@@ -20,6 +20,9 @@ import { __Coreum_setGlobalPrefix } from "@/globalPrefix/__Coreum_setGlobalPrefi
 import { __Coreum_Controller } from "@/Controller/__Coreum_Controller";
 import { __Coreum_getRuntime } from "@/runtime/__Coreum_getRuntime";
 import { __Coreum_getGlobalPrefix } from "@/globalPrefix/__Coreum_getGlobalPrefix";
+import { __Coreum_Config } from "@/Config/__Coreum_Config";
+
+export const Config = __Coreum_Config;
 
 /**
  * This function sets the runtime to either "bun" or "node", it defaults to "bun".
