@@ -20,6 +20,6 @@ import type { output, ZodType } from "zod";
 
 // prettier-ignore
 export type __Coreum_InferSchema<T> =
-	T extends Type ? T["out"] :
+	T extends Type ? T["inferOut"] :
 	T extends ZodType ? output<T> :
 	never

@@ -12,8 +12,9 @@ export function __Coreum_parse<O>(
 		const result = schema(data);
 		if (result instanceof type.errors) {
 			throw new Error(errorMessage, result.toTraversalError());
+		} else {
+			return result as O;
 		}
-		return result as O;
 	}
 
 	if (schema instanceof ZodType) {
@@ -21,7 +22,7 @@ export function __Coreum_parse<O>(
 		if (!result.success) {
 			throw new Error(errorMessage, result.error);
 		}
-		return result.data as __Coreum_InferSchema<ZodType<O>>;
+		return result.data as O;
 	}
 
 	throw new Error(
