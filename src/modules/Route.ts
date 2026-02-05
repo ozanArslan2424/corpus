@@ -1,4 +1,4 @@
-import { __Coreum_Route } from "@/lib/Route/__Coreum_Route";
+import { Route as _Route } from "@/internal/Route/Route";
 
 /**
  * The object to define an endpoint. Can be instantiated with "new" or inside a controller
@@ -6,11 +6,11 @@ import { __Coreum_Route } from "@/lib/Route/__Coreum_Route";
  * return {@link Response} or object or nothing.
  * */
 
-export const Route = __Coreum_Route;
+export const Route = _Route;
 export type Route<
 	D = undefined,
 	R extends unknown = unknown,
 	B extends unknown = unknown,
 	S extends unknown = unknown,
 	P extends unknown = unknown,
-> = __Coreum_Route<D, R, B, S, P>;
+> = _Route<D, R, B, S, P>;

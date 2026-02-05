@@ -1,3 +1,3 @@
-import { __Coreum_Config } from "@/lib/Config/__Coreum_Config";
+import { Config as _Config } from "@/internal/Config/Config";
 
-export const Config = __Coreum_Config;
+export const Config = _Config;

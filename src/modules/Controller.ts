@@ -1,4 +1,4 @@
-import { __Coreum_Controller } from "@/lib/Controller/__Coreum_Controller";
+import { Controller as _Controller } from "@/internal/Controller/Controller";
 
-export const Controller = __Coreum_Controller;
-export type Controller = __Coreum_Controller;
+export const Controller = _Controller;
+export type Controller = _Controller;

@@ -1,8 +1,8 @@
-import { __Coreum_Cors } from "@/lib/Cors/__Coreum_Cors";
+import { Cors as _Cors } from "@/internal/Cors/Cors";
 
 /**
  * Simple cors helper object to set cors headers
  * */
 
-export const Cors = __Coreum_Cors;
-export type Cors = __Coreum_Cors;
+export const Cors = _Cors;
+export type Cors = _Cors;

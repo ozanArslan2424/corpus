@@ -1,4 +1,4 @@
-import { __Coreum_Cookies } from "@/lib/Cookies/__Coreum_Cookies";
+import { CoreumCookies as _Cookies } from "@/internal/Cookies/CoreumCookies";
 
 /**
  * TODO: Only available in Bun runtime at the moment.
@@ -6,5 +6,5 @@ import { __Coreum_Cookies } from "@/lib/Cookies/__Coreum_Cookies";
  * Set-Cookie header is handled by {@link Response}
  * */
 
-export const Cookies = __Coreum_Cookies;
-export type Cookies = __Coreum_Cookies;
+export const Cookies = _Cookies;
+export type Cookies = _Cookies;

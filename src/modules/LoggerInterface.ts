@@ -1,3 +1,3 @@
-import type { __Coreum_LoggerInterface } from "@/lib/Logger/__Coreum_Logger";
+import type { LoggerInterface as _LoggerInterface } from "@/internal/Logger/LoggerInterface";
 
-export interface LoggerInterface extends __Coreum_LoggerInterface {}
+export interface LoggerInterface extends _LoggerInterface {}

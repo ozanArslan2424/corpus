@@ -1,8 +1,8 @@
-import { __Coreum_Status } from "@/lib/Status/__Coreum_Status";
+import { Status as _Status } from "@/internal/Status/Status";
 
 /**
  * Commonly used HTTP status codes.
  * */
 
-export const Status = __Coreum_Status;
-export type Status = __Coreum_Status;
+export const Status = _Status;
+export type Status = _Status;

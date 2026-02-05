@@ -1,0 +1,1 @@
+export type CoreumRequestInfo = RequestInfo;

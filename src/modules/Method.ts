@@ -1,8 +1,8 @@
-import { __Coreum_Method } from "@/lib/Method/__Coreum_Method";
+import { Method as _Method } from "@/internal/Method/Method";
 
 /**
  * Commonly used HTTP verbs.
  * */
 
-export const Method = __Coreum_Method;
-export type Method = __Coreum_Method;
+export const Method = _Method;
+export type Method = _Method;

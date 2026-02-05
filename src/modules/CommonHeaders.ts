@@ -1,8 +1,8 @@
-import { __Coreum_CommonHeaders } from "@/lib/CommonHeaders/__Coreum_CommonHeaders";
+import { CommonHeaders as _CommonHeaders } from "@/internal/CommonHeaders/CommonHeaders";
 
 /**
  * Just some common headers.
  * */
 
-export const CommonHeaders = __Coreum_CommonHeaders;
-export type CommonHeaders = __Coreum_CommonHeaders;
+export const CommonHeaders = _CommonHeaders;
+export type CommonHeaders = _CommonHeaders;
