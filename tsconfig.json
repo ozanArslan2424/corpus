@@ -1,17 +1,19 @@
 {
 	"compilerOptions": {
-		"target": "es2020",
-		"module": "esnext",
-		"strict": true,
+		"lib": [
+			"ESNext",
+			"DOM"
+		],
+		"target": "ESNext",
+		"module": "Preserve",
+		"moduleDetection": "force",
 		"moduleResolution": "node",
+		"strict": true,
 		"skipLibCheck": true,
 		"allowJs": true,
 		"noEmit": true,
 		"outDir": "dist",
 		"resolveJsonModule": true,
-		"paths": {
-			"@/*": ["./src/*"]
-		},
 		"verbatimModuleSyntax": true,
 		"noFallthroughCasesInSwitch": true,
 		"noUncheckedIndexedAccess": true,
@@ -20,6 +22,16 @@
 		"noUnusedLocals": false,
 		"noUnusedParameters": false,
 		"noPropertyAccessFromIndexSignature": false,
-		"esModuleInterop": true
-	}
+		"esModuleInterop": true,
+		"baseUrl": ".",
+		"paths": {
+			"@/*": [
+				"./src/*"
+			]
+		}
+	},
+	"exclude": [
+		"dist",
+		"node_modules"
+	]
 }

@@ -1,7 +1,7 @@
-export * from "./modules";
+import * as C from "@/exports";
 
-import * as C from "./modules";
+export * from "@/exports";
 
-export { C as Coreum };
+export { C };
 
 export default C;
