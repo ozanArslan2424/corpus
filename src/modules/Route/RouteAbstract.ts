@@ -51,8 +51,7 @@ export abstract class RouteAbstract<
 			.split("/")
 			.map((part) => (part.startsWith(":") ? "([^\\/]+)" : part))
 			.join("/");
-		const pattern = new RegExp(`^${regex}$`);
-		return pattern;
+		return new RegExp(`^${regex}$`);
 	}
 
 	get id(): RouteId {

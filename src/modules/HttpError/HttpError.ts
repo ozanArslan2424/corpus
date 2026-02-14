@@ -13,26 +13,26 @@ export class HttpError extends HttpErrorAbstract implements HttpErrorInterface {
 
 	static internalServerError(msg?: string): HttpError {
 		const status = Status.INTERNAL_SERVER_ERROR;
-		return new HttpError(msg ?? status.toString(), status);
+		return new this(msg ?? status.toString(), status);
 	}
 
 	static badRequest(msg?: string): HttpError {
 		const status = Status.BAD_REQUEST;
-		return new HttpError(msg ?? status.toString(), status);
+		return new this(msg ?? status.toString(), status);
 	}
 
 	static notFound(msg?: string): HttpError {
 		const status = Status.NOT_FOUND;
-		return new HttpError(msg ?? status.toString(), status);
+		return new this(msg ?? status.toString(), status);
 	}
 
 	static methodNotAllowed(msg?: string): HttpError {
 		const status = Status.METHOD_NOT_ALLOWED;
-		return new HttpError(msg ?? status.toString(), status);
+		return new this(msg ?? status.toString(), status);
 	}
 
 	static unprocessableEntity(msg?: string): HttpError {
 		const status = Status.UNPROCESSABLE_ENTITY;
-		return new HttpError(msg ?? status.toString(), status);
+		return new this(msg ?? status.toString(), status);
 	}
 }

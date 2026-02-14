@@ -1,4 +1,3 @@
-import { makeLogger } from "@/modules/Logger/LoggerClass";
 import { HttpError } from "@/modules/HttpError/HttpError";
 import type { HttpErrorInterface } from "@/modules/HttpError/HttpErrorInterface";
 import { Route } from "@/modules/Route/Route";
@@ -13,7 +12,6 @@ import { textSplit } from "@/utils/textSplit";
 export abstract class RouterAbstract implements RouterInterface {
 	globalPrefix: string = "";
 	private readonly possibles: string[] = [];
-	protected readonly logger = makeLogger("Router");
 	abstract addRoute(route: AnyRoute): void;
 	abstract getRoutes(): Array<AnyRoute>;
 	abstract updateRoute(route: AnyRoute): void;
@@ -30,7 +28,6 @@ export abstract class RouterAbstract implements RouterInterface {
 		const parts = textSplit("/", routePath);
 		if (!this.possibles.includes(routePath)) {
 			this.possibles.push(routePath);
-			// console.log("adding", routePath);
 		}
 
 		for (let i = 0; i < parts.length; i++) {
@@ -41,7 +38,6 @@ export abstract class RouterAbstract implements RouterInterface {
 			const possiblePath = joinPathSegments(...variation);
 			if (this.possibles.includes(possiblePath)) continue;
 			this.possibles.push(possiblePath);
-			// console.log("adding", possiblePath);
 		}
 	}
 
@@ -53,15 +49,14 @@ export abstract class RouterAbstract implements RouterInterface {
 			if (!(similar instanceof Route)) continue;
 			if (similar.path === routePath) continue;
 			if (!this.pathsCollide(routePath, similar.path)) continue;
-			this.logger.warn(
+			console.warn(
 				`${similar.path} has params that clash with ${routePath}. Initialize ${routePath} before ${similar.path} or consider using a different endpoint.`,
 			);
 		}
 
-		// Also check if this route would cause collisions with existing routes
 		const existingRoute = this.findRouteByPathname(routePath, method);
 		if (existingRoute instanceof Route && existingRoute.path !== routePath) {
-			this.logger.warn(
+			console.warn(
 				`${routePath} clashes with existing route ${existingRoute.path}. Consider using a different endpoint.`,
 			);
 		}

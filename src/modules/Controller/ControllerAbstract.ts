@@ -11,8 +11,6 @@ import { createHash } from "@/utils/createHash";
 import { getServerInstance } from "@/modules/Server/ServerInstance";
 import { Method } from "@/modules/HttpRequest/enums/Method";
 
-// TODO: opts.beforeEach
-
 /** Extend this class to create your own controllers. */
 
 export abstract class ControllerAbstract<

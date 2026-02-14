@@ -3,7 +3,7 @@ import type { ValueOf } from "@/utils/ValueOf";
 /** Commonly used HTTP status codes. */
 
 export const Status = {
-	// --- 1xx Informational ---
+	/** --- 1xx Informational --- */
 	/** Continue: Request received, please continue */
 	CONTINUE: 100,
 	/** Switching Protocols: Protocol change request approved */
@@ -13,7 +13,7 @@ export const Status = {
 	/** Early Hints */
 	EARLY_HINTS: 103,
 
-	// --- 2xx Success ---
+	/** --- 2xx Success --- */
 	/** OK: Request succeeded */
 	OK: 200,
 	/** Created: Resource created */
@@ -35,7 +35,7 @@ export const Status = {
 	/** IM Used (HTTP Delta encoding) */
 	IM_USED: 226,
 
-	// --- 3xx Redirection ---
+	/** --- 3xx Redirection --- */
 	/** Multiple Choices */
 	MULTIPLE_CHOICES: 300,
 	/** Moved Permanently: Resource moved to a new URL */
@@ -53,7 +53,7 @@ export const Status = {
 	/** Permanent Redirect: Resource permanently at another URI */
 	PERMANENT_REDIRECT: 308,
 
-	// --- 4xx Client Errors ---
+	/** --- 4xx Client Errors --- */
 	/** Bad Request: Malformed request */
 	BAD_REQUEST: 400,
 	/** Unauthorized: Missing or invalid auth credentials */
@@ -113,7 +113,7 @@ export const Status = {
 	/** Unavailable For Legal Reasons */
 	UNAVAILABLE_FOR_LEGAL_REASONS: 451,
 
-	// --- 5xx Server Errors ---
+	/** --- 5xx Server Errors --- */
 	/** Internal Server Error: Unhandled server error */
 	INTERNAL_SERVER_ERROR: 500,
 	/** Not Implemented: Endpoint/method not implemented */

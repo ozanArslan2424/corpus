@@ -3,6 +3,7 @@ import { HttpHeaders } from "@/modules/HttpHeaders/HttpHeaders";
 import { HttpRequest } from "@/modules/HttpRequest/HttpRequest";
 import { describe, expect, it } from "bun:test";
 import { TEST_URL } from "../utils/TEST_URL";
+import { Parser } from "@/modules/Parser/Parser";
 
 const ctReq = (ct: string) =>
 	new HttpRequest(TEST_URL, {
@@ -86,14 +87,14 @@ describe("Request", () => {
 	});
 	it("normalizedContentType - application/json", () => {
 		const json = ctReq("application/json");
-		expect(json.normalizedContentType).toBe("json");
+		expect(Parser.getNormalizedContentType(json)).toBe("json");
 		expect(json.headers.get(CommonHeaders.ContentType)).toBe(
 			"application/json",
 		);
 	});
 	it("normalizedContentType - application/json; charset=utf-8", () => {
 		const jsonCharset = ctReq("application/json; charset=utf-8");
-		expect(jsonCharset.normalizedContentType).toBe("json");
+		expect(Parser.getNormalizedContentType(jsonCharset)).toBe("json");
 		expect(jsonCharset.headers.get(CommonHeaders.ContentType)).toBe(
 			"application/json; charset=utf-8",
 		);
@@ -101,7 +102,9 @@ describe("Request", () => {
 
 	it("normalizedContentType - application/x-www-form-urlencoded", () => {
 		const formUrlEncoded = ctReq("application/x-www-form-urlencoded");
-		expect(formUrlEncoded.normalizedContentType).toBe("form-urlencoded");
+		expect(Parser.getNormalizedContentType(formUrlEncoded)).toBe(
+			"form-urlencoded",
+		);
 		expect(formUrlEncoded.headers.get(CommonHeaders.ContentType)).toBe(
 			"application/x-www-form-urlencoded",
 		);
@@ -109,7 +112,7 @@ describe("Request", () => {
 
 	it("normalizedContentType - multipart/form-data", () => {
 		const formData = ctReq("multipart/form-data");
-		expect(formData.normalizedContentType).toBe("form-data");
+		expect(Parser.getNormalizedContentType(formData)).toBe("form-data");
 		expect(formData.headers.get(CommonHeaders.ContentType)).toBe(
 			"multipart/form-data",
 		);
@@ -117,13 +120,13 @@ describe("Request", () => {
 
 	it("normalizedContentType - text/plain", () => {
 		const text = ctReq("text/plain");
-		expect(text.normalizedContentType).toBe("text");
+		expect(Parser.getNormalizedContentType(text)).toBe("text");
 		expect(text.headers.get(CommonHeaders.ContentType)).toBe("text/plain");
 	});
 
 	it("normalizedContentType - application/xml", () => {
 		const appXml = ctReq("application/xml");
-		expect(appXml.normalizedContentType).toBe("xml");
+		expect(Parser.getNormalizedContentType(appXml)).toBe("xml");
 		expect(appXml.headers.get(CommonHeaders.ContentType)).toBe(
 			"application/xml",
 		);
@@ -131,13 +134,13 @@ describe("Request", () => {
 
 	it("normalizedContentType - text/xml", () => {
 		const textXml = ctReq("text/xml");
-		expect(textXml.normalizedContentType).toBe("xml");
+		expect(Parser.getNormalizedContentType(textXml)).toBe("xml");
 		expect(textXml.headers.get(CommonHeaders.ContentType)).toBe("text/xml");
 	});
 
 	it("normalizedContentType - application/octet-stream", () => {
 		const binary = ctReq("application/octet-stream");
-		expect(binary.normalizedContentType).toBe("binary");
+		expect(Parser.getNormalizedContentType(binary)).toBe("binary");
 		expect(binary.headers.get(CommonHeaders.ContentType)).toBe(
 			"application/octet-stream",
 		);
@@ -145,31 +148,31 @@ describe("Request", () => {
 
 	it("normalizedContentType - application/pdf", () => {
 		const pdf = ctReq("application/pdf");
-		expect(pdf.normalizedContentType).toBe("pdf");
+		expect(Parser.getNormalizedContentType(pdf)).toBe("pdf");
 		expect(pdf.headers.get(CommonHeaders.ContentType)).toBe("application/pdf");
 	});
 
 	it("normalizedContentType - image/png", () => {
 		const img = ctReq("image/png");
-		expect(img.normalizedContentType).toBe("image");
+		expect(Parser.getNormalizedContentType(img)).toBe("image");
 		expect(img.headers.get(CommonHeaders.ContentType)).toBe("image/png");
 	});
 
 	it("normalizedContentType - audio/mpeg", () => {
 		const audio = ctReq("audio/mpeg");
-		expect(audio.normalizedContentType).toBe("audio");
+		expect(Parser.getNormalizedContentType(audio)).toBe("audio");
 		expect(audio.headers.get(CommonHeaders.ContentType)).toBe("audio/mpeg");
 	});
 
 	it("normalizedContentType - video/mp4", () => {
 		const video = ctReq("video/mp4");
-		expect(video.normalizedContentType).toBe("video");
+		expect(Parser.getNormalizedContentType(video)).toBe("video");
 		expect(video.headers.get(CommonHeaders.ContentType)).toBe("video/mp4");
 	});
 
 	it("normalizedContentType - unknown/something", () => {
 		const unknown = ctReq("unknown/something");
-		expect(unknown.normalizedContentType).toBe("unknown");
+		expect(Parser.getNormalizedContentType(unknown)).toBe("unknown");
 		expect(unknown.headers.get(CommonHeaders.ContentType)).toBe(
 			"unknown/something",
 		);
@@ -177,7 +180,9 @@ describe("Request", () => {
 
 	it("normalizedContentType - no-body-allowed", () => {
 		const noBodyAllowed = new HttpRequest(TEST_URL, { method: Method.GET });
-		expect(noBodyAllowed.normalizedContentType).toBe("no-body-allowed");
+		expect(Parser.getNormalizedContentType(noBodyAllowed)).toBe(
+			"no-body-allowed",
+		);
 		expect(noBodyAllowed.headers.get(CommonHeaders.ContentType)).toBe(null);
 	});
 });

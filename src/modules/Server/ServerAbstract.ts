@@ -1,5 +1,4 @@
 import { Status } from "@/modules/HttpResponse/enums/Status";
-import { makeLogger } from "@/modules/Logger/LoggerClass";
 import type { ServerInterface } from "@/modules/Server/ServerInterface";
 import type { HttpRequestInterface } from "@/modules/HttpRequest/HttpRequestInterface";
 import type { HttpResponseInterface } from "@/modules/HttpResponse/HttpResponseInterface";
@@ -22,7 +21,6 @@ export abstract class ServerAbstract implements ServerInterface {
 	abstract serve(options: ServeOptions): void;
 	abstract exit(): Promise<void>;
 
-	protected readonly logger = makeLogger("Http");
 	readonly router: RouterInterface = new Router();
 	protected cors: CorsInterface | undefined;
 	protected handleBeforeListen: (() => MaybePromise<void>) | undefined;
@@ -65,7 +63,7 @@ export abstract class ServerAbstract implements ServerInterface {
 				fetch: (r) => this.handle(r),
 			});
 		} catch (err) {
-			this.logger.error("Server unable to start:", err);
+			console.error("Server unable to start:", err);
 			await this.exit();
 		}
 	}
@@ -89,7 +87,7 @@ export abstract class ServerAbstract implements ServerInterface {
 			.getRoutes()
 			.map((r) => `[${r.method}]\t:\t${r.path}`)
 			.join("\n");
-		this.logger.log(`Listening on ${hostname}:${port}\n${routes}`);
+		console.log(`Listening on ${hostname}:${port}\n${routes}`);
 	}
 
 	private handleError: ErrorHandler = async (err) => {
@@ -122,11 +120,7 @@ export abstract class ServerAbstract implements ServerInterface {
 
 	private handleRoute: RequestHandler = async (req) => {
 		const route = this.router.findRoute(req.url, req.method);
-		const ctx = await RouteContext.makeFromRequest(
-			req,
-			route.path,
-			route.schemas,
-		);
+		const ctx = await RouteContext.makeFromRequest(req, route);
 		const returnData = await route.handler(ctx);
 		if (returnData instanceof HttpResponse) {
 			return returnData;

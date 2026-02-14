@@ -1,38 +1,49 @@
 import { describe, expect, it } from "bun:test";
 import { reqMaker } from "../utils/reqMaker";
-import { type } from "arktype";
 import { pathMaker } from "../utils/pathMaker";
+import z from "zod";
+import { testServer } from "test/utils/testServer";
 import { Status } from "@/modules/HttpResponse/enums/Status";
 import { CommonHeaders } from "@/modules/HttpHeaders/enums/CommonHeaders";
 import { Route } from "@/modules/Route/Route";
-import { testServer } from "test/utils/testServer";
 
-const prefix = "/request-body/arktype";
+const prefix = "/request-body/zod";
 const path = pathMaker(prefix);
 const req = reqMaker(prefix);
 
-const stringSchema = type("string");
-const numberSchema = type("number");
-const objectSchema = type({ name: "string", age: "number" });
-const arraySchema = type("string[]");
-const booleanSchema = type("boolean");
-const optionalKeySchema = type({ required: "string", "optional?": "string" });
-const nestedSchema = type({
-	user: { name: "string", address: { city: "string", country: "string" } },
+const stringSchema = z.string();
+const numberSchema = z.number();
+const objectSchema = z.object({ name: z.string(), age: z.number() });
+const arraySchema = z.array(z.string());
+const booleanSchema = z.boolean();
+const optionalKeySchema = z.object({
+	required: z.string(),
+	optional: z.string().optional(),
 });
-const enumSchema = type({ status: "'active' | 'inactive' | 'pending'" });
-const defaultValueSchema = type({ name: "string", count: "number = 0" });
-const requiredStringSchema = type({ required: "string" });
-const requiredNumberSchema = type({ required: "number" });
-const constraintSchema = type("string >= 1");
-const optionalSchema = type("string | undefined");
-const emailSchema = type({ email: "string.email" });
-const customMessageSchema = type("string").atLeastLength({
-	rule: 5,
-	"meta.message": "Must be at least 5 characters",
+const nestedSchema = z.object({
+	user: z.object({
+		name: z.string(),
+		address: z.object({
+			city: z.string(),
+			country: z.string(),
+		}),
+	}),
 });
+const enumSchema = z.object({
+	status: z.enum(["active", "inactive", "pending"]),
+});
+const defaultValueSchema = z.object({
+	name: z.string(),
+	count: z.number().default(0),
+});
+const requiredStringSchema = z.object({ required: z.string() });
+const requiredNumberSchema = z.object({ required: z.number() });
+const constraintSchema = z.string().min(1);
+const optionalSchema = z.string().optional();
+const emailSchema = z.object({ email: z.email() });
+const customMessageSchema = z.string().min(5, "Must be at least 5 characters");
 
-describe("Request Body - Arktype", () => {
+describe("Request Body - Zod", () => {
 	it("STRING", async () => {
 		new Route({ method: "POST", path: path("/string") }, (c) => c.body, {
 			body: stringSchema,

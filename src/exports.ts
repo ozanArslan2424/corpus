@@ -21,10 +21,6 @@ export type { HttpResponseInterface as ResponseInterface } from "@/modules/HttpR
 
 export * from "@/modules/Cors/Cors";
 
-export * from "@/modules/Logger/Logger";
-
-export { setLogger } from "@/modules/Logger/LoggerClass";
-
 export * from "@/modules/Middleware/Middleware";
 
 export * from "@/modules/Parser/types/Schema";
@@ -38,5 +34,3 @@ export * from "@/modules/Route/Route";
 export * from "@/modules/RouteContext/RouteContext";
 
 export * from "@/modules/Server/Server";
-
-export { ServiceAbstract as Service } from "@/modules/Service/ServiceAbstract";

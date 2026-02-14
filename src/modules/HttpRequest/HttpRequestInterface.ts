@@ -8,5 +8,4 @@ export interface HttpRequestInterface extends Request {
 	readonly init?: HttpRequestInit;
 	readonly cookies: CookiesInterface;
 	get isPreflight(): boolean;
-	get normalizedContentType(): string;
 }

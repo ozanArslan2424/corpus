@@ -1,3 +1,4 @@
 import type { CommonHeaders } from "@/modules/HttpHeaders/enums/CommonHeaders";
+import type { OrString } from "@/utils/OrString";
 
-export type HttpHeaderKey = CommonHeaders | (string & {});
+export type HttpHeaderKey = OrString<CommonHeaders>;

@@ -1,6 +1,14 @@
-export function isObjectWith<T extends Record<string, unknown>>(
+import type { OrString } from "@/utils/OrString";
+import type { UnknownObject } from "@/utils/UnknownObject";
+
+export function isObjectWith<T extends UnknownObject>(
 	item: unknown,
-	key: keyof T | string,
+	key: OrString<keyof T>,
 ): item is T {
-	return !!item && typeof item === "object" && key in item;
+	return (
+		item !== null &&
+		item !== undefined &&
+		typeof item === "object" &&
+		key in item
+	);
 }
