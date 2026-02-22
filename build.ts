@@ -2,6 +2,13 @@ import type { BuildConfig } from "bun";
 import dts from "bun-plugin-dts";
 
 async function build() {
+	try {
+		await Bun.$`rm -rf ./dist`.quiet();
+		console.log("🧹 Cleaned ./dist folder");
+	} catch {
+		console.warn("⚠️  Could not clean ./dist folder (might not exist yet)");
+	}
+
 	const defaultBuildConfig: BuildConfig = {
 		entrypoints: ["./src/index.ts", "./src/internal.ts"],
 		outdir: "./dist",
