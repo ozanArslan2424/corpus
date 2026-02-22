@@ -3,7 +3,7 @@ import dts from "bun-plugin-dts";
 
 async function build() {
 	const defaultBuildConfig: BuildConfig = {
-		entrypoints: ["./src/index.ts"],
+		entrypoints: ["./src/index.ts", "./src/internal.ts"],
 		outdir: "./dist",
 		target: "bun",
 	};
@@ -25,4 +25,10 @@ async function build() {
 	]);
 }
 
-build();
+const start = performance.now();
+
+await build();
+
+const end = performance.now();
+const startup = end - start;
+console.log(`🚀 build function took ${startup.toFixed(2)}ms`);
