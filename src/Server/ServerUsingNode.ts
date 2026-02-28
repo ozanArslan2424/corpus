@@ -1,3 +1,6 @@
+import { setRouterInstance } from "@/index";
+import { Config } from "@/Config/Config";
+import { Router } from "@/Router/Router";
 import { Method } from "@/Request/enums/Method";
 import { ServerAbstract } from "@/Server/ServerAbstract";
 import type { ServeOptions } from "@/Server/types/ServeOptions";
@@ -7,6 +10,11 @@ import http from "node:http";
 export class ServerUsingNode extends ServerAbstract {
 	private app: ServerAppUsingNode | undefined;
 
+	constructor() {
+		super();
+		setRouterInstance(new Router());
+	}
+
 	serve(options: ServeOptions): void {
 		const app = this.createApp(options);
 		this.app = app;
@@ -14,9 +22,16 @@ export class ServerUsingNode extends ServerAbstract {
 	}
 
 	async close(): Promise<void> {
+		await this.handleBeforeClose?.();
+		console.log("Closing...");
+
 		this.app?.close();
 		this.app?.closeAllConnections();
 		this.app?.closeIdleConnections();
+
+		if (Config.nodeEnv !== "test") {
+			process.exit(0);
+		}
 	}
 
 	private createApp(options: ServeOptions): ServerAppUsingNode {

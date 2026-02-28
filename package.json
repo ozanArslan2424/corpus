@@ -2,7 +2,7 @@
 	"name": "@ozanarslan/corpus",
 	"type": "module",
 	"module": "index.ts",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"description": "Small Typescript backend framework with only core utilities",
 	"author": "Ozan Arslan <ozanarslanwork@gmail.com>",
 	"license": "MIT",

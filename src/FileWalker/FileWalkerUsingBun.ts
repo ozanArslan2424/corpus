@@ -1,8 +1,7 @@
-import { FileWalkerAbstract } from "@/FileWalker/FileWalkerAbstract";
 import type { FileWalkerFile } from "@/FileWalker/types/FileWalkerFile";
 
-export class FileWalkerUsingBun extends FileWalkerAbstract {
-	async read(address: string): Promise<string | null> {
+export class FileWalkerUsingBun {
+	static async read(address: string): Promise<string | null> {
 		try {
 			const file = await this.find(address);
 			if (!file) return null;
@@ -12,15 +11,15 @@ export class FileWalkerUsingBun extends FileWalkerAbstract {
 		}
 	}
 
-	async exists(address: string): Promise<boolean> {
+	static async exists(address: string): Promise<boolean> {
 		return (await this.find(address)) !== null;
 	}
 
-	getExtension(address: string): string {
+	static getExtension(address: string): string {
 		return address.split(".").pop() ?? "txt";
 	}
 
-	async find(address: string): Promise<FileWalkerFile | null> {
+	static async find(address: string): Promise<FileWalkerFile | null> {
 		const file = Bun.file(address);
 		const exists = await file.exists();
 		if (exists) {

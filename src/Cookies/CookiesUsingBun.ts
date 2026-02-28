@@ -5,12 +5,10 @@ import type { CookiesInit } from "@/Cookies/types/CookiesInit";
 export class CookiesUsingBun extends CookiesAbstract {
 	constructor(init?: CookiesInit) {
 		super();
-		if (init) {
-			this.applyInit(init);
-		}
+		this.applyInit(init);
 	}
 
-	private map = new Bun.CookieMap();
+	protected map = new Bun.CookieMap();
 
 	toSetCookieHeaders(): Array<string> {
 		return this.map.toSetCookieHeaders();

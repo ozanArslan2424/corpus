@@ -12,12 +12,10 @@ import type { UnknownObject } from "@/utils/types/UnknownObject";
 export class CookiesUsingMap extends CookiesAbstract {
 	constructor(init?: CookiesInit) {
 		super();
-		if (init) {
-			this.applyInit(init);
-		}
+		this.applyInit(init);
 	}
 
-	private map = new Map<string, string>();
+	protected map = new Map<string, string>();
 
 	toSetCookieHeaders(): Array<string> {
 		return Array.from(this.map.values());
