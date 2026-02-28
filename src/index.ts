@@ -1,4 +1,4 @@
-import type { Router } from "@/modules/Router";
+import type { Router } from "@/Router/Router";
 
 let RouterInstance: Router;
 
@@ -15,8 +15,6 @@ export function getRouterInstance(): Router {
 export function setRouterInstance(router: Router): void {
 	RouterInstance = router;
 }
-
-export type * from "@/types.d.ts";
 
 import * as C from "@/exports";
 

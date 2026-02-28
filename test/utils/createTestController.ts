@@ -1,4 +1,4 @@
-import C from "../../dist";
+import C from "@/index";
 
 export function createTestController(prefix: string) {
 	class TestController extends C.Controller {
