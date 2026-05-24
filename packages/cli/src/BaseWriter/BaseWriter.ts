@@ -1,5 +1,7 @@
 import fs from "node:fs";
 
+import { Formatter } from "../Formatter/Formatter";
+
 export abstract class BaseWriter {
 	constructor(indentOrFilePath?: number | string) {
 		if (typeof indentOrFilePath === "string") {
@@ -12,6 +14,7 @@ export abstract class BaseWriter {
 
 	readonly indent: number = 0;
 	protected readonly writeToFilePath?: string;
+	protected readonly formatter = new Formatter();
 
 	protected fileLineCount = 0;
 	protected O: string[] = [];
@@ -41,6 +44,17 @@ export abstract class BaseWriter {
 		}
 	}
 
+	prepend(...strings: string[]) {
+		const tabs = new Array(this.indent).fill(this.tabChar).join("");
+		const tabbed = strings.map((str) => `${tabs}${str}`);
+		this.O.unshift(...tabbed);
+		if (this.writeToFilePath) {
+			const existing = fs.readFileSync(this.writeToFilePath, "utf8");
+			fs.writeFileSync(this.writeToFilePath, tabbed.join("\n") + "\n" + existing);
+			this.fileLineCount += tabbed.length;
+		}
+	}
+
 	line(...strings: string[]) {
 		const tabs = new Array(this.indent).fill(this.tabChar).join("");
 		const tabbed = strings.map((str) => `${tabs}${str}`);
@@ -58,6 +72,7 @@ export abstract class BaseWriter {
 			fs.writeFileSync(this.writeToFilePath, this.O.join("\n") + "\n");
 		}
 	}
+
 	tab(str: string, indent: number = 1) {
 		const tabs = new Array(this.indent + indent).fill(this.tabChar).join("");
 		this.line(`${tabs}${str}`);

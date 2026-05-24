@@ -34,7 +34,7 @@
 		"tests": "bun test --only-failures"
 	},
 	"dependencies": {
-		"@clack/prompts": "^1.2.0",
+		"@clack/prompts": "^1.4.0",
 		"@sodaru/yup-to-json-schema": "^2.0.1",
 		"@standard-schema/spec": "^1.1.0",
 		"json-schema-to-typescript": "^15.0.4",
@@ -43,11 +43,11 @@
 	},
 	"devDependencies": {
 		"@ozanarslan/corpus": "workspace:*",
-		"@types/bun": "^1.3.12",
+		"@types/bun": "^1.3.14",
 		"arktype": "^2.2.0",
 		"corpus-utils": "workspace:*",
-		"tsdown": "^0.21.9",
+		"tsdown": "^0.22.0",
 		"yup": "^1.7.1",
-		"zod": "^4.3.6"
+		"zod": "^4.4.3"
 	}
 }

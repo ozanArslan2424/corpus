@@ -74,7 +74,7 @@ export namespace StatementWriterTypes {
 
 	export type Import = {
 		keys?: string[] | ImpAs[];
-		def?: string;
+		def?: string | ImpAs;
 		isType?: boolean;
 		from: string;
 	};

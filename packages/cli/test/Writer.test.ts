@@ -73,7 +73,7 @@ describe("TypescriptWriter core", () => {
 
 	it("interfaces set is populated by $interface", () => {
 		const w = new TypescriptWriter();
-		w.$interface({ name: "MyInterface", body: () => {} });
+		w.$interface({ variant: "interface", name: "MyInterface", body: () => {} });
 		expect(w.interfaces.has("MyInterface")).toBe(true);
 	});
 
@@ -631,6 +631,7 @@ describe("$interface", () => {
 	it("interface declaration", () => {
 		const w = new TypescriptWriter();
 		w.$interface({
+			variant: "interface",
 			name: "IFoo",
 			body: (w) => {
 				w.line("x: number;");
@@ -643,13 +644,14 @@ describe("$interface", () => {
 
 	it("type alias", () => {
 		const w = new TypescriptWriter();
-		w.$interface({ keyword: "type", name: "MyType", body: () => {} });
+		w.$interface({ variant: "type", name: "MyType", body: () => {} });
 		expect(w.read()).toContain("type MyType =");
 	});
 
 	it("interface with generics", () => {
 		const w = new TypescriptWriter();
 		w.$interface({
+			variant: "interface",
 			name: "Repo",
 			generics: ["T"],
 			body: () => {},
@@ -659,7 +661,7 @@ describe("$interface", () => {
 
 	it("adds to interfaces set", () => {
 		const w = new TypescriptWriter();
-		w.$interface({ keyword: "interface", name: "IBar", body: () => {} });
+		w.$interface({ variant: "interface", name: "IBar", body: () => {} });
 		expect(w.interfaces.has("IBar")).toBe(true);
 	});
 });

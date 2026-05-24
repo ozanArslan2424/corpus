@@ -14,8 +14,14 @@ export namespace VariableWriterTypes {
 	export type Const = Base;
 	export type Let = Omit<Base, "value"> & { value?: string | BodyWriter };
 	export type Var = Base;
-	export type Type = Omit<Base, "type"> & { generics?: string[] };
-	export type Assign = Pick<Base, "name" | "value" | "type">;
+	export type Type = Omit<Base, "value" | "type"> & {
+		generics?: string[];
+		value: (string | BodyWriter) | (string | BodyWriter)[];
+	};
+
+	export type Assign =
+		| { type?: string; as?: string; satisfies?: string }
+		| { type?: string; as?: string; satisfies?: string };
 
 	export type Namespace = {
 		isExported?: boolean;

@@ -70,6 +70,9 @@ export namespace ClassWriterTypes {
 
 	export type Method = MethodBase;
 
+	export type MethodOverload1 = Required<Pick<MethodBase, "name" | "type">>;
+	export type MethodOverload2 = Omit<MethodBase, "name" | "type" | "body">;
+
 	export type ArrowMethod = Omit<MethodBase, "args"> & {
 		args?: OrString<B.TypedArg>[];
 	};

@@ -8,6 +8,7 @@ export function writeModelFile(c: Config, m: ModuleInterface): string {
 	if (!c.validationLibrary) {
 		w.$comment({ variant: "line", text: "No validation library detected." });
 		w.$interface({
+			variant: "interface",
 			isExported: true,
 			name: m.modelTypeName,
 			body: (w) => {

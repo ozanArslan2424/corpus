@@ -16,7 +16,7 @@ interface RequestDescriptor {
 type UnkObj = Record<string, unknown>;
 
 namespace Entities {
-	const newable = <T>() =>
+	const newable = <T,>() =>
 		class {
 			constructor(values: T) {
 				Object.assign(this, values);

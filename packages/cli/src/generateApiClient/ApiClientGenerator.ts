@@ -134,6 +134,7 @@ export class ApiClientGenerator {
 		w.line("");
 
 		w.$interface({
+			variant: "interface",
 			name: "RequestDescriptor",
 			body: (w) => {
 				w.line("endpoint: string");
@@ -272,10 +273,10 @@ export class ApiClientGenerator {
 			w.$if(`!headers.has("content-type")`, `&&`, `!(args.body instanceof FormData)`).then((w) => {
 				w.line(`headers.set("content-type", "application/json");`);
 			});
-			w.$assign({
-				name: `body`,
-				value: w.tern(`args.body instanceof FormData`, `args.body`, `JSON.stringify(args.body)`),
-			});
+			w.$assign(
+				"body",
+				w.tern(`args.body instanceof FormData`, `args.body`, `JSON.stringify(args.body)`),
+			);
 		});
 
 		w.$const({ name: "req", value: "new Request(url, { method, headers, body, ...args.init })" });
@@ -288,17 +289,17 @@ export class ApiClientGenerator {
 
 		w.$if(`isJson`)
 			.then((w) => {
-				w.$assign({ name: `data`, value: `await res.json()` });
-				w.$assign({ name: `err`, value: `data.message ?? res.statusText` });
+				w.$assign(`data`, `await res.json()`);
+				w.$assign(`err`, `data.message ?? res.statusText`);
 			})
 			.elseif(`isText`)
 			.then((w) => {
-				w.$assign({ name: `data`, value: `await res.text()` });
-				w.$assign({ name: `err`, value: w.tern(`data !== ""`, `data`, `res.statusText`) });
+				w.$assign(`data`, `await res.text()`);
+				w.$assign(`err`, w.tern(`data !== ""`, `data`, `res.statusText`));
 			})
 			.else((w) => {
-				w.$assign({ name: `data`, value: `await res.blob()` });
-				w.$assign({ name: `err`, value: `res.statusText` });
+				w.$assign(`data`, `await res.blob()`);
+				w.$assign(`err`, `res.statusText`);
 			});
 
 		w.line(`if (!res.ok) throw new Error(err, { cause: data })`);

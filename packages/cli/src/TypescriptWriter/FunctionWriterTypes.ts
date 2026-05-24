@@ -7,6 +7,8 @@ export namespace FunctionWriterTypes {
 	type BodyWriter = B.BodyWriter<TypescriptWriter>;
 
 	type FunctionBase = {
+		isExported?: boolean;
+		name: string;
 		args?: B.TypedArg[];
 		generics?: string[];
 		isAsync?: boolean;
@@ -14,11 +16,13 @@ export namespace FunctionWriterTypes {
 		body: BodyWriter;
 	};
 
-	export type Function = FunctionBase & { name: string };
+	export type Function = FunctionBase;
+
+	export type FunctionOverload1 = Required<Pick<FunctionBase, "name" | "type">>;
+	export type FunctionOverload2 = Omit<FunctionBase, "name" | "type" | "body">;
 
 	export type Arrow = Omit<FunctionBase, "args"> & {
 		keyword?: "const" | "let" | "var";
-		name: string;
 		args?: OrString<B.TypedArg>[];
 	};
 }

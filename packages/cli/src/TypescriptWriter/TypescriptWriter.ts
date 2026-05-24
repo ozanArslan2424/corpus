@@ -1,8 +1,8 @@
 import { isSomeArray } from "corpus-utils/isSomeArray";
-import prettier from "prettier";
 
 import { BaseWriter } from "../BaseWriter/BaseWriter";
 import type { BaseWriterTypes as B } from "../BaseWriter/BaseWriterTypes";
+import { StringBuilder } from "../StringBuilder/StringBuilder";
 import type { ClassWriterTypes as CWT } from "./ClassWriterTypes";
 import type { FunctionWriterTypes as FWT } from "./FunctionWriterTypes";
 import type { InterfaceWriterTypes as IWT } from "./InterfaceWriterTypes";
@@ -13,11 +13,7 @@ type BodyWriter = B.BodyWriter<TypescriptWriter>;
 
 export class TypescriptWriter extends BaseWriter {
 	async format() {
-		const formatted = await prettier.format(this.read(), {
-			parser: "typescript",
-			useTabs: true,
-			printWidth: 100,
-		});
+		const formatted = await this.formatter.format(this.read(), "typescript");
 		this.finalize(formatted);
 	}
 
@@ -54,8 +50,10 @@ export class TypescriptWriter extends BaseWriter {
 	$class(o: CWT.Class) {
 		this.variables.add(o.name);
 
+		const genericsStr = isSomeArray(o.generics) ? `<${o.generics.join(", ")}>` : "";
+
 		this.line(
-			`${o.isExported ? `export ` : ``}${o.isAbstract ? `abstract ` : ``}class ${o.name} ${o.extends ? `extends ${o.extends} ` : ``} ${o.implements ? `implements ${o.implements} ` : ``}{`,
+			`${o.isExported ? `export ` : ``}${o.isAbstract ? `abstract ` : ``}class ${o.name}${genericsStr} ${o.extends ? `extends ${o.extends} ` : ``} ${o.implements ? `implements ${o.implements} ` : ``}{`,
 		);
 
 		if (o.constr) {
@@ -87,6 +85,26 @@ export class TypescriptWriter extends BaseWriter {
 		}
 
 		this.tab("}");
+		this.line("");
+	}
+
+	$methodOverload(
+		method: CWT.MethodOverload1,
+		overloads: CWT.MethodOverload2[],
+		body: CWT.Method["body"],
+	) {
+		for (const o of overloads) {
+			this.line(o.keyword ? `${o.keyword} ` : "");
+			if (o.isAsync) this.inline("async ");
+			this.inline(method.name);
+			if (isSomeArray(o.generics)) this.inline(`<${o.generics.join(", ")}>`);
+			this.inline(`(${isSomeArray(o.args) ? o.args.join(", ") : ""})`);
+			this.inline(`: ${method.type}`);
+		}
+
+		this.inline("{");
+		this.writeBody(this, body);
+		this.line("};");
 		this.line("");
 	}
 
@@ -150,9 +168,29 @@ export class TypescriptWriter extends BaseWriter {
 		);
 	}
 
+	$functionOverload(
+		method: FWT.FunctionOverload1,
+		overloads: FWT.FunctionOverload2[],
+		body: CWT.Method["body"],
+	) {
+		for (const o of overloads) {
+			this.variables.add(method.name);
+			this.line(`${o.isExported ? `export ` : ``}${o.isAsync ? `async ` : ``}function `);
+			this.inline(method.name);
+			if (isSomeArray(o.generics)) this.inline(`<${o.generics.join(", ")}>`);
+			this.inline(`(${isSomeArray(o.args) ? o.args.join(", ") : ""})`);
+			this.inline(`: ${method.type} `);
+		}
+
+		this.inline("{");
+		this.writeBody(this, body);
+		this.line("};");
+		this.line("");
+	}
+
 	$function(o: FWT.Function) {
 		this.variables.add(o.name);
-		this.line(`${o.isAsync ? `async ` : ``}function `);
+		this.line(`${o.isExported ? `export ` : ``}${o.isAsync ? `async ` : ``}function `);
 		this.inline(
 			o.name,
 			isSomeArray(o.generics) ? `<${o.generics.join(", ")}>` : "",
@@ -187,11 +225,11 @@ export class TypescriptWriter extends BaseWriter {
 
 	$interface(o: IWT.Interface) {
 		this.interfaces.add(o.name);
-		this.line(`${o.isExported ? "export " : ""}${o.keyword ?? "interface"} `);
+		this.line(`${o.isExported ? "export " : ""}${o.variant} `);
 		this.inline(
 			o.name,
 			isSomeArray(o.generics) ? `<${o.generics.join(", ")}> ` : " ",
-			o.keyword === "type" ? "= {" : "{",
+			o.variant === "type" ? "= {" : o.extends ? `extends ${o.extends} {` : "{",
 		);
 		this.writeBody(this, o.body);
 		this.line("}");
@@ -216,42 +254,31 @@ export class TypescriptWriter extends BaseWriter {
 	}
 
 	$if(...conditions: SWT.Condition[]): SWT.If {
+		// oxlint-disable-next-line typescript/no-this-alias
+		const writer = this;
+
+		const makeElseChain = () => ({
+			elseif: (...newConditions: SWT.Condition[]) => ({
+				then: (newBody: BodyWriter) => {
+					writer.line(`else if (${newConditions.join(" ")}) {`);
+					writer.writeBody(writer, newBody);
+					writer.line(`}`);
+					return makeElseChain();
+				},
+			}),
+			else: (finalBody: BodyWriter) => {
+				writer.line(`else {`);
+				writer.writeBody(writer, finalBody);
+				writer.line(`}`);
+			},
+		});
+
 		return {
 			then: (body) => {
-				const conditionStr = conditions.join(" ");
-				this.line(`if (${conditionStr}) {`);
-				this.writeBody(this, body);
-				this.line(`}`);
-
-				return {
-					elseif: (...newConditions) => {
-						return {
-							then: (newBody) => {
-								const conditionStr2 = newConditions.join(" ");
-								this.line(`else if (${conditionStr2}) {`);
-								this.writeBody(this, newBody);
-								this.line(`}`);
-
-								return {
-									// not the class this, this this
-									elseif(...newConditions2) {
-										return this.elseif(...newConditions2);
-									},
-									else: (finalBody) => {
-										this.line(`else {`);
-										this.writeBody(this, finalBody);
-										this.line(`}`);
-									},
-								};
-							},
-						};
-					},
-					else: (finalBody) => {
-						this.line(`else {`);
-						this.writeBody(this, finalBody);
-						this.line(`}`);
-					},
-				};
+				writer.line(`if (${conditions.join(" ")}) {`);
+				writer.writeBody(writer, body);
+				writer.line(`}`);
+				return makeElseChain();
 			},
 		};
 	}
@@ -334,33 +361,43 @@ export class TypescriptWriter extends BaseWriter {
 	}
 
 	$import(o: SWT.Import) {
-		this.line("import ");
-		this.inline(o.isType ? "type " : "", o.def ?? "");
+		const str = new StringBuilder("import ");
+
+		if (o.def) {
+			if (typeof o.def === "string") {
+				str.add(o.def);
+			} else {
+				if (o.def.isType) str.add("type ");
+				str.add(o.def.key);
+				if (o.def.as) str.add(` as ${o.def.as}`);
+			}
+		}
+
+		if (o.isType) str.add("type ");
 
 		if (o.keys) {
-			if (o.def) {
-				this.inline(", ");
-			}
-
-			this.inline("{ ");
+			if (o.def) str.add(", ");
+			str.add("{ ");
 
 			for (const [i, k] of o.keys.entries()) {
 				if (typeof k === "string") {
-					this.inline(k);
-				} else if (k.as) {
-					this.inline(k.isType ? "type " : "", k.key, " as ", k.as);
+					str.add(k);
 				} else {
-					this.inline(k.isType ? "type " : "", k.key);
+					if (k.isType) str.add("type ");
+					str.add(k.key);
+					if (k.as) str.add(` as ${k.as}`);
 				}
 				if (i !== o.keys.length - 1) {
-					this.inline(", ");
+					str.add(", ");
 				}
 			}
 
-			this.inline(" }");
+			str.add(" }");
 		}
 
-		this.inline(` from "${o.from}";`);
+		str.add(` from "${o.from}";`);
+
+		this.prepend(str.read());
 	}
 
 	$export(o: SWT.Export): void {
@@ -419,14 +456,24 @@ export class TypescriptWriter extends BaseWriter {
 		);
 	}
 
-	$type(o: VWT.Type): void {
+	$type(o: VWT.Type): this {
 		this.interfaces.add(o.name);
+
+		const values = Array.isArray(o.value) ? o.value : [o.value];
+		const resolvedUnion = values.map((v) => this.resolveValue(v)).join(" | ");
+
 		this.line(
-			`${o.isExported ? "export " : ""}type ${o.name}${isSomeArray(o.generics) ? `<${o.generics.join(", ")}>` : ""} = ${this.resolveValue(o.value)};`,
+			`${o.isExported ? "export " : ""}type ${o.name}${isSomeArray(o.generics) ? `<${o.generics.join(", ")}>` : ""} = ${resolvedUnion};`,
 		);
+
+		return this;
 	}
 
-	$assign(o: VWT.Assign) {
-		this.line(`${o.name} = ${this.resolveValue(o.value)}${o.type ? `as ${o.type}` : ``}`);
+	$assign(name: string, value: string | BodyWriter, o?: VWT.Assign) {
+		this.line(name);
+		if (o?.type) this.inline(`: ${o.type}`);
+		this.inline(` = ${this.resolveValue(value)}`);
+		if (o?.as) this.inline(` as ${o.as}`);
+		if (o?.satisfies) this.inline(` satisfies ${o.satisfies}`);
 	}
 }
