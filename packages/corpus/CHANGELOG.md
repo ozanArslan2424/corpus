@@ -1,5 +1,11 @@
 # @ozanarslan/corpus
 
+## 0.5.16
+
+### Patch Changes
+
+- XFile bugfix: extension
+
 ## 0.5.15
 
 ### Patch Changes

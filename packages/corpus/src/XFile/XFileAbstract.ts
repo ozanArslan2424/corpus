@@ -38,8 +38,9 @@ export abstract class XFileAbstract {
 	/** The file extension (e.g., "html", "md"), excluding the leading dot. */
 	get extension(): string {
 		const last = this.path.split(this.SLASH).pop() ?? this.EMPTY;
-		if (!last.includes(this.DOT)) return this.fallbackExtension;
-		return last.split(this.DOT).pop() ?? this.fallbackExtension;
+		if (!last.includes(this.DOT)) return this.fallbackExtension.toLowerCase();
+		const ext = last.split(this.DOT).pop() ?? this.fallbackExtension;
+		return ext.toLowerCase();
 	}
 
 	/** The full name of the file, including the extension. */

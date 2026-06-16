@@ -7,10 +7,6 @@
 	},
 	"globals": {},
 	"ignorePatterns": ["node_modules", "dist"],
-	"options": {
-		"typeAware": true,
-		"typeCheck": true
-	},
 	"settings": {},
 	"rules": {
 		// typescript
