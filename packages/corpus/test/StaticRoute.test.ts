@@ -68,7 +68,7 @@ describe("C.StaticRoute", () => {
 		new TC.StaticRoute("/sr-js", f("sample.js"));
 		const res = await s.handle(req("/sr-js"));
 		expect(res.status).toBe(200);
-		expect(res.headers.get("Content-Type")).toBe("application/javascript");
+		expect(res.headers.get("Content-Type")).toBe("text/javascript");
 		const body = await res.text();
 		expect(body).toContain("hello");
 	});
@@ -147,7 +147,7 @@ describe("C.StaticRoute", () => {
 
 	it("UNKNOWN EXTENSION FALLS BACK TO OCTET STREAM", async () => {
 		// manually test mime fallback via a route pointing to a fake extension
-		new TC.StaticRoute("/sr-bin", f("sample.xyz"));
+		new TC.StaticRoute("/sr-bin", f("sample.what"));
 		const res = await s.handle(req("/sr-bin"));
 		expect(res.headers.get("Content-Type")).toBe("application/octet-stream");
 	});

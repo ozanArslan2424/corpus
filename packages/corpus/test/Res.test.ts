@@ -253,9 +253,9 @@ describe("C.Res", () => {
 		const cases: [string, string][] = [
 			["test/fixtures/sample.html", "text/html"],
 			["test/fixtures/sample.css", "text/css"],
-			["test/fixtures/sample.js", "application/javascript"],
+			["test/fixtures/sample.js", "text/javascript"],
 			["test/fixtures/sample.json", "application/json"],
-			["test/fixtures/sample.xyz", "application/octet-stream"],
+			["test/fixtures/sample.what", "application/octet-stream"],
 		];
 
 		for (const [path, expectedMime] of cases) {
