@@ -6,10 +6,12 @@ import * as p from "@clack/prompts";
 import { logFatal, log } from "corpus-utils/internalLog";
 
 import type { Config, PartialConfig } from "../config";
-import { TypescriptWriter } from "../TypescriptWriter/TypescriptWriter";
+import { Formatter } from "../Formatter/Formatter";
+import { StringBuilder } from "../StringBuilder/StringBuilder";
 import { ACCEPTED_PACKAGE_MANAGERS } from "../utils/ACCEPTED_PACKAGE_MANAGERS";
 import { ACCEPTED_VALIDATION_LIBS } from "../utils/ACCEPTED_VALIDATION_LIBS";
 import { ACTIONS, type Action } from "../utils/ACTIONS";
+import { CONFIG_FILE_NAME } from "../utils/constants";
 import { registerSilentConsole } from "../utils/registerSilentConsole";
 
 export class ConfigManager {
@@ -50,7 +52,7 @@ export class ConfigManager {
 
 	static getFileConfig(): PartialConfig {
 		const extensions = [".ts", ".js"];
-		const base = path.resolve(process.cwd(), "corpus.config");
+		const base = path.resolve(process.cwd(), CONFIG_FILE_NAME.replace(".ts", ""));
 		const configPath = extensions.map((ext) => base + ext).find(fs.existsSync);
 		const fileC: PartialConfig = configPath ? require(configPath).default : {};
 		return fileC;
@@ -216,45 +218,45 @@ export class ConfigManager {
 	static async writeConfigFile(config: Config) {
 		if (this.configFileExists()) return;
 
-		const filePath = path.resolve(process.cwd(), "corpus.config.ts");
-		const w = new TypescriptWriter(filePath);
+		const f = new Formatter();
+		const b = new StringBuilder();
 
-		w.$import({
-			keys: ["defineConfig"],
-			from: "@ozanarslan/corpus-cli/config",
-		});
-		w.line("export default defineConfig({");
-		w.pair("main", w.str(config.main));
-		w.pair("pkgPath", w.str(config.pkgPath));
-		w.pair(
-			"validationLibrary",
-			config.validationLibrary ? w.str(config.validationLibrary) : "null",
+		b.line(`import { defineConfig } from "@ozanarslan/corpus-cli/config";`);
+		b.line(`export default defineConfig({`);
+		b.line(`    main: "${config.main}",`);
+		b.line(`    pkgPath: "${config.pkgPath}",`);
+		b.line(
+			`    validationLibrary: ${config.validationLibrary ? `"${config.validationLibrary}"` : `null`},`,
 		);
-		w.pair("packageManager", w.str(config.packageManager ?? "bun"));
-		w.pair("casing", w.str(config.casing));
-		w.pair("output", w.str(config.output));
-		w.pair("exportClientAs", w.str(config.exportClientAs));
-		w.pair("exportModelsAs", w.str(config.exportModelsAs));
-		w.pair("exportArgsAs", w.str(config.exportArgsAs));
-		w.pair("exportEntitiesAs", w.str(config.exportEntitiesAs));
-		w.$comment("The `fallback: ctx => ctx.base` strategy silently drops unsupported constraints");
-		w.$comment(
-			"and keeps the rest of the schema intact, which is the least-surprising behaviour for codegen purposes.",
+		b.line(`    packageManager: "${config.packageManager ?? `bun`}",`);
+		b.line(`    casing: "${config.casing}",`);
+		b.line(`    output: "${config.output}",`);
+		b.line(`    exportClientAs: "${config.exportClientAs}",`);
+		b.line(`    exportModelsAs: "${config.exportModelsAs}",`);
+		b.line(`    exportArgsAs: "${config.exportArgsAs}",`);
+		b.line(`    exportEntitiesAs: "${config.exportEntitiesAs}",`);
+		b.line(
+			`    // The \`fallback: ctx => ctx.base\` strategy silently drops unsupported constraints and`,
 		);
-		w.$comment("");
-		w.line("jsonSchemaOptions: {");
-		w.tab(`target: "draft-07",`);
-		w.tab("fallback: (ctx: any) => ctx.base,");
-		w.line("}");
-		w.untab("})");
+		b.line(
+			`    // keeps the rest of the schema intact. The least surprising behaviour for codegen purposes.`,
+		);
+		b.line(`    jsonSchemaOptions: {`);
+		b.line(`        target: "draft-07",`);
+		b.line(`        fallback: (ctx: any) => ctx.base,`);
+		b.line(`    },`);
+		b.line(`})`);
 
-		await w.format();
+		const content = await f.format(b.read(), "typescript");
+		const fpath = path.resolve(process.cwd(), CONFIG_FILE_NAME);
+		fs.mkdirSync(path.dirname(fpath), { recursive: true });
+		fs.writeFileSync(fpath, content);
 
-		log.info(`Config written to corpus.config.ts`);
+		log.info(`Config written to ${CONFIG_FILE_NAME}`);
 	}
 
 	static configFileExists() {
-		const filePath = path.resolve(process.cwd(), "corpus.config.ts");
+		const filePath = path.resolve(process.cwd(), CONFIG_FILE_NAME);
 		return fs.existsSync(filePath);
 	}
 }

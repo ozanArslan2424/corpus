@@ -2,12 +2,14 @@ import fs from "node:fs";
 import path from "path";
 
 import type { EntityDefinition } from "@ozanarslan/corpus";
+import { log } from "corpus-utils/internalLog";
 import type { UnknownObject } from "corpus-utils/UnknownObject";
 
 import type { Config, PartialConfig } from "../config";
 import { ConfigManager } from "../ConfigManager/ConfigManager";
+import { Formatter } from "../Formatter/Formatter";
 import { SchemaManager } from "../SchemaManager/SchemaManager";
-import { TypescriptWriter } from "../TypescriptWriter/TypescriptWriter";
+import { StringBuilder } from "../StringBuilder/StringBuilder";
 import type { Schema } from "../utils/Schema";
 import { toPascalCase } from "../utils/toPascalCase";
 
@@ -74,27 +76,31 @@ export class ApiClientGenerator {
 	}
 
 	public async generate() {
-		const outputPath = this.config.output.split("/");
-		const dirName = outputPath.slice(0, -1);
-		const fileName = outputPath[outputPath.length - 1] ?? "generated.ts";
-		const dir = path.resolve(process.cwd(), ...dirName);
-		const file = path.join(dir, fileName);
-		fs.mkdirSync(dir, { recursive: true });
-
 		const routes = Array.from(this.docs.values());
-		const w = new TypescriptWriter(file);
+
+		const f = new Formatter();
+		const b = new StringBuilder();
+
 		const map = this.getRouteMap(routes);
 
-		this.writeInitialContent(w);
+		this.writeInitialContent(b);
 
 		if (this.entities.size > 0) {
-			await this.writeEntities(w, this.entities);
+			await this.writeEntities(b, this.entities);
 		}
-		await this.writeModelsNamespace(w, map);
-		this.writeArgsNamespace(w, map);
-		this.writeApiClientClass(w, map);
-		this.writeExports(w);
-		await w.format();
+		await this.writeModels(b, map);
+		this.writeArgs(b, map);
+		this.writeApiClientClass(b, map);
+
+		const content = await f.format(b.read(), "typescript");
+		const segments = this.config.output.split("/");
+		const dirName = segments.slice(0, -1);
+		const fileName = segments[segments.length - 1] ?? "corpus.gen.ts";
+		const fpath = path.join(process.cwd(), ...dirName, fileName);
+		fs.mkdirSync(path.dirname(fpath), { recursive: true });
+		fs.writeFileSync(fpath, content);
+
+		log.info(`Api Client written to: ${fpath}`);
 	}
 
 	private getRouteMap(routes: DocEntry[]) {
@@ -119,39 +125,26 @@ export class ApiClientGenerator {
 		return map;
 	}
 
-	private writeInitialContent(w: TypescriptWriter) {
-		w.$type({ name: "_prim", value: "string | number | boolean" });
-		w.line("");
-
-		w.$type({ name: "_pretty", generics: ["T"], value: "{ [K in keyof T]: T[K] } & {}" });
-		w.line("");
-
-		w.$type({
-			name: "_args",
-			generics: ["T"],
-			value: `Omit<T, "response"> & { headers?: HeadersInit; init?: RequestInit; }`,
-		});
-		w.line("");
-
-		w.$interface({
-			variant: "interface",
-			name: "RequestDescriptor",
-			body: (w) => {
-				w.line("endpoint: string");
-				w.line("method: string");
-				w.line("body?: unknown");
-				w.line("search?: UnkObj");
-				w.line("headers?: HeadersInit");
-				w.line(`init?: Omit<RequestInit, "headers">`);
-			},
-		});
-		w.line("");
-
-		w.$type({ name: "UnkObj", value: "Record<string, unknown>" });
-		w.line("");
+	private writeInitialContent(b: StringBuilder) {
+		b.line(`type _prim = string | number | boolean;`);
+		b.line(``);
+		b.line(`type _pretty<T> = { [K in keyof T]: T[K] } & {};`);
+		b.line(``);
+		b.line(`type _args<T> = Omit<T, "response"> & { headers?: HeadersInit; init?: RequestInit; };`);
+		b.line(``);
+		b.line(`type UnkObj = Record<string, unknown>;`);
+		b.line(``);
+		b.line(`interface RequestDescriptor {`);
+		b.line(`    endpoint: string;`);
+		b.line(`    method: string;`);
+		b.line(`    body?: unknown;`);
+		b.line(`    search?: UnkObj;`);
+		b.line(`    headers?: HeadersInit;`);
+		b.line(`    init?: Omit<RequestInit, "headers">;`);
+		b.line(`}`);
 	}
 
-	private async writeEntities(w: TypescriptWriter, map: Map<string, EntityDefinition>) {
+	private async writeEntities(b: StringBuilder, map: Map<string, EntityDefinition>) {
 		const types = new Map<string, string>();
 
 		for (const def of map.values()) {
@@ -162,31 +155,27 @@ export class ApiClientGenerator {
 			}
 		}
 
-		function write(w: TypescriptWriter, getKey?: (pascalKey: string) => string) {
-			w.line(
-				`const newable = <T>() => class { constructor(values: T) { Object.assign(this, values); } } as unknown as new (values: T) => T;`,
-			);
+		b.line(`const newable = <T>() => class {`);
+		b.line(`    constructor(values: T) { Object.assign(this, values); } `);
+		b.line(`} as unknown as new (values: T) => T;`);
+		b.line(``);
 
-			w.line("");
+		const useTemplate = this.entitiesNS.includes("$");
 
-			const isExported = getKey == undefined;
+		if (!useTemplate) b.line(`export namespace ${this.entitiesNS} {`);
 
-			for (const [name, typedef] of types.entries()) {
-				const pascalKey = toPascalCase(name);
-				const key = getKey ? getKey(pascalKey) : pascalKey;
-				w.$type({ isExported, name: key, value: typedef });
-				w.$const({ isExported, name: key, value: `newable<${key}>()` });
-			}
+		for (const [name, typedef] of types.entries()) {
+			const pascalKey = toPascalCase(name);
+			const key = useTemplate ? this.entityKey(pascalKey) : pascalKey;
+			b.line(`export type ${key} = ${typedef};`);
+			b.line(`export const ${key} = newable<${key}>();`);
+			b.line(``);
 		}
 
-		if (this.entitiesNS.includes("$")) {
-			write(w, (pk) => this.entityKey(pk));
-		} else {
-			w.$namespace({ name: this.entitiesNS, body: (w) => write(w) });
-		}
+		if (!useTemplate) b.line(`}`);
 	}
 
-	private async writeModelsNamespace(w: TypescriptWriter, map: Map<string, MapEntry>) {
+	private async writeModels(b: StringBuilder, map: Map<string, MapEntry>) {
 		const models = new Map<
 			string,
 			Record<"body" | "search" | "params" | "response", string | null>
@@ -194,218 +183,143 @@ export class ApiClientGenerator {
 
 		for (const r of map.values()) {
 			models.set(r.pascalKey, {
-				body: r.model?.body ? await this.buildSchemaType(r.model.body) : null,
-				search: r.model?.search ? await this.buildSchemaType(r.model.search) : "UnkObj",
+				body: r.model?.body ? await this.buildSchemaType(r.model?.body) : null,
+				search: r.model?.search ? await this.buildSchemaType(r.model?.search) : "UnkObj",
 				params: r.model?.params
-					? await this.buildSchemaType(r.model.params)
+					? await this.buildSchemaType(r.model?.params)
 					: r.params.length > 0
 						? this.buildPrimitiveParamsType(r.params)
 						: null,
-				response: r.model?.response ? await this.buildSchemaType(r.model.response) : "void",
+				response: r.model?.response ? await this.buildSchemaType(r.model?.response) : "void",
 			});
 		}
 
-		function write(w: TypescriptWriter, getKey?: (pascalKey: string) => string) {
-			const isExported = getKey == undefined;
+		const useTemplate = this.modelsNS.includes("$");
 
-			for (const [pascalKey, model] of models.entries()) {
-				w.$type({
-					isExported,
-					name: getKey ? getKey(pascalKey) : pascalKey,
-					generics: model.body ? [bodyTypeGeneric] : [],
-					value: (w) => {
-						w.inline(`_pretty<`);
-						w.inline(`{ response: ${model.response} }`);
-						if (model.params) w.inline(`& { params: ${model.params} }`);
-						if (model.search) w.inline(`& { search?: ${model.search} }`);
-						if (model.body)
-							w.inline(`& { body: BT extends "formData" ? FormData : ${model.body} }`);
-						w.inline(`>`);
-					},
-				});
-			}
+		if (!useTemplate) b.line(`export namespace ${this.modelsNS} {`);
+
+		for (const [pascalKey, model] of models.entries()) {
+			const key = useTemplate ? this.modelKey(pascalKey) : pascalKey;
+			b.line(`export type ${key}${model.body ? `<${bodyTypeGeneric}>` : ``} = _pretty<`);
+			b.line(`{ response: ${model.response} }`);
+			if (model.params) b.line(`& { params: ${model.params} }`);
+			if (model.search) b.line(`& { search?: ${model.search} }`);
+			if (model.body) b.line(`& { body: BT extends "formData" ? FormData : ${model.body} }`);
+			b.line(`>`);
 		}
 
-		if (this.modelsNS.includes("$")) {
-			write(w, (pk) => this.modelKey(pk));
-		} else {
-			w.$namespace({ name: this.modelsNS, body: (w) => write(w) });
-		}
+		if (!useTemplate) b.line(`}`);
 	}
 
-	private writeArgsNamespace(w: TypescriptWriter, map: Map<string, MapEntry>) {
-		function write(w: TypescriptWriter, getKey?: (pascalKey: string) => string) {
-			const isExported = getKey == undefined;
+	private writeArgs(b: StringBuilder, map: Map<string, MapEntry>) {
+		const useTemplate = this.argsNS.includes("$");
 
-			for (const r of map.values()) {
-				w.$type({
-					isExported,
-					name: getKey ? getKey(r.pascalKey) : r.pascalKey,
-					generics: r.model?.body ? [bodyTypeGeneric] : [],
-					value: r.model?.body ? `_args<${r.modelKey}<BT>>` : `_args<${r.modelKey}>`,
-				});
-			}
-		}
+		if (!useTemplate) b.line(`export namespace ${this.argsNS} {`);
 
-		if (this.argsNS.includes("$")) {
-			write(w, (pk) => this.argsKey(pk));
-		} else {
-			w.$namespace({ name: this.argsNS, body: (w) => write(w) });
-		}
-	}
-
-	private writeDefaultFetchFn(w: TypescriptWriter) {
-		w.line(`const url = new URL(args.endpoint, this.baseUrl);`);
-		w.line(`const headers = new Headers(args.headers);`);
-		w.line(`const method: RequestInit["method"] = args.method;`);
-		w.line(`let body: RequestInit["body"];`);
-
-		w.$if(`args.search`).then((w) => {
-			w.$for([`const`, `[key, val]`, `of`, `Object.entries(args.search)`], (w) => {
-				w.$if(`val == null`).then((w) => w.line(`continue;`));
-				w.line(
-					`url.searchParams.append(key, ${w.tern(`typeof val === "object"`, `JSON.stringify(val)`, `String(val as _prim)`)});`,
-				);
-			});
-		});
-
-		w.$if(`args.body`).then((w) => {
-			w.$if(`!headers.has("content-type")`, `&&`, `!(args.body instanceof FormData)`).then((w) => {
-				w.line(`headers.set("content-type", "application/json");`);
-			});
-			w.$assign(
-				"body",
-				w.tern(`args.body instanceof FormData`, `args.body`, `JSON.stringify(args.body)`),
+		for (const r of map.values()) {
+			const key = useTemplate ? this.modelKey(r.pascalKey) : r.pascalKey;
+			b.line(
+				`export type ${key}${r.model?.body ? `<${bodyTypeGeneric}>` : ``} = _args<${r.modelKey}${r.model?.body ? `<BT>` : ``}>`,
 			);
-		});
+		}
 
-		w.$const({ name: "req", value: "new Request(url, { method, headers, body, ...args.init })" });
-		w.$const({ name: "res", value: "await fetch(req)" });
-		w.$const({ name: "contentType", value: `res.headers.get("content-type")` });
-		w.$const({ name: "isJson", value: `contentType?.includes("application/json")` });
-		w.$const({ name: "isText", value: `contentType?.includes("text/")` });
-		w.$let({ name: `data`, type: `any` });
-		w.$let({ name: `err`, type: `string` });
-
-		w.$if(`isJson`)
-			.then((w) => {
-				w.$assign(`data`, `await res.json()`);
-				w.$assign(`err`, `data.message ?? res.statusText`);
-			})
-			.elseif(`isText`)
-			.then((w) => {
-				w.$assign(`data`, `await res.text()`);
-				w.$assign(`err`, w.tern(`data !== ""`, `data`, `res.statusText`));
-			})
-			.else((w) => {
-				w.$assign(`data`, `await res.blob()`);
-				w.$assign(`err`, `res.statusText`);
-			});
-
-		w.line(`if (!res.ok) throw new Error(err, { cause: data })`);
-		w.$return(`data`);
+		if (!useTemplate) b.line(`}`);
 	}
 
-	private writeApiClientClass(w: TypescriptWriter, map: Map<string, MapEntry>) {
-		w.$class({
-			name: this.config.exportClientAs,
-			constr: {
-				args: [{ keyword: "public readonly", key: "baseUrl", type: "string" }],
-			},
-			body: (w) => {
-				w.$arrowMethod({
-					keyword: "public",
-					isAsync: true,
-					name: "fetchFn",
-					type: "<R = unknown>(args: RequestDescriptor) => Promise<R>",
-					args: ["args"],
-					body: (w) => {
-						this.writeDefaultFetchFn(w);
-					},
-				});
-
-				w.$method({
-					keyword: "public",
-					isAsync: false,
-					name: "setFetchFn",
-					args: ["cb: <R = unknown>(args: RequestDescriptor) => Promise<R>"],
-					body: (w) => w.$return("this.fetchFn = cb"),
-				});
-
-				w.$member({
-					keyword: "public readonly",
-					name: "endpoints",
-					value: w.scope((w) => {
-						for (const r of map.values()) {
-							w.pair(
-								r.camelKey,
-								r.params.length === 0
-									? w.str(r.endpoint)
-									: `(p: ${r.argsKey}["params"]) => \`${r.endpoint
-											.split(/:([a-zA-Z_][a-zA-Z0-9_]*)/)
-											.map((part, i) => {
-												if (i % 2 === 1) return `\${String(p.${part})}`;
-												return part.replace("*", `\${String(p["*"])}`);
-											})
-											.join("")}\``,
-							);
-						}
-					}),
-				});
-				w.line("");
-
-				for (const r of map.values()) {
-					w.$method({
-						keyword: "public",
-						name: r.camelKey,
-						generics: r.model?.body ? [bodyTypeGeneric] : [],
-						args: r.model?.body ? [`args: ${r.argsKey}<BT>`] : [`args: ${r.argsKey}`],
-						body: (w) => {
-							w.$const({
-								name: "req",
-								value: w.scope((w) => {
-									if (r.params.length === 0) {
-										w.pair("endpoint", w.str(r.endpoint));
-									} else {
-										w.pair(
-											"endpoint",
-											w.lit(
-												r.endpoint
-													.split(/:([a-zA-Z_][a-zA-Z0-9_]*)/)
-													.map((part, i) => {
-														if (i % 2 === 1) return `\${String(args.params.${part})}`;
-														return part.replace("*", `\${String(args.params["*"])}`);
-													})
-													.join(""),
-											),
-										);
-									}
-
-									w.pair("method", w.str(r.method));
-									w.pair("search", `args.search`);
-									if (r.model?.body) {
-										w.pair("body", `args.body`);
-									}
-								}),
-							});
-							w.$return(`this.fetchFn<${r.modelKey}["response"]>(req)`);
-						},
-					});
-				}
-			},
-		});
-	}
-
-	private writeExports(w: TypescriptWriter) {
-		const variables = Array.from(w.variables);
-		const interfaces = Array.from(w.interfaces).filter(
-			(t) => !["_prim", "_pretty", "_args", "UnkObj"].includes(t),
+	private writeApiClientClass(b: StringBuilder, map: Map<string, MapEntry>) {
+		b.line(`export class ${this.config.exportClientAs} {`);
+		b.line(`    constructor(public readonly baseUrl: string) {}`);
+		b.line(``);
+		b.line(
+			`    public fetchFn: <R = unknown>(args: RequestDescriptor) => Promise<R> = async (args) => {`,
 		);
-
-		w.line("");
-		w.$export({ variant: "type", keys: interfaces });
-		w.line("");
-		w.$export({ variant: "object", keys: variables });
+		b.line(`	const url = new URL(args.endpoint, this.baseUrl);`);
+		b.line(`	const headers = new Headers(args.headers);`);
+		b.line(`	const method: RequestInit["method"] = args.method;`);
+		b.line(`	let body: RequestInit["body"];`);
+		b.line(`	if (args.search) {`);
+		b.line(`	    for (const [key, val] of Object.entries(args.search)) {`);
+		b.line(`	        if (val == null) continue;`);
+		b.line(`	        url.searchParams.append(key, typeof val === "object"`);
+		b.line(`	            ? JSON.stringify(val)`);
+		b.line(`	            : String(val as _prim));`);
+		b.line(`	    }`);
+		b.line(`	}`);
+		b.line(`	if (args.body) {`);
+		b.line(`	    if (!headers.has("content-type") && !(args.body instanceof FormData)) {`);
+		b.line(`	        headers.set("content-type", "application/json");`);
+		b.line(`	    }`);
+		b.line(`	    body = args.body instanceof FormData ? args.body : JSON.stringify(args.body);`);
+		b.line(`	}`);
+		b.line(`	const req = new Request(url, { method, headers, body, ...args.init });`);
+		b.line(`	const res = await fetch(req);`);
+		b.line(`	const contentType = res.headers.get("content-type");`);
+		b.line(`	const isJson = contentType?.includes("application/json");`);
+		b.line(`	const isText = contentType?.includes("text/");`);
+		b.line(`	let data: any;`);
+		b.line(`	let err: string;`);
+		b.line(`	if (isJson) {`);
+		b.line(`	    data = await res.json();`);
+		b.line(`	    err = data.message ?? res.statusText;`);
+		b.line(`	    `);
+		b.line(`	    body = args.body instanceof FormData ? args.body : JSON.stringify(args.body);`);
+		b.line(`	} else if (isText) {`);
+		b.line(`	    data = await res.text();`);
+		b.line(`	    err = data !== "" ? data : res.statusText;`);
+		b.line(`	} else {`);
+		b.line(`	    data = await res.blob();`);
+		b.line(`	    err = res.statusText;`);
+		b.line(`	}`);
+		b.line(`	if (!res.ok) throw new Error(err, { cause: data })`);
+		b.line(`	return data;`);
+		b.line(`    }`);
+		b.line(``);
+		b.line(`    public setFetchFn(cb: <R = unknown>(args: RequestDescriptor) => Promise<R>) {`);
+		b.line(`        this.fetchFn = cb;`);
+		b.line(`    }`);
+		b.line(``);
+		b.line(`    public readonly endpoints = {`);
+		for (const r of map.values()) {
+			const key = r.camelKey;
+			const val =
+				r.params.length === 0
+					? `"${r.endpoint}"`
+					: `(p: ${r.argsKey}["params"]) => \`${r.endpoint
+							.split(/:([a-zA-Z_][a-zA-Z0-9_]*)/)
+							.map((part, i) => {
+								if (i % 2 === 1) return `\${String(p.${part})}`;
+								return part.replace("*", `\${String(p["*"])}`);
+							})
+							.join("")}\``;
+			b.line(`        ${key}: ${val},`);
+		}
+		b.line(`    }`);
+		b.line(``);
+		for (const r of map.values()) {
+			const endpointValue =
+				r.params.length === 0
+					? `"${r.endpoint}"`
+					: `\`${r.endpoint
+							.split(/:([a-zA-Z_][a-zA-Z0-9_]*)/)
+							.map((part, i) => {
+								if (i % 2 === 1) return `\${String(args.params.${part})}`;
+								return part.replace("*", `\${String(args.params["*"])}`);
+							})
+							.join("")}\``;
+			const fnKey = r.camelKey;
+			const generic = r.model?.body ? `<${bodyTypeGeneric}>` : ``;
+			const args = `args: ${r.argsKey}${r.model?.body ? `<BT>` : ``}`;
+			b.line(`\tpublic ${fnKey}${generic}(${args}) {`);
+			b.line(`\t\treturn this.fetchFn<${r.modelKey}["response"]>({`);
+			b.line(`\t\t\tendpoint: ${endpointValue},`);
+			b.line(`\t\t\tmethod: "${r.method}",`);
+			b.line(`\t\t\tsearch: args.search,`);
+			if (r.model?.body) b.line(`\t\t\tbody: args.body,`);
+			b.line(`\t\t});`);
+			b.line(`\t}`);
+			b.line(``);
+		}
+		b.line(`}`);
 	}
 
 	private extractParams(path: string): string[] {

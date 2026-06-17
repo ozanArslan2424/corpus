@@ -8,8 +8,10 @@ export default defineConfig({
 	clean: true,
 	// minify: true,
 	// sourcemap: true,
-	exports: true,
 	deps: {
 		alwaysBundle: ["corpus-utils"],
+	},
+	exports: {
+		bin: { corpus: "./src/index.ts" },
 	},
 });

@@ -1,5 +1,11 @@
 # @ozanarslan/corpus-cli
 
+## 0.5.17
+
+### Patch Changes
+
+- Remove unnecessary writer from cli
+
 ## 0.5.16
 
 ### Patch Changes

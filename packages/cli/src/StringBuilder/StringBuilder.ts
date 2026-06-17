@@ -1,22 +1,36 @@
 export class StringBuilder {
-	constructor(init: string = "") {
-		this.complete = init;
-	}
 	private complete: string = "";
+	private lineCount: number = 0;
 
-	add(s: string): this {
+	inline(s: string): this {
 		this.complete += s;
 		return this;
 	}
 
-	addLine(s: string = ""): this {
-		this.complete += s + "\n";
+	line(s: string = ""): this {
+		if (this.complete.length === 0) {
+			this.complete += s;
+		} else {
+			this.complete += "\n" + s;
+			this.lineCount++;
+		}
 		return this;
 	}
 
 	prepend(s: string): this {
-		this.complete = s + this.complete;
+		this.complete = s + "\n" + this.complete;
+		this.lineCount++;
 		return this;
+	}
+
+	clear(): this {
+		this.complete = "";
+		this.lineCount = 0;
+		return this;
+	}
+
+	get currentLine(): number {
+		return this.lineCount;
 	}
 
 	replaceAll(find: string, change: string): this {
@@ -53,11 +67,6 @@ export class StringBuilder {
 
 	trimStart(): this {
 		this.complete = this.complete.trimStart();
-		return this;
-	}
-
-	clear(): this {
-		this.complete = "";
 		return this;
 	}
 
