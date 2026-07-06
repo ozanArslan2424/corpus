@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "bun:test";
 
 import { type } from "arktype";
 
-import { $registryTesting, TC } from "./_modules";
+import { $registryTesting, TC, type RouterReturn } from "./_modules";
 import { createTestServer } from "./utils/createTestServer";
 import { req } from "./utils/req";
 
@@ -34,7 +34,7 @@ describe("C.Context", () => {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ hello: "world" }),
 		});
-		const fakeRouterReturn: TC.RouterReturn = {
+		const fakeRouterReturn: RouterReturn = {
 			params: { id: "randomID" },
 			route: {
 				endpoint: "/hello/:id",

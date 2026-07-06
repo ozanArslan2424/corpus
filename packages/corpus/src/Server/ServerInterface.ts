@@ -1,9 +1,8 @@
-import type { Func } from "@/utils/functions";
-import type { OrString } from "@/utils/strings";
-
 import type { RouterData } from "@/Router/RouterData";
 import type { ErrorHandler } from "@/Server/ErrorHandler";
 import type { RequestHandler } from "@/Server/RequestHandler";
+import type { Func } from "@/utils/functions";
+import type { OrString } from "@/utils/strings";
 
 export interface ServerInterface {
 	get routes(): Array<RouterData>;

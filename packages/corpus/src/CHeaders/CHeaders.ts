@@ -1,7 +1,6 @@
-import { strIsDefined } from "@/utils/strings";
-
 import type { CHeaderKey } from "@/CHeaders/CHeaderKey";
 import type { CHeadersInit } from "@/CHeaders/CHeadersInit";
+import { strIsDefined } from "@/utils/strings";
 
 /** Headers is extended to include helpers and intellisense for common header names. */
 

@@ -1,11 +1,10 @@
-import { compile } from "@/utils/compile";
-
 import type { MiddlewareHandler } from "@/Middleware/MiddlewareHandler";
 import type { MiddlewareInterface } from "@/Middleware/MiddlewareInterface";
 import type { MiddlewareUseOn } from "@/Middleware/MiddlewareUseOn";
 import { MiddlewareVariant } from "@/Middleware/MiddlewareVariant";
 import type { MiddlewareRouterInterface } from "@/MiddlewareRouter/MiddlewareRouterInterface";
 import type { MiddlewareStoreReturn } from "@/MiddlewareRouter/MiddlewareRouterReturn";
+import { compile } from "@/utils/compile";
 
 export class MiddlewareRouter implements MiddlewareRouterInterface {
 	private readonly maps = {

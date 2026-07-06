@@ -1,7 +1,5 @@
 import path from "node:path";
 
-import type { Func } from "@/utils/functions";
-
 import { BaseRouteAbstract } from "@/BaseRoute/BaseRouteAbstract";
 import type { RouteModel } from "@/BaseRoute/RouteModel";
 import { RouteVariant } from "@/BaseRoute/RouteVariant";
@@ -13,6 +11,7 @@ import { Exception } from "@/Exception/Exception";
 import { Method } from "@/Method/Method";
 import { Res } from "@/Res/Res";
 import { Status } from "@/Status/Status";
+import type { Func } from "@/utils/functions";
 import { XFile } from "@/XFile/XFile";
 
 type R = Res | string;

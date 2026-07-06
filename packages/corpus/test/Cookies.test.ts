@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 
-import { $registryTesting, TC } from "./_modules";
+import { $registryTesting, TC, type CookieOptions } from "./_modules";
 import { createTestServer } from "./utils/createTestServer";
 import { req } from "./utils/req";
 
@@ -9,7 +9,7 @@ beforeEach(() => $registryTesting.reset());
 describe("Cookies", () => {
 	const firstName = "firstCookie";
 	const firstValue = "firstValue";
-	const firstCookie: TC.CookieOptions = {
+	const firstCookie: CookieOptions = {
 		value: firstValue,
 		name: firstName,
 		domain: "localhost",
@@ -17,7 +17,7 @@ describe("Cookies", () => {
 	};
 	const secondName = "secondCookie";
 	const secondValue = "secondValue";
-	const secondCookie: TC.CookieOptions = {
+	const secondCookie: CookieOptions = {
 		value: secondValue,
 		name: secondName,
 		domain: "localhost",

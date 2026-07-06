@@ -12,7 +12,7 @@ interface RequestDescriptor {
 	headers?: HeadersInit;
 	init?: Omit<RequestInit, "headers">;
 }
-const newable = <T>() =>
+const newable = <T,>() =>
 	class {
 		constructor(values: T) {
 			Object.assign(this, values);

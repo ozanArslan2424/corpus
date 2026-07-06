@@ -1,5 +1,3 @@
-import { isNil } from "@/utils/nil";
-
 import { BaseRouteAbstract } from "@/BaseRoute/BaseRouteAbstract";
 import type { RouteAddress } from "@/BaseRoute/RouteAddress";
 import type { RouteModel } from "@/BaseRoute/RouteModel";
@@ -9,8 +7,9 @@ import { Res } from "@/Res/Res";
 import { StaticRouteAbstract } from "@/StaticRoute/StaticRouteAbstract";
 import type { StaticRouteCallback } from "@/StaticRoute/StaticRouteCallback";
 import type { StaticRouteDefinition } from "@/StaticRoute/StaticRouteDefinition";
+import { isNil } from "@/utils/nil";
 
-type R = Res | string;
+type StaticRouteRes = Res | string;
 
 /**
  * Defines a route that serves a static file. Accepts a path and a {@link StaticRouteDefinition}
@@ -46,7 +45,7 @@ export class StaticRoute<
 		address: RouteAddress<E>,
 		definition: StaticRouteDefinition,
 		callback?: StaticRouteCallback<B, S, P>,
-		model?: RouteModel<B, S, P, R>,
+		model?: RouteModel<B, S, P, StaticRouteRes>,
 	) {
 		super();
 		const resolved = BaseRouteAbstract.resolveAddress(address);

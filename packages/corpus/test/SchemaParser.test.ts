@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 
-import type { Schema, SchemaValidator, ValidationIssues } from "@/utils/Schema";
-
 import type { SchemaParser } from "@/Parser/SchemaParser";
+import type { Schema, SchemaValidator, ValidationIssues } from "@/utils/Schema";
 
 import { $registryTesting, TC } from "./_modules";
 import { createTestServer } from "./utils/createTestServer";

@@ -1,10 +1,9 @@
-import { isObjectWith } from "@/utils/objects";
-import type { SchemaValidator, ValidationIssues } from "@/utils/Schema";
-import type { UnknownObject } from "@/utils/UnknownObject";
-
 import { Exception } from "@/Exception/Exception";
 import type { SchemaParserInterface } from "@/Parser/SchemaParserInterface";
 import { Status } from "@/Status/Status";
+import { isObjectWith } from "@/utils/objects";
+import type { SchemaValidator, ValidationIssues } from "@/utils/Schema";
+import type { UnknownObject } from "@/utils/UnknownObject";
 
 export class SchemaParser implements SchemaParserInterface {
 	async parse<T = UnknownObject>(

@@ -1,5 +1,3 @@
-import { strSplit } from "@/utils/strings";
-
 import { CHeaders } from "@/CHeaders/CHeaders";
 import { CommonHeaders } from "@/CommonHeaders/CommonHeaders";
 import { Cookies } from "@/Cookies/Cookies";
@@ -7,6 +5,7 @@ import type { CookiesInterface } from "@/Cookies/CookiesInterface";
 import { Method } from "@/Method/Method";
 import type { ReqInfo } from "@/Req/ReqInfo";
 import type { ReqInit } from "@/Req/ReqInit";
+import { strSplit } from "@/utils/strings";
 
 /** Req includes a cookie jar, better headers, and some utilities. */
 

@@ -23,14 +23,19 @@
 		"LICENSE.txt",
 		"THIRD_PARTY_LICENSES.txt"
 	],
-	"main": "dist/index.cjs",
+	"type": "module",
 	"module": "dist/index.js",
 	"types": "dist/index.d.ts",
+	"imports": {
+		"#corpus-entry": {
+			"corpus-src": "./src/index.ts",
+			"default": "./dist/index.js"
+		}
+	},
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js",
-			"require": "./dist/index.cjs"
+			"import": "./dist/index.js"
 		}
 	},
 	"publishConfig": {
@@ -39,20 +44,22 @@
 	"scripts": {
 		"build": "bun run build.ts",
 		"test:serve": "bun run test/other/test-server.ts",
+		"test:serve:src": "bun --conditions=corpus-src run test/other/test-server.ts",
 		"test:http": "bun run test/other/http-simulation.ts",
+		"test:http:src": "bun --conditions=corpus-src run test/other/http-simulation.ts",
 		"test:ws": "bun run test/other/ws-simulation.ts",
+		"test:ws:src": "bun --conditions=corpus-src run test/other/ws-simulation.ts",
 		"test:benchmark": "bun run test/other/benchmark.ts",
-		"test:all": "bun run build && bun test --only-failures && bun test:http -s && bun test:ws -s && bun test:benchmark",
-		"tests": "pnpm run build && bun test --only-failures"
+		"test:benchmark:src": "bun --conditions=corpus-src run test/other/benchmark.ts",
+		"test:all": "bun test --only-failures && bun run test:http -s && bun run test:ws -s && bun run test:benchmark",
+		"test:all:src": "bun --conditions=corpus-src test --only-failures && bun run test:http:src -s && bun run test:ws:src -s && bun run test:benchmark:src"
 	},
 	"devDependencies": {
 		"@standard-schema/spec": "^1.1.0",
 		"@types/bun": "^1.3.14",
-		"@types/ws": "^8.18.1",
 		"arktype": "^2.2.0",
 		"bun-plugin-dts": "^0.4.0",
 		"memoirist": "^1.0.3",
-		"ws": "^8.21.0",
 		"zod": "^4.4.3"
 	},
 	"peerDependencies": {

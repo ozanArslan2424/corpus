@@ -30,8 +30,7 @@
 	"scripts": {
 		"build": "tsdown",
 		"test:api": "bun run build && bun run ./dist/index.mjs api -s -m ./test/other/startServer.ts -o ./test/other/generated.ts && bun run ./test/other/integration.ts -s",
-		"test:all": "bun test --only-failures && bun test:api",
-		"tests": "bun test --only-failures"
+		"test:all": "bun test:api"
 	},
 	"dependencies": {
 		"@clack/prompts": "^1.4.0",

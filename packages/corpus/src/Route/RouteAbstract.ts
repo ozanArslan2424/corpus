@@ -1,9 +1,8 @@
-import type { Func } from "@/utils/functions";
-
 import { BaseRouteAbstract } from "@/BaseRoute/BaseRouteAbstract";
 import { RouteVariant } from "@/BaseRoute/RouteVariant";
 import type { Context } from "@/Context/Context";
 import type { RouteCallback } from "@/Route/RouteCallback";
+import type { Func } from "@/utils/functions";
 
 export abstract class RouteAbstract<
 	B = unknown,

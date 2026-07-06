@@ -1,10 +1,9 @@
-import type { Func } from "@/utils/functions";
-
 import type { Method } from "@/Method/Method";
 import type { Req } from "@/Req/Req";
 import type { RouterData } from "@/Router/RouterData";
 import type { RouterReturn } from "@/Router/RouterReturn";
 import type { RouterAdapterInterface } from "@/RouterAdapter/RouterAdapterInterface";
+import type { Func } from "@/utils/functions";
 
 type Store = Map<Method, RouterData>;
 

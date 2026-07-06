@@ -1,8 +1,8 @@
 import { logger } from "@/utils/logger";
 
-import { TC } from "../_modules";
+import { TC, type ServerOptions } from "../_modules";
 
-export function createTestServer(opts?: TC.ServerOptions & { withLogging?: boolean }) {
+export function createTestServer(opts?: ServerOptions & { withLogging?: boolean }) {
 	const { withLogging, ...serverOpts } = opts ?? {
 		withLogging: false,
 	};

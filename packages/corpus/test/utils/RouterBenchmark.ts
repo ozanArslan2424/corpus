@@ -1,15 +1,15 @@
-import { $registryTesting, TC, RouterTesting } from "../_modules";
+import { $registryTesting, TC, type RouterAdapterInterface } from "../_modules";
 
 export class RouterBenchmark {
-	private readonly router: RouterTesting;
+	private readonly router: TC.Router;
 	private readonly routes: TC.Route<any, any, any, any, any>[] = [];
 	private requests: Array<{ request: TC.Req; expectedId: string }> = [];
 
 	private readonly usedStaticPaths = new Set<string>();
 	private readonly usedDynamicShapes = new Set<string>(); // "GET:/static/*/static" - no param names, includes method
 
-	constructor(private readonly adapter: TC.RouterAdapterInterface) {
-		this.router = new RouterTesting(adapter);
+	constructor(private readonly adapter: RouterAdapterInterface) {
+		this.router = new TC.Router(adapter);
 		$registryTesting.router = this.router;
 	}
 

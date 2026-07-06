@@ -1,7 +1,6 @@
+import type { Env } from "@/types.d.ts";
 import type { Func } from "@/utils/functions";
 import { type OrString, strIsDefined } from "@/utils/strings";
-
-import type { Env } from "@/types.d.ts";
 
 type NodeEnv = OrString<"development" | "production" | "test">;
 type EnvKey = OrString<keyof Env>;

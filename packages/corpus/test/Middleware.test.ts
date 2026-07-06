@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from "bun:test";
 
-import { $registryTesting, TC } from "./_modules";
+import { $registryTesting, TC, type MiddlewareHandler } from "./_modules";
 import { createTestController } from "./utils/createTestController";
 import { createTestServer } from "./utils/createTestServer";
 import { parseBody } from "./utils/parse";
@@ -239,7 +239,7 @@ describe("C.Middleware - find() correctness & matching", () => {
 		const r = new TC.Route("/dup", (c) => {
 			c.data = count;
 		});
-		const handler: TC.MiddlewareHandler = () => {
+		const handler: MiddlewareHandler = () => {
 			count++;
 		};
 

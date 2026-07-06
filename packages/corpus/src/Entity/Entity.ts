@@ -1,8 +1,7 @@
-import type { InferSchemaIn, InferSchemaOut, Schema } from "@/utils/Schema";
-
 import type { EntityDefinition } from "@/Entity/EntityDefinition";
 import type { EntityJsonSchema } from "@/Entity/EntityJsonSchema";
-import { $registry } from "@/index";
+import { $registry } from "@/registry";
+import type { InferSchemaIn, InferSchemaOut, Schema } from "@/utils/Schema";
 
 export function Entity<T extends Schema = Schema>(def: EntityDefinition<T>) {
 	$registry.entities.add(def);

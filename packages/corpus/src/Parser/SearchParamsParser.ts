@@ -1,6 +1,5 @@
-import type { UnknownObject } from "@/utils/UnknownObject";
-
 import { ObjectParserAbstract } from "@/Parser/ObjectParserAbstract";
+import type { UnknownObject } from "@/utils/UnknownObject";
 
 export class SearchParamsParser extends ObjectParserAbstract<URLSearchParams> {
 	parse(searchParams: URLSearchParams): UnknownObject {

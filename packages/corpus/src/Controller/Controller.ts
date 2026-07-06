@@ -1,9 +1,8 @@
-import { joinPathSegments } from "@/utils/joinPathSegments";
-
 import { BaseRouteAbstract } from "@/BaseRoute/BaseRouteAbstract";
 import type { MiddlewareHandler } from "@/Middleware/MiddlewareHandler";
 import { Route } from "@/Route/Route";
 import { StaticRoute } from "@/StaticRoute/StaticRoute";
+import { joinPathSegments } from "@/utils/joinPathSegments";
 import { WebSocketRoute } from "@/WebSocketRoute/WebSocketRoute";
 
 /**

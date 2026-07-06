@@ -1,6 +1,5 @@
-import type { UnknownObject } from "@/utils/UnknownObject";
-
 import type { ObjectParserInterface } from "@/Parser/ObjectParserInterface";
+import type { UnknownObject } from "@/utils/UnknownObject";
 
 export abstract class ObjectParserAbstract<T> implements ObjectParserInterface<T> {
 	// ABSTRACT

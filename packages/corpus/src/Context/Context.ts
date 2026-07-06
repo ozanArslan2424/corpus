@@ -1,6 +1,6 @@
 import type { CHeaders } from "@/CHeaders/CHeaders";
 import type { CookiesInterface } from "@/Cookies/CookiesInterface";
-import { $registry } from "@/index";
+import { $registry } from "@/registry";
 import { Req } from "@/Req/Req";
 import { Res } from "@/Res/Res";
 import type { RouterReturn } from "@/Router/RouterReturn";

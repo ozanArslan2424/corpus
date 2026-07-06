@@ -1,6 +1,6 @@
 import type { Logger } from "@/utils/logger";
 
-import { TC } from "../_modules";
+import { TC, type WebSocketRouteDefinition } from "../_modules";
 
 export function createTestWebSocketRoute(log: Logger, withAbstract: boolean) {
 	if (withAbstract) {
@@ -12,7 +12,7 @@ export function createTestWebSocketRoute(log: Logger, withAbstract: boolean) {
 
 			path: string = "/ws";
 
-			onOpen?: TC.WebSocketRouteDefinition["onOpen"] | undefined = (ws) => {
+			onOpen?: WebSocketRouteDefinition["onOpen"] | undefined = (ws) => {
 				log.info(`[ws] New connection opened — remoteAddress: ${ws.remoteAddress}`);
 				ws.send(
 					JSON.stringify({
@@ -23,11 +23,11 @@ export function createTestWebSocketRoute(log: Logger, withAbstract: boolean) {
 				log.debug(`[ws] Sent connected greeting to ${ws.remoteAddress}`);
 			};
 
-			onClose?: TC.WebSocketRouteDefinition["onClose"] | undefined = (_ws, code, reason) => {
+			onClose?: WebSocketRouteDefinition["onClose"] | undefined = (_ws, code, reason) => {
 				log.info(`[ws] Connection closed — code=${code} reason=${reason ?? "no reason provided"}`);
 			};
 
-			onMessage: TC.WebSocketRouteDefinition["onMessage"] = (ws, message) => {
+			onMessage: WebSocketRouteDefinition["onMessage"] = (ws, message) => {
 				// oxlint-disable-next-line typescript/restrict-template-expressions
 				log.debug(`[ws] Received message: ${message}`);
 				const msg = JSON.parse(message as string) as {

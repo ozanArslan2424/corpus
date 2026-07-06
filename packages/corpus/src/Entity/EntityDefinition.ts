@@ -1,6 +1,5 @@
-import type { Schema } from "@/utils/Schema";
-
 import type { EntityJsonSchema } from "@/Entity/EntityJsonSchema";
+import type { Schema } from "@/utils/Schema";
 
 export interface EntityDefinition<T extends Schema = Schema> {
 	name: string;

@@ -1,11 +1,10 @@
-import type { Func } from "@/utils/functions";
-import { joinPathSegments } from "@/utils/joinPathSegments";
-
 import { BaseRouteAbstract } from "@/BaseRoute/BaseRouteAbstract";
 import { RouteVariant } from "@/BaseRoute/RouteVariant";
 import type { Context } from "@/Context/Context";
-import { $registry } from "@/index";
 import { Method } from "@/Method/Method";
+import { $registry } from "@/registry";
+import type { Func } from "@/utils/functions";
+import { joinPathSegments } from "@/utils/joinPathSegments";
 import type { WebSocketRouteDefinition } from "@/WebSocketRoute/WebSocketRouteDefinition";
 
 type R = WebSocketRouteAbstract;

@@ -1,6 +1,3 @@
-import type { Func } from "@/utils/functions";
-import { isNil } from "@/utils/nil";
-
 import { BaseRouteAbstract } from "@/BaseRoute/BaseRouteAbstract";
 import { RouteVariant } from "@/BaseRoute/RouteVariant";
 import { CacheControlDirective } from "@/CommonHeaders/CacheControlDirective";
@@ -11,17 +8,20 @@ import { Exception } from "@/Exception/Exception";
 import { Res } from "@/Res/Res";
 import type { StaticRouteCallback } from "@/StaticRoute/StaticRouteCallback";
 import { Status } from "@/Status/Status";
+import type { Func } from "@/utils/functions";
+import { isNil } from "@/utils/nil";
 import { XFile } from "@/XFile/XFile";
 
-type R = Res | string;
+type StaticRouteRes = Res | string;
 
 export abstract class StaticRouteAbstract<
 	B = unknown,
 	S = unknown,
 	P = unknown,
 	E extends string = string,
-> extends BaseRouteAbstract<B, S, P, R, E> {
-	// FROM CONSTRUCTOR
+> extends BaseRouteAbstract<B, S, P, StaticRouteRes, E> {
+	readonly variant: RouteVariant = RouteVariant.static;
+
 	abstract readonly callback?: StaticRouteCallback<B, S, P>;
 
 	abstract filePath: string;
@@ -30,30 +30,11 @@ export abstract class StaticRouteAbstract<
 
 	abstract cache?: CacheControlDirectiveInterface;
 
-	// PROTECTED
-
 	protected onFileNotFound: Func<[], Promise<Res>> = () => {
 		throw new Exception(Status.NOT_FOUND.toString(), Status.NOT_FOUND);
 	};
 
-	// protected get filePath(): string {
-	// 	return typeof this.definition === "string" ? this.definition : this.definition.filePath;
-	// }
-	//
-	// ROUTE BASE PROPERTIES
-	readonly variant: RouteVariant = RouteVariant.static;
-
-	// get endpoint(): E {
-	// 	return this.path;
-	// }
-	//
-	// get method(): Method {
-	// 	return typeof this.definition === "string"
-	// 		? Method.GET
-	// 		: (this.definition.method ?? Method.GET);
-	// }
-	//
-	get handler(): Func<[Context<B, S, P, R>], Bun.MaybePromise<R>> {
+	get handler(): Func<[Context<B, S, P, StaticRouteRes>], Bun.MaybePromise<StaticRouteRes>> {
 		const customHandler = this.callback;
 
 		const cacheHeader = CacheControlDirective.createHeaderString(

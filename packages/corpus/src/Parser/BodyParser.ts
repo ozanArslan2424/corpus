@@ -1,13 +1,12 @@
-import { arrIncludes } from "@/utils/arrays";
-import type { UnknownArray } from "@/utils/UnknownArray";
-import type { UnknownObject } from "@/utils/UnknownObject";
-
 import { CommonHeaders } from "@/CommonHeaders/CommonHeaders";
 import { Method } from "@/Method/Method";
 import type { BodyParserInterface } from "@/Parser/BodyParserInterface";
 import type { ObjectParserInterface } from "@/Parser/ObjectParserInterface";
 import type { Req } from "@/Req/Req";
 import type { Res } from "@/Res/Res";
+import { arrIncludes } from "@/utils/arrays";
+import type { UnknownArray } from "@/utils/UnknownArray";
+import type { UnknownObject } from "@/utils/UnknownObject";
 
 type NormalizedContentType =
 	| "json"

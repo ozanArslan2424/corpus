@@ -1,14 +1,13 @@
-import { arrIncludes } from "@/utils/arrays";
-import { assert } from "@/utils/assert";
-import { objGetValues } from "@/utils/objects";
-
 import type { BaseRouteHandler } from "@/BaseRoute/BaseRouteHandler";
 import type { BaseRouteInterface } from "@/BaseRoute/BaseRouteInterface";
 import type { RouteAddress } from "@/BaseRoute/RouteAddress";
 import type { RouteModel } from "@/BaseRoute/RouteModel";
 import { RouteVariant } from "@/BaseRoute/RouteVariant";
-import { $registry } from "@/index";
 import { Method } from "@/Method/Method";
+import { $registry } from "@/registry";
+import { arrIncludes } from "@/utils/arrays";
+import { assert } from "@/utils/assert";
+import { objGetValues } from "@/utils/objects";
 
 export abstract class BaseRouteAbstract<
 	B = unknown,

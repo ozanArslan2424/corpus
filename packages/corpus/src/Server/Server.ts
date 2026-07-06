@@ -1,11 +1,7 @@
-import type { Func } from "@/utils/functions";
-import { logger, logFatal } from "@/utils/logger";
-import type { OrString } from "@/utils/strings";
-
 import { RouteVariant } from "@/BaseRoute/RouteVariant";
 import { Context } from "@/Context/Context";
 import { Exception } from "@/Exception/Exception";
-import { $registry } from "@/index";
+import { $registry } from "@/registry";
 import { Req } from "@/Req/Req";
 import { Res } from "@/Res/Res";
 import type { RouterData } from "@/Router/RouterData";
@@ -15,6 +11,9 @@ import type { ServerApp } from "@/Server/ServerApp";
 import type { ServerInterface } from "@/Server/ServerInterface";
 import type { ServerOptions } from "@/Server/ServerOptions";
 import { Status } from "@/Status/Status";
+import type { Func } from "@/utils/functions";
+import { logger, logFatal } from "@/utils/logger";
+import type { OrString } from "@/utils/strings";
 import { WebSocketRoute } from "@/WebSocketRoute/WebSocketRoute";
 import { XConfig } from "@/XConfig/XConfig";
 

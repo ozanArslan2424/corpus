@@ -1,6 +1,5 @@
-import type { Func } from "@/utils/functions";
-
 import type { ServerWebSocket } from "@/Server/ServerWebSocket";
+import type { Func } from "@/utils/functions";
 
 export type WebSocketRouteDefinition = {
 	onOpen?: Func<[ws: ServerWebSocket], Bun.MaybePromise<void>>;

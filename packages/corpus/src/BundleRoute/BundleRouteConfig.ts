@@ -1,7 +1,6 @@
-import type { Func } from "@/utils/functions";
-
 import type { CacheControlDirectiveInterface } from "@/CommonHeaders/CacheControlDirectiveInterface";
 import type { Res } from "@/Res/Res";
+import type { Func } from "@/utils/functions";
 
 export type BundleRouteConfig = {
 	onFileNotFound: Func<[], Promise<Res>>;
