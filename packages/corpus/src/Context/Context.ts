@@ -1,7 +1,7 @@
 import type { CHeaders } from "@/CHeaders/CHeaders";
 import type { CookiesInterface } from "@/Cookies/CookiesInterface";
 import { $registry } from "@/index";
-import type { Req } from "@/Req/Req";
+import { Req } from "@/Req/Req";
 import { Res } from "@/Res/Res";
 import type { RouterReturn } from "@/Router/RouterReturn";
 import type { ContextDataInterface } from "@/types.d.ts";
@@ -35,7 +35,7 @@ export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 		this.res = res ?? new Res<R>();
 	}
 
-	readonly req: Req;
+	req: Req;
 	res: Res<R>;
 	url: URL;
 	headers: CHeaders;
@@ -49,6 +49,11 @@ export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 		ctx: Context<B, S, P, R>,
 		match: RouterReturn,
 	) {
+		// Clone the request before the body parser consumes the stream, so the
+		// consumer can still call c.req.formData()/json()/text() without hitting
+		// the "body already consumed" error.
+		const clone = new Req(ctx.req.clone());
+
 		const body = await $registry.bodyParser.parse(ctx.req);
 		const search = $registry.searchParamsParser.parse(ctx.url.searchParams);
 		const params = $registry.urlParamsParser.parse(match.params);
@@ -60,5 +65,7 @@ export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 		}
 		ctx.search = await $registry.schemaParser.parse("search", search, match.route.model?.search);
 		ctx.params = await $registry.schemaParser.parse("params", params, match.route.model?.params);
+
+		ctx.req = clone;
 	}
 }

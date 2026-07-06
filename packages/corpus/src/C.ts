@@ -62,7 +62,7 @@ export * from "./Entity/Entity";
 export * from "./Entity/EntityDefinition";
 export * from "./Entity/EntityJsonSchema";
 
-export * from "./CommonHeaders/CacheDirective";
+export * from "./CommonHeaders/CacheControlDirective";
 export * from "./CommonHeaders/CommonHeaders";
 
 export * from "./Method/Method";

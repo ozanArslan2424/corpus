@@ -1,7 +1,5 @@
 type _prim = string | number | boolean;
-
 type _pretty<T> = { [K in keyof T]: T[K] } & {};
-
 type _args<T> = Omit<T, "response"> & { headers?: HeadersInit; init?: RequestInit };
 
 type UnkObj = Record<string, unknown>;
@@ -14,7 +12,7 @@ interface RequestDescriptor {
 	headers?: HeadersInit;
 	init?: Omit<RequestInit, "headers">;
 }
-const newable = <T>() =>
+const newable = <T,>() =>
 	class {
 		constructor(values: T) {
 			Object.assign(this, values);

@@ -1,6 +1,6 @@
 import type { Func } from "corpus-utils/Func";
 
-import type { CacheDirective } from "@/CommonHeaders/CacheDirective";
+import type { CacheControlDirectiveInterface } from "@/CommonHeaders/CacheControlDirectiveInterface";
 import type { Res } from "@/Res/Res";
 
 export type BundleRouteConfig = {
@@ -10,10 +10,10 @@ export type BundleRouteConfig = {
 	ignore: string[];
 	cache: {
 		/** Strategy for index.html */
-		indexHtml: CacheDirective | "no-cache";
+		indexHtml: CacheControlDirectiveInterface | "no-cache";
 		/** Strategy for the /assets/ folder */
-		assetsDir: CacheDirective;
+		assetsDir: CacheControlDirectiveInterface;
 		/** Optional: Strategy for other root files (favicon, robots.txt, etc.) */
-		fallback?: CacheDirective;
+		fallback?: CacheControlDirectiveInterface;
 	};
 };

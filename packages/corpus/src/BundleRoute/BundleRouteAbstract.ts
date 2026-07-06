@@ -7,7 +7,7 @@ import { BaseRouteAbstract } from "@/BaseRoute/BaseRouteAbstract";
 import type { RouteModel } from "@/BaseRoute/RouteModel";
 import { RouteVariant } from "@/BaseRoute/RouteVariant";
 import type { BundleRouteConfig } from "@/BundleRoute/BundleRouteConfig";
-import type { CacheDirective } from "@/CommonHeaders/CacheDirective";
+import { CacheControlDirective } from "@/CommonHeaders/CacheControlDirective";
 import { CommonHeaders } from "@/CommonHeaders/CommonHeaders";
 import type { Context } from "@/Context/Context";
 import { Exception } from "@/Exception/Exception";
@@ -114,29 +114,23 @@ export abstract class BundleRouteAbstract<
 				file.extension !== "html" ? await Res.streamFile(file, "inline") : await Res.file(file);
 
 			if (file.name === idx) {
-				res.headers.set(CommonHeaders.CacheControl, this.formatCacheHeader(this.cache.indexHtml));
+				res.headers.set(
+					CommonHeaders.CacheControl,
+					CacheControlDirective.createHeaderString(this.cache.indexHtml),
+				);
 			} else if (file.path.includes(`/${this.assetsDir}/`)) {
-				res.headers.set(CommonHeaders.CacheControl, this.formatCacheHeader(this.cache.assetsDir));
+				res.headers.set(
+					CommonHeaders.CacheControl,
+					CacheControlDirective.createHeaderString(this.cache.assetsDir),
+				);
 			} else if (this.cache.fallback) {
-				res.headers.set(CommonHeaders.CacheControl, this.formatCacheHeader(this.cache.fallback));
+				res.headers.set(
+					CommonHeaders.CacheControl,
+					CacheControlDirective.createHeaderString(this.cache.fallback),
+				);
 			}
 
 			return res;
 		};
-	}
-
-	// PRIVATE
-
-	private formatCacheHeader(config: CacheDirective | "no-cache"): string {
-		if (config === "no-cache") return "no-cache";
-
-		const parts: string[] = [];
-		if (config.noStore) return "no-store";
-		if (config.noCache) return "no-cache";
-		if (config.public) parts.push("public");
-		if (config.maxAge !== undefined) parts.push(`max-age=${config.maxAge}`);
-		if (config.immutable) parts.push("immutable");
-
-		return parts.join(", ");
 	}
 }

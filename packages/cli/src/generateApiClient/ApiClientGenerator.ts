@@ -83,7 +83,20 @@ export class ApiClientGenerator {
 
 		const map = this.getRouteMap(routes);
 
-		this.writeInitialContent(b);
+		b.line(`type _prim = string | number | boolean;`);
+		b.line(`type _pretty<T> = { [K in keyof T]: T[K] } & {};`);
+		b.line(`type _args<T> = Omit<T, "response"> & { headers?: HeadersInit; init?: RequestInit; };`);
+		b.line(``);
+		b.line(`type UnkObj = Record<string, unknown>;`);
+		b.line(``);
+		b.line(`interface RequestDescriptor {`);
+		b.line(`    endpoint: string;`);
+		b.line(`    method: string;`);
+		b.line(`    body?: unknown;`);
+		b.line(`    search?: UnkObj;`);
+		b.line(`    headers?: HeadersInit;`);
+		b.line(`    init?: Omit<RequestInit, "headers">;`);
+		b.line(`}`);
 
 		if (this.entities.size > 0) {
 			await this.writeEntities(b, this.entities);
@@ -123,25 +136,6 @@ export class ApiClientGenerator {
 		}
 
 		return map;
-	}
-
-	private writeInitialContent(b: StringBuilder) {
-		b.line(`type _prim = string | number | boolean;`);
-		b.line(``);
-		b.line(`type _pretty<T> = { [K in keyof T]: T[K] } & {};`);
-		b.line(``);
-		b.line(`type _args<T> = Omit<T, "response"> & { headers?: HeadersInit; init?: RequestInit; };`);
-		b.line(``);
-		b.line(`type UnkObj = Record<string, unknown>;`);
-		b.line(``);
-		b.line(`interface RequestDescriptor {`);
-		b.line(`    endpoint: string;`);
-		b.line(`    method: string;`);
-		b.line(`    body?: unknown;`);
-		b.line(`    search?: UnkObj;`);
-		b.line(`    headers?: HeadersInit;`);
-		b.line(`    init?: Omit<RequestInit, "headers">;`);
-		b.line(`}`);
 	}
 
 	private async writeEntities(b: StringBuilder, map: Map<string, EntityDefinition>) {

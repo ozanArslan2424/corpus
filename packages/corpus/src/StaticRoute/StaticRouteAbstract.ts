@@ -1,9 +1,10 @@
 import type { Func } from "corpus-utils/Func";
+import { isNil } from "corpus-utils/isNil";
 import type { MaybePromise } from "corpus-utils/MaybePromise";
 
 import { BaseRouteAbstract } from "@/BaseRoute/BaseRouteAbstract";
 import { RouteVariant } from "@/BaseRoute/RouteVariant";
-import type { CacheDirective } from "@/CommonHeaders/CacheDirective";
+import { CacheControlDirective } from "@/CommonHeaders/CacheControlDirective";
 import { CommonHeaders } from "@/CommonHeaders/CommonHeaders";
 import type { Context } from "@/Context/Context";
 import { Exception } from "@/Exception/Exception";
@@ -47,18 +48,20 @@ export abstract class StaticRouteAbstract<
 	}
 
 	get method(): Method {
-		return Method.GET;
+		return typeof this.definition === "string"
+			? Method.GET
+			: (this.definition.method ?? Method.GET);
 	}
 
 	get handler(): Func<[Context<B, S, P, R>], MaybePromise<R>> {
 		const customHandler = this.callback;
 		const isStrDef = typeof this.definition === "string";
-		const defaultCaching: CacheDirective = {
-			public: true,
-			maxAge: 3600, // 1 hour - safe middle ground
-			noCache: false,
-		};
-		const caching = isStrDef ? defaultCaching : (this.definition.cache ?? defaultCaching);
+
+		const cacheHeader = CacheControlDirective.createHeaderString(
+			!isStrDef && !!this.definition.cache
+				? this.definition.cache
+				: { public: true, maxAge: 3600, noCache: false },
+		);
 
 		return async (c) => {
 			const file = new XFile(this.filePath);
@@ -72,36 +75,21 @@ export abstract class StaticRouteAbstract<
 				c.res.headers.setMany({
 					[CommonHeaders.ContentType]: file.mimeType,
 					[CommonHeaders.ContentLength]: content.length.toString(),
-					[CommonHeaders.CacheControl]: this.formatCacheHeader(caching),
+					[CommonHeaders.CacheControl]: cacheHeader,
 				});
 				return customHandler(c, content);
 			}
 
 			let res: Res;
 
-			if (!isStrDef && this.definition.stream) {
+			if (!isStrDef && !isNil(this.definition.disposition)) {
 				res = await Res.streamFile(file, this.definition.disposition);
 			} else {
 				res = await Res.file(file);
 			}
 
-			res.headers.set(CommonHeaders.CacheControl, this.formatCacheHeader(caching));
+			res.headers.set(CommonHeaders.CacheControl, cacheHeader);
 			return res;
 		};
-	}
-
-	// PRIVATE
-
-	private formatCacheHeader(config: CacheDirective | "no-cache"): string {
-		if (config === "no-cache") return "no-cache";
-
-		const parts: string[] = [];
-		if (config.noStore) return "no-store";
-		if (config.noCache) return "no-cache";
-		if (config.public) parts.push("public");
-		if (config.maxAge !== undefined) parts.push(`max-age=${config.maxAge}`);
-		if (config.immutable) parts.push("immutable");
-
-		return parts.join(", ");
 	}
 }

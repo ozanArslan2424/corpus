@@ -12,10 +12,6 @@ export abstract class BaseRouteAbstract<
 	R = unknown,
 	E extends string = string,
 > implements BaseRouteInterface<B, S, P, R, E> {
-	get id(): string {
-		return `${this.method.toUpperCase()} ${this.endpoint}`;
-	}
-
 	abstract get handler(): BaseRouteHandler<B, S, P, R>;
 
 	abstract get endpoint(): E;
@@ -25,6 +21,10 @@ export abstract class BaseRouteAbstract<
 	abstract readonly variant: RouteVariant;
 
 	abstract readonly model?: RouteModel<B, S, P, R>;
+
+	get id(): string {
+		return `${this.method.toUpperCase()} ${this.endpoint}`;
+	}
 
 	register(): void {
 		$registry.router.add(this);
