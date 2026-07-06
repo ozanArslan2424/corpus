@@ -3,8 +3,8 @@ import fs from "node:fs/promises";
 import * as path from "node:path";
 import * as os from "os";
 
-import { logFatal } from "corpus-utils/internalLog";
-
+import { Exception } from "@/Exception/Exception";
+import { Status } from "@/Status/Status";
 import type { RateLimitEntry } from "@/XRateLimiter/RateLimitEntry";
 import type { RateLimitStoreInterface } from "@/XRateLimiter/RateLimitStoreInterface";
 
@@ -19,7 +19,11 @@ export class RateLimiterFileStore implements RateLimitStoreInterface {
 
 	private ensureStoreDir() {
 		fs.mkdir(this.storeDir, { recursive: true }).catch((err) => {
-			logFatal("Rate Limit File Store Directory could not be created:", err);
+			throw new Exception(
+				"Rate Limit File Store Directory could not be created",
+				Status.INTERNAL_SERVER_ERROR,
+				err,
+			);
 		});
 	}
 

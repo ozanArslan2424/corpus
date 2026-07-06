@@ -1,4 +1,10 @@
+import { isNil } from "@/utils/nil";
+
+import { BaseRouteAbstract } from "@/BaseRoute/BaseRouteAbstract";
+import type { RouteAddress } from "@/BaseRoute/RouteAddress";
 import type { RouteModel } from "@/BaseRoute/RouteModel";
+import type { CacheControlDirectiveInterface } from "@/CommonHeaders/CacheControlDirectiveInterface";
+import { Method } from "@/Method/Method";
 import { Res } from "@/Res/Res";
 import { StaticRouteAbstract } from "@/StaticRoute/StaticRouteAbstract";
 import type { StaticRouteCallback } from "@/StaticRoute/StaticRouteCallback";
@@ -37,12 +43,33 @@ export class StaticRoute<
 	E extends string = string,
 > extends StaticRouteAbstract<B, S, P, E> {
 	constructor(
-		readonly path: E,
-		readonly definition: StaticRouteDefinition,
-		readonly callback?: StaticRouteCallback<B, S, P>,
-		readonly model?: RouteModel<B, S, P, R>,
+		address: RouteAddress<E>,
+		definition: StaticRouteDefinition,
+		callback?: StaticRouteCallback<B, S, P>,
+		model?: RouteModel<B, S, P, R>,
 	) {
 		super();
+		const resolved = BaseRouteAbstract.resolveAddress(address);
+		this.endpoint = resolved.path;
+		this.method = resolved.method;
+		this.callback = callback;
+		this.model = model;
+
+		if (typeof definition === "string") {
+			this.filePath = definition;
+		} else {
+			this.filePath = definition.filePath;
+			if (!isNil(definition.disposition)) this.disposition = definition.disposition;
+			if (!isNil(definition.cache)) this.cache = definition.cache;
+		}
+
 		this.register();
 	}
+
+	override endpoint: E;
+	override method: Method = Method.GET;
+	override callback?: StaticRouteCallback<B, S, P> | undefined;
+	override filePath: string;
+	override disposition?: "attachment" | "inline" | undefined;
+	override cache: CacheControlDirectiveInterface = { public: true, maxAge: 3600, noCache: false };
 }

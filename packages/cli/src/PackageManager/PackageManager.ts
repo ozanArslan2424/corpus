@@ -1,7 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "path";
 
-import { logFatal } from "corpus-utils/internalLog";
+import { logFatal } from "@/utils/logger";
 
 import type { Config } from "../config";
 import type { PackageInterface } from "../Package/PackageInterface";

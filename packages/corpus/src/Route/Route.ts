@@ -1,10 +1,12 @@
+import { BaseRouteAbstract } from "@/BaseRoute/BaseRouteAbstract";
+import type { RouteAddress } from "@/BaseRoute/RouteAddress";
 import type { RouteModel } from "@/BaseRoute/RouteModel";
+import type { Method } from "@/C";
 import { RouteAbstract } from "@/Route/RouteAbstract";
 import type { RouteCallback } from "@/Route/RouteCallback";
-import type { RouteDefinition } from "@/Route/RouteDefinition";
 
 /**
- * Defines an HTTP endpoint. Accepts a {@link RouteDefinition} which can either be a plain
+ * Defines an HTTP endpoint. Accepts a {@link RouteAddress} which can either be a plain
  * path string (defaults to GET) or an object with a `method` and `path` for other HTTP methods.
  *
  * The handler receives a {@link Context} and can return any data, a {@link Res} directly,
@@ -35,11 +37,20 @@ export class Route<
 	E extends string = string,
 > extends RouteAbstract<B, S, P, R, E> {
 	constructor(
-		readonly definition: RouteDefinition<E>,
-		readonly callback: RouteCallback<B, S, P, R>,
-		readonly model?: RouteModel<B, S, P, R>,
+		address: RouteAddress<E>,
+		callback: RouteCallback<B, S, P, R>,
+		model?: RouteModel<B, S, P, R>,
 	) {
 		super();
+		const resolved = BaseRouteAbstract.resolveAddress(address);
+		this.endpoint = resolved.path;
+		this.method = resolved.method;
+		this.callback = callback;
+		this.model = model;
 		this.register();
 	}
+
+	override callback: RouteCallback<B, S, P, R>;
+	override endpoint: E;
+	override method: Method;
 }

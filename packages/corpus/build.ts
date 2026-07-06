@@ -1,6 +1,6 @@
 import dts from "bun-plugin-dts";
-import { log } from "corpus-utils/internalLog";
-import { Timer } from "corpus-utils/Timer";
+import { logger } from "@/utils/logger";
+import { Timer } from "@/utils/Timer";
 
 try {
 	const t = new Timer();
@@ -10,7 +10,7 @@ try {
 		await Bun.$`rm -rf ./dist`.quiet();
 		t.done("cleaned dist");
 	} catch {
-		log.warn("could not clean dist (might not exist yet)");
+		logger.warn("could not clean dist (might not exist yet)");
 	}
 
 	const defaultBuildConfig: Bun.BuildConfig = {
@@ -42,11 +42,11 @@ try {
 			naming: "[dir]/[name].cjs",
 		}),
 	]);
-	if (!esm.success) esm.logs.forEach((l) => log.error(l));
-	if (!cjs.success) cjs.logs.forEach((l) => log.error(l));
+	if (!esm.success) esm.logs.forEach((l) => logger.error(l));
+	if (!cjs.success) cjs.logs.forEach((l) => logger.error(l));
 	if (!esm.success || !cjs.success) process.exit(1);
 	t.done("built esm + cjs");
 } catch (err) {
-	log.error(err);
+	logger.error(err);
 	process.exit(1);
 }

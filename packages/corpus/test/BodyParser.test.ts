@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
 
-import { CommonHeaders } from "@/index";
+import { CommonHeaders } from "@/CommonHeaders/CommonHeaders";
 import { BodyParser } from "@/Parser/BodyParser";
 import { FormDataParser } from "@/Parser/FormDataParser";
 import { SearchParamsParser } from "@/Parser/SearchParamsParser";

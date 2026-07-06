@@ -1,7 +1,6 @@
-import type { Func } from "corpus-utils/Func";
-import { log, logFatal } from "corpus-utils/internalLog";
-import type { MaybePromise } from "corpus-utils/MaybePromise";
-import type { OrString } from "corpus-utils/OrString";
+import type { Func } from "@/utils/functions";
+import { logger, logFatal } from "@/utils/logger";
+import type { OrString } from "@/utils/strings";
 
 import { RouteVariant } from "@/BaseRoute/RouteVariant";
 import { Context } from "@/Context/Context";
@@ -44,11 +43,11 @@ export class Server implements ServerInterface {
 		try {
 			process.on("SIGINT", () => this.close());
 			process.on("SIGTERM", () => this.close());
-			log.log(`Listening on ${hostname}:${port}`);
+			logger.log(`Listening on ${hostname}:${port}`);
 			await this.handleBeforeListen?.();
 			this.app = this.createApp(port, hostname);
 		} catch (err) {
-			log.error("Server unable to start:", err);
+			logger.error("Server unable to start:", err);
 			await this.close();
 		}
 	}
@@ -161,17 +160,17 @@ export class Server implements ServerInterface {
 		return ctx.res;
 	}
 
-	protected handleBeforeListen: Func<[], MaybePromise<void>> | undefined;
-	setOnBeforeListen(handler: Func<[], MaybePromise<void>> | undefined): void {
+	protected handleBeforeListen: Func<[], Bun.MaybePromise<void>> | undefined;
+	setOnBeforeListen(handler: Func<[], Bun.MaybePromise<void>> | undefined): void {
 		this.handleBeforeListen = handler;
 	}
-	defaultOnBeforeListen: Func<[], MaybePromise<void>> | undefined = undefined;
+	defaultOnBeforeListen: Func<[], Bun.MaybePromise<void>> | undefined = undefined;
 
-	protected handleBeforeClose: Func<[], MaybePromise<void>> | undefined;
-	setOnBeforeClose(handler: () => MaybePromise<void>): void {
+	protected handleBeforeClose: Func<[], Bun.MaybePromise<void>> | undefined;
+	setOnBeforeClose(handler: () => Bun.MaybePromise<void>): void {
 		this.handleBeforeClose = handler;
 	}
-	defaultOnBeforeClose: Func<[], MaybePromise<void>> | undefined = undefined;
+	defaultOnBeforeClose: Func<[], Bun.MaybePromise<void>> | undefined = undefined;
 
 	protected handleError: ErrorHandler = (err, c) => this.defaultErrorHandler(err, c);
 	setOnError(handler: ErrorHandler): void {

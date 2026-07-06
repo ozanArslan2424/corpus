@@ -1,7 +1,8 @@
+import { toPascalCase } from "@/utils/strings";
+
 import { Importable } from "../Importable/Importable";
 import type { ImportableInterface } from "../Importable/ImportableInterface";
 import type { ImportsManager } from "../ImportsManager/ImportsManager";
-import { toPascalCase } from "../utils/toPascalCase";
 import type { ModuleInterface } from "./ModuleInterface";
 
 export class Module implements ModuleInterface {

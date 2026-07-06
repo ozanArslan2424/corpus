@@ -1,11 +1,13 @@
-import type { Func } from "corpus-utils/Func";
-import { log } from "corpus-utils/internalLog";
-import { internFunc } from "corpus-utils/internFunc";
-import { objGetKeys } from "corpus-utils/objGetKeys";
-import { strRemoveWhitespace } from "corpus-utils/strRemoveWhitespace";
+import { arrIncludes } from "@/utils/arrays";
+import type { Func } from "@/utils/functions";
+import { internFunc } from "@/utils/functions";
+import { joinPathSegments } from "@/utils/joinPathSegments";
+import { logger } from "@/utils/logger";
+import { objGetKeys } from "@/utils/objects";
+import { strRemoveWhitespace } from "@/utils/strings";
 
 import type { BaseRouteInterface } from "@/BaseRoute/BaseRouteInterface";
-import type { RouteModel } from "@/BaseRoute/RouteModel";
+import { RouteVariant } from "@/BaseRoute/RouteVariant";
 import { $registry } from "@/index";
 import type { Req } from "@/Req/Req";
 import type { RouterData } from "@/Router/RouterData";
@@ -23,7 +25,7 @@ export class Router implements RouterInterface {
 		const data = this.routeToRouterData(route);
 		if (route.model) {
 			data.model ??= {};
-			for (const key of objGetKeys<keyof RouteModel>(route.model)) {
+			for (const key of objGetKeys(route.model)) {
 				if (key === "response") continue;
 				const schema = route.model[key];
 				if (!schema) continue;
@@ -54,16 +56,21 @@ export class Router implements RouterInterface {
 	list(): Array<RouterData> {
 		const fn = this.adapter.list;
 		if (!fn) {
-			log.warn("Router adapter does not support list method, returning empty array");
+			logger.warn("Router adapter does not support list method, returning empty array");
 			return [];
 		}
 		return fn();
 	}
 
 	private routeToRouterData(route: BaseRouteInterface): RouterData {
+		let endpoint = route.endpoint;
+		if (arrIncludes(route.variant, [RouteVariant.dynamic, RouteVariant.websocket])) {
+			endpoint = joinPathSegments($registry.prefix, route.endpoint);
+		}
+
 		return {
 			id: route.id,
-			endpoint: route.endpoint,
+			endpoint,
 			method: route.method,
 			handler: route.handler,
 			variant: route.variant,

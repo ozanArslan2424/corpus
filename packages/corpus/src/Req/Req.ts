@@ -1,4 +1,4 @@
-import { strSplit } from "corpus-utils/strSplit";
+import { strSplit } from "@/utils/strings";
 
 import { CHeaders } from "@/CHeaders/CHeaders";
 import { CommonHeaders } from "@/CommonHeaders/CommonHeaders";

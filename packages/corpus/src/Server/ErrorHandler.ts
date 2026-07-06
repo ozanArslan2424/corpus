@@ -1,7 +1,6 @@
-import type { Func } from "corpus-utils/Func";
-import type { MaybePromise } from "corpus-utils/MaybePromise";
+import type { Func } from "@/utils/functions";
 
 import type { Context } from "@/Context/Context";
 import type { Res } from "@/Res/Res";
 
-export type ErrorHandler<R = unknown> = Func<[Error, Context], MaybePromise<Res<R>>>;
+export type ErrorHandler<R = unknown> = Func<[Error, Context], Bun.MaybePromise<Res<R>>>;

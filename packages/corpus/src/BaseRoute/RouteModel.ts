@@ -1,4 +1,4 @@
-import type { Schema } from "corpus-utils/Schema";
+import type { Schema } from "@/utils/Schema";
 
 export type RouteModel<B = unknown, S = unknown, P = unknown, R = unknown> = {
 	response?: Schema<R>;

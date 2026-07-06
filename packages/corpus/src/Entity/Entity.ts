@@ -1,4 +1,4 @@
-import type { InferSchemaIn, InferSchemaOut, Schema } from "corpus-utils/Schema";
+import type { InferSchemaIn, InferSchemaOut, Schema } from "@/utils/Schema";
 
 import type { EntityDefinition } from "@/Entity/EntityDefinition";
 import type { EntityJsonSchema } from "@/Entity/EntityJsonSchema";

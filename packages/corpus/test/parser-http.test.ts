@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 
-import { joinPathSegments } from "corpus-utils/joinPathSegments";
+import { joinPathSegments } from "@/utils/joinPathSegments";
 
 import { $registryTesting, TC } from "./_modules";
 import { createTestServer } from "./utils/createTestServer";

@@ -1,4 +1,4 @@
-import type { ValueOf } from "corpus-utils/ValueOf";
+import type { ValueOf } from "@/utils/ValueOf";
 
 /** Commonly used HTTP verbs. */
 

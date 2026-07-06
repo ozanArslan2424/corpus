@@ -1,5 +1,5 @@
-import type { UnknownArray } from "corpus-utils/UnknownArray";
-import type { UnknownObject } from "corpus-utils/UnknownObject";
+import type { UnknownArray } from "@/utils/UnknownArray";
+import type { UnknownObject } from "@/utils/UnknownObject";
 
 import type { Req } from "@/Req/Req";
 import type { Res } from "@/Res/Res";

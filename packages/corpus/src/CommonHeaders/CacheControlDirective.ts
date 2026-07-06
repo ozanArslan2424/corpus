@@ -1,6 +1,6 @@
-import { CommonHeaders } from "@/C";
 import type { CHeaders } from "@/CHeaders/CHeaders";
 import type { CacheControlDirectiveInterface } from "@/CommonHeaders/CacheControlDirectiveInterface";
+import { CommonHeaders } from "@/CommonHeaders/CommonHeaders";
 
 export class CacheControlDirective implements CacheControlDirectiveInterface {
 	constructor(private readonly opts: CacheControlDirectiveInterface | "no-cache") {

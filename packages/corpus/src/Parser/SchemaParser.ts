@@ -1,6 +1,6 @@
-import { isObjectWith } from "corpus-utils/isObjectWith";
-import type { SchemaValidator, ValidationIssues } from "corpus-utils/Schema";
-import type { UnknownObject } from "corpus-utils/UnknownObject";
+import { isObjectWith } from "@/utils/objects";
+import type { SchemaValidator, ValidationIssues } from "@/utils/Schema";
+import type { UnknownObject } from "@/utils/UnknownObject";
 
 import { Exception } from "@/Exception/Exception";
 import type { SchemaParserInterface } from "@/Parser/SchemaParserInterface";

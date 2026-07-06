@@ -1,4 +1,4 @@
-import { compile } from "corpus-utils/compile";
+import { compile } from "@/utils/compile";
 
 import type { MiddlewareHandler } from "@/Middleware/MiddlewareHandler";
 import type { MiddlewareInterface } from "@/Middleware/MiddlewareInterface";

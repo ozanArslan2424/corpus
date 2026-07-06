@@ -1,4 +1,4 @@
-import type { Schema } from "corpus-utils/Schema";
+import type { Schema } from "@/utils/Schema";
 
 import type { EntityJsonSchema } from "@/Entity/EntityJsonSchema";
 

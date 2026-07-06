@@ -46,11 +46,11 @@
 		"tests": "pnpm run build && bun test --only-failures"
 	},
 	"devDependencies": {
+		"@standard-schema/spec": "^1.1.0",
 		"@types/bun": "^1.3.14",
 		"@types/ws": "^8.18.1",
 		"arktype": "^2.2.0",
 		"bun-plugin-dts": "^0.4.0",
-		"corpus-utils": "workspace:*",
 		"memoirist": "^1.0.3",
 		"ws": "^8.21.0",
 		"zod": "^4.4.3"

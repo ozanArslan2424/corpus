@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { toCamelCase, toPascalCase } from "@/utils/strings";
+
 import type { ImportsManager } from "../ImportsManager/ImportsManager";
-import { toCamelCase } from "../utils/toCamelCase";
-import { toPascalCase } from "../utils/toPascalCase";
 import type { ImportableInterface } from "./ImportableInterface";
 
 export class Importable implements ImportableInterface {

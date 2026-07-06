@@ -1,4 +1,4 @@
-import { strIsDefined } from "corpus-utils/strIsDefined";
+import { strIsDefined } from "@/utils/strings";
 
 import type { CHeaderKey } from "@/CHeaders/CHeaderKey";
 import type { CHeadersInit } from "@/CHeaders/CHeadersInit";

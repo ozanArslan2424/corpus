@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 
-import type { Schema, SchemaValidator, ValidationIssues } from "corpus-utils/Schema";
+import type { Schema, SchemaValidator, ValidationIssues } from "@/utils/Schema";
 
 import type { SchemaParser } from "@/Parser/SchemaParser";
 

@@ -1,15 +1,13 @@
 import { transform } from "esbuild";
 import terser from "html-minifier-terser";
 
-import { log } from "@/utils/log";
-
 export class Minifier {
 	async javascript(code: string) {
 		try {
 			const result = await transform(code, { loader: "js", minify: true, sourcemap: false });
 			return result.code;
 		} catch (err) {
-			log.error("minifyJS fail:", err);
+			console.error("minifyJS fail:", err);
 			return code;
 		}
 	}
@@ -19,7 +17,7 @@ export class Minifier {
 			const result = await transform(code, { loader: "css", minify: true, sourcemap: false });
 			return result.code;
 		} catch (err) {
-			log.error("minifyCSS fail:", err);
+			console.error("minifyCSS fail:", err);
 			return code;
 		}
 	}
@@ -37,7 +35,7 @@ export class Minifier {
 			});
 			return result;
 		} catch (err) {
-			log.error("minifyHTML fail:", err);
+			console.error("minifyHTML fail:", err);
 			return code;
 		}
 	}

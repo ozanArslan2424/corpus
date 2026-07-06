@@ -1,7 +1,7 @@
 import crypto from "crypto";
 
-import { logFatal } from "corpus-utils/internalLog";
-import { strIsDefined } from "corpus-utils/strIsDefined";
+import { logFatal } from "@/utils/logger";
+import { strIsDefined } from "@/utils/strings";
 
 import { RouteVariant } from "@/BaseRoute/RouteVariant";
 import { CHeaders } from "@/CHeaders/CHeaders";

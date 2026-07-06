@@ -34,7 +34,7 @@ export * from "./BaseRoute/RouteModel";
 
 export * from "./Route/Route";
 export * from "./Route/RouteAbstract";
-export * from "./Route/RouteDefinition";
+export * from "./BaseRoute/RouteAddress";
 export * from "./Route/RouteCallback";
 
 export * from "./StaticRoute/StaticRoute";

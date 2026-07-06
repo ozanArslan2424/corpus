@@ -4,7 +4,6 @@ import { FileHelper } from "@/compiler/FileHelper";
 import { HtmlHelper } from "@/compiler/HtmlHelper";
 import { MdHelper } from "@/compiler/MdHelper";
 import { Minifier } from "@/compiler/Minifier";
-import { log } from "@/utils/log";
 
 export async function compile(outDir: string) {
 	const minifier = new Minifier();
@@ -29,7 +28,7 @@ export async function compile(outDir: string) {
 
 		for (const cssPath of cssPaths) {
 			const file = new X.File(cssPath);
-			log.step("Minifying:", file.fullname);
+			console.log("Minifying:", file.fullname);
 
 			let content = await file.text();
 			content = await minifier.css(content);
@@ -46,7 +45,7 @@ export async function compile(outDir: string) {
 
 		for (const jsPath of jsPaths) {
 			const file = new X.File(jsPath);
-			log.step("Minifying:", file.fullname);
+			console.log("Minifying:", file.fullname);
 
 			let content = await file.text();
 			content = await minifier.javascript(content);
@@ -63,7 +62,7 @@ export async function compile(outDir: string) {
 
 		for (const mdPath of mdPaths) {
 			const file = new X.File(mdPath);
-			log.step("Converting:", file.fullname);
+			console.log("Converting:", file.fullname);
 
 			let content = await file.text();
 			content = await mdh.toHTML(content);
@@ -103,5 +102,5 @@ export async function compile(outDir: string) {
 		writeIndexFile(...parts),
 	]);
 
-	log.success("Finished");
+	console.log("Finished");
 }

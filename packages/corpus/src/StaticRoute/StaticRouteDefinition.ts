@@ -1,5 +1,4 @@
 import type { CacheControlDirectiveInterface } from "@/CommonHeaders/CacheControlDirectiveInterface";
-import type { Method } from "@/Method/Method";
 
 export type StaticRouteDefinition =
 	// just the file path, doesn't stream
@@ -8,5 +7,4 @@ export type StaticRouteDefinition =
 			filePath: string;
 			disposition?: "attachment" | "inline";
 			cache?: CacheControlDirectiveInterface;
-			method?: Method;
 	  };

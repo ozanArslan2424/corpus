@@ -1,5 +1,5 @@
-import type { Prettify } from "corpus-utils/Prettify";
-import type { InferSchemaOut, Schema } from "corpus-utils/Schema";
+import type { InferSchemaOut, Schema } from "@/utils/Schema";
+import type { Prettify } from "@/utils/types";
 
 import type { RouteModel } from "@/BaseRoute/RouteModel";
 

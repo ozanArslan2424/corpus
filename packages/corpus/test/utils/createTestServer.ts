@@ -1,4 +1,4 @@
-import { log } from "corpus-utils/internalLog";
+import { logger } from "@/utils/logger";
 
 import { TC } from "../_modules";
 
@@ -10,12 +10,12 @@ export function createTestServer(opts?: TC.ServerOptions & { withLogging?: boole
 
 	if (withLogging === true) {
 		s.setOnError((err, c) => {
-			log.error("thrown error", err);
+			logger.error("thrown error", err);
 			return s.defaultErrorHandler(err, c);
 		});
 
 		s.setOnNotFound((req) => {
-			log.error("not found request", req);
+			logger.error("not found request", req);
 			return s.defaultNotFoundHandler(req);
 		});
 	}

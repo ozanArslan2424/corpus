@@ -1,17 +1,15 @@
-import type { Func } from "corpus-utils/Func";
-import { isNil } from "corpus-utils/isNil";
-import type { MaybePromise } from "corpus-utils/MaybePromise";
+import type { Func } from "@/utils/functions";
+import { isNil } from "@/utils/nil";
 
 import { BaseRouteAbstract } from "@/BaseRoute/BaseRouteAbstract";
 import { RouteVariant } from "@/BaseRoute/RouteVariant";
 import { CacheControlDirective } from "@/CommonHeaders/CacheControlDirective";
+import type { CacheControlDirectiveInterface } from "@/CommonHeaders/CacheControlDirectiveInterface";
 import { CommonHeaders } from "@/CommonHeaders/CommonHeaders";
 import type { Context } from "@/Context/Context";
 import { Exception } from "@/Exception/Exception";
-import { Method } from "@/Method/Method";
 import { Res } from "@/Res/Res";
 import type { StaticRouteCallback } from "@/StaticRoute/StaticRouteCallback";
-import type { StaticRouteDefinition } from "@/StaticRoute/StaticRouteDefinition";
 import { Status } from "@/Status/Status";
 import { XFile } from "@/XFile/XFile";
 
@@ -24,11 +22,13 @@ export abstract class StaticRouteAbstract<
 	E extends string = string,
 > extends BaseRouteAbstract<B, S, P, R, E> {
 	// FROM CONSTRUCTOR
-	abstract readonly path: E;
-
-	abstract readonly definition: StaticRouteDefinition;
-
 	abstract readonly callback?: StaticRouteCallback<B, S, P>;
+
+	abstract filePath: string;
+
+	abstract disposition?: "attachment" | "inline";
+
+	abstract cache?: CacheControlDirectiveInterface;
 
 	// PROTECTED
 
@@ -36,31 +36,28 @@ export abstract class StaticRouteAbstract<
 		throw new Exception(Status.NOT_FOUND.toString(), Status.NOT_FOUND);
 	};
 
-	protected get filePath(): string {
-		return typeof this.definition === "string" ? this.definition : this.definition.filePath;
-	}
-
+	// protected get filePath(): string {
+	// 	return typeof this.definition === "string" ? this.definition : this.definition.filePath;
+	// }
+	//
 	// ROUTE BASE PROPERTIES
 	readonly variant: RouteVariant = RouteVariant.static;
 
-	get endpoint(): E {
-		return this.path;
-	}
-
-	get method(): Method {
-		return typeof this.definition === "string"
-			? Method.GET
-			: (this.definition.method ?? Method.GET);
-	}
-
-	get handler(): Func<[Context<B, S, P, R>], MaybePromise<R>> {
+	// get endpoint(): E {
+	// 	return this.path;
+	// }
+	//
+	// get method(): Method {
+	// 	return typeof this.definition === "string"
+	// 		? Method.GET
+	// 		: (this.definition.method ?? Method.GET);
+	// }
+	//
+	get handler(): Func<[Context<B, S, P, R>], Bun.MaybePromise<R>> {
 		const customHandler = this.callback;
-		const isStrDef = typeof this.definition === "string";
 
 		const cacheHeader = CacheControlDirective.createHeaderString(
-			!isStrDef && !!this.definition.cache
-				? this.definition.cache
-				: { public: true, maxAge: 3600, noCache: false },
+			this.cache ?? { public: true, maxAge: 3600, noCache: false },
 		);
 
 		return async (c) => {
@@ -82,10 +79,10 @@ export abstract class StaticRouteAbstract<
 
 			let res: Res;
 
-			if (!isStrDef && !isNil(this.definition.disposition)) {
-				res = await Res.streamFile(file, this.definition.disposition);
-			} else {
+			if (isNil(this.disposition)) {
 				res = await Res.file(file);
+			} else {
+				res = await Res.streamFile(file, this.disposition);
 			}
 
 			res.headers.set(CommonHeaders.CacheControl, cacheHeader);

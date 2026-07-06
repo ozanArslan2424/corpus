@@ -38,12 +38,35 @@ describe("C.Route", () => {
 		expect(res.status).toBe(200);
 	});
 
-	it("REGISTERS WITH CORRECT METHOD", async () => {
-		const path = "/r6";
-		new TC.Route({ method: TC.Method.POST, path }, () => "posted");
+	it("REGISTERS CORRECT METHOD FROM ADDRESS (object)", async () => {
+		new TC.Route({ method: TC.Method.POST, path: "/r6" }, () => "posted");
 
-		const res = await s.handle(req(path, { method: "POST" }));
+		const res = await s.handle(req("/r6", { method: "POST" }));
 		expect(res.status).toBe(200);
+	});
+
+	it("REGISTERS CORRECT METHOD FROM ADDRESS (inlined)", async () => {
+		new TC.Route("POST /r7", () => "posted");
+
+		const res = await s.handle(req("/r7", { method: "POST" }));
+		expect(res.status).toBe(200);
+	});
+
+	it("REGISTERS CORRECT METHOD FROM ADDRESS (missing)", async () => {
+		new TC.Route("/r7-g", () => "got");
+
+		const res = await s.handle(req("/r7-g", { method: "GET" }));
+		expect(res.status).toBe(200);
+	});
+
+	it("REGISTERS CORRECT METHOD AND ENDPOINT FROM ADDRESS (no slash)", async () => {
+		new TC.Route("r7-1", () => "got");
+		new TC.Route("POST r7-2", () => "posted");
+
+		const res1 = await s.handle(req("/r7-1", { method: "GET" }));
+		expect(res1.status).toBe(200);
+		const res2 = await s.handle(req("/r7-2", { method: "POST" }));
+		expect(res2.status).toBe(200);
 	});
 
 	it("WITH MODEL", () => {
@@ -78,9 +101,9 @@ describe("C.Route", () => {
 				this.register();
 			}
 
-			definition: TC.RouteDefinition = path;
+			override endpoint: string = path;
+			override method: TC.Method = TC.Method.GET;
 			callback: TC.RouteCallback = () => "extended";
-			model?: TC.RouteModel | undefined = undefined;
 		}
 
 		new MyRoute();

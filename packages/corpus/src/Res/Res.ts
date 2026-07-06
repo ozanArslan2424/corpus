@@ -1,5 +1,5 @@
-import { isNil } from "corpus-utils/isNil";
-import { isPrimitive } from "corpus-utils/isPrimitive";
+import { isNil } from "@/utils/nil";
+import { isPrimitive } from "@/utils/primitives";
 
 import { CHeaders } from "@/CHeaders/CHeaders";
 import { CommonHeaders } from "@/CommonHeaders/CommonHeaders";

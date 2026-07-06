@@ -1,6 +1,6 @@
-import { joinPathSegments } from "corpus-utils/joinPathSegments";
+import { joinPathSegments } from "@/utils/joinPathSegments";
 
-import { Method } from "@/Method/Method";
+import { BaseRouteAbstract } from "@/BaseRoute/BaseRouteAbstract";
 import type { MiddlewareHandler } from "@/Middleware/MiddlewareHandler";
 import { Route } from "@/Route/Route";
 import { StaticRoute } from "@/StaticRoute/StaticRoute";
@@ -42,9 +42,10 @@ export abstract class Controller {
 	protected route<B = unknown, S = unknown, P = unknown, R = unknown, E extends string = string>(
 		...args: ConstructorParameters<typeof Route<B, S, P, R, E>>
 	): Route<B, S, P, R, E> {
-		const [def, handler, model] = args;
-		const method = typeof def === "string" ? Method.GET : def.method;
-		const path = joinPathSegments<E>(this.prefix, typeof def === "string" ? def : def.path);
+		const [address, handler, model] = args;
+		const resolved = BaseRouteAbstract.resolveAddress(address);
+		const method = resolved.method;
+		const path = joinPathSegments<E>(this.prefix, resolved.path);
 		const route = new Route(
 			{ method, path },
 			async (ctx) => {
@@ -64,9 +65,11 @@ export abstract class Controller {
 	protected staticRoute<B = unknown, S = unknown, P = unknown, E extends string = string>(
 		...args: ConstructorParameters<typeof StaticRoute<B, S, P, E>>
 	): StaticRoute<B, S, P, E> {
-		const [path, ...rest] = args;
-		const endpoint = joinPathSegments<E>(this.prefix, path);
-		const route = new StaticRoute(endpoint, ...rest);
+		const [address, ...rest] = args;
+		const resolved = BaseRouteAbstract.resolveAddress(address);
+		const method = resolved.method;
+		const path = joinPathSegments<E>(this.prefix, resolved.path);
+		const route = new StaticRoute({ method, path }, ...rest);
 		this.routeIds.add(route.id);
 		return route;
 	}

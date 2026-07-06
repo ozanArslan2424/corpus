@@ -1,4 +1,4 @@
-import { log, logFatal } from "corpus-utils/internalLog";
+import { logFatal, logger } from "@/utils/logger";
 
 import { TC } from "../_modules";
 import { RouterBenchmark } from "../utils/RouterBenchmark";
@@ -13,7 +13,7 @@ function main() {
 		results.push(bench.run());
 	}
 
-	log.success(["Finished", ...results].join("\n\n"));
+	logger.success(["Finished", ...results].join("\n\n"));
 }
 
 // Run the benchmark

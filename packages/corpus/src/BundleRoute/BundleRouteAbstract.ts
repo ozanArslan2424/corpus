@@ -1,7 +1,6 @@
 import path from "node:path";
 
-import type { Func } from "corpus-utils/Func";
-import type { MaybePromise } from "corpus-utils/MaybePromise";
+import type { Func } from "@/utils/functions";
 
 import { BaseRouteAbstract } from "@/BaseRoute/BaseRouteAbstract";
 import type { RouteModel } from "@/BaseRoute/RouteModel";
@@ -62,7 +61,7 @@ export abstract class BundleRouteAbstract<
 
 	// ROUTE BASE PROPERTIES
 	readonly variant: RouteVariant = RouteVariant.bundle;
-	readonly model?: RouteModel<B, S, P, R> | undefined = undefined;
+	override model?: RouteModel<B, S, P, R> | undefined = undefined;
 
 	get endpoint(): E {
 		return this.path;
@@ -72,7 +71,7 @@ export abstract class BundleRouteAbstract<
 		return Method.GET;
 	}
 
-	get handler(): Func<[Context<B, S, P, R>], MaybePromise<R>> {
+	get handler(): Func<[Context<B, S, P, R>], Bun.MaybePromise<R>> {
 		return async (c) => {
 			const idx = "index.html";
 			const pathname = c.req.urlObject.pathname;

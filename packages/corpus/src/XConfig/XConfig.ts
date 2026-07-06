@@ -1,6 +1,5 @@
-import type { Func } from "corpus-utils/Func";
-import type { OrString } from "corpus-utils/OrString";
-import { strIsDefined } from "corpus-utils/strIsDefined";
+import type { Func } from "@/utils/functions";
+import { type OrString, strIsDefined } from "@/utils/strings";
 
 import type { Env } from "@/types.d.ts";
 

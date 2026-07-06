@@ -1,8 +1,8 @@
-import type { Log } from "corpus-utils/internalLog";
+import type { Logger } from "@/utils/logger";
 
 import { TC } from "../_modules";
 
-export function createTestWebSocketRoute(log: Log, withAbstract: boolean) {
+export function createTestWebSocketRoute(log: Logger, withAbstract: boolean) {
 	if (withAbstract) {
 		class WSR extends TC.WebSocketRouteAbstract {
 			constructor() {

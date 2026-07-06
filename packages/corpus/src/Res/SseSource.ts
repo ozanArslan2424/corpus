@@ -1,4 +1,4 @@
-import type { Func } from "corpus-utils/Func";
+import type { Func } from "@/utils/functions";
 
 export type SseSource = Func<
 	[

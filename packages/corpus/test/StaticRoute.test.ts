@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import path from "node:path";
 
+import type { CacheControlDirectiveInterface } from "@/CommonHeaders/CacheControlDirectiveInterface";
+
 import { $registryTesting, TC } from "./_modules";
 import { createTestServer } from "./utils/createTestServer";
 import { req } from "./utils/req";
@@ -161,13 +163,12 @@ describe("C.StaticRoute", () => {
 				this.register();
 			}
 
-			path: string = path;
-
-			definition: TC.StaticRouteDefinition = f("sample.txt");
-
+			override endpoint: string = path;
+			override method: TC.Method = "GET";
+			override filePath: string = f("sample.txt");
+			override disposition?: "attachment" | "inline" | undefined;
+			override cache?: CacheControlDirectiveInterface | undefined;
 			override callback?: TC.StaticRouteCallback | undefined = () => "";
-
-			override model?: TC.RouteModel<unknown, unknown, unknown, string | TC.Res> | undefined;
 		}
 
 		new MyRoute();

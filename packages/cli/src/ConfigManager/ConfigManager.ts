@@ -3,16 +3,18 @@ import path from "node:path";
 import { parseArgs } from "util";
 
 import * as p from "@clack/prompts";
-import { logFatal, log } from "corpus-utils/internalLog";
 
-import type { Config, PartialConfig } from "../config";
-import { Formatter } from "../Formatter/Formatter";
-import { StringBuilder } from "../StringBuilder/StringBuilder";
-import { ACCEPTED_PACKAGE_MANAGERS } from "../utils/ACCEPTED_PACKAGE_MANAGERS";
-import { ACCEPTED_VALIDATION_LIBS } from "../utils/ACCEPTED_VALIDATION_LIBS";
-import { ACTIONS, type Action } from "../utils/ACTIONS";
-import { CONFIG_FILE_NAME } from "../utils/constants";
-import { registerSilentConsole } from "../utils/registerSilentConsole";
+import type { Config, PartialConfig } from "@/config";
+import {
+	type Action,
+	ACTIONS,
+	ACCEPTED_PACKAGE_MANAGERS,
+	ACCEPTED_VALIDATION_LIBS,
+	CONFIG_FILE_NAME,
+} from "@/constants";
+import { Formatter } from "@/Formatter/Formatter";
+import { logFatal, logger } from "@/utils/logger";
+import { registerSilentConsole } from "@/utils/registerSilentConsole";
 
 export class ConfigManager {
 	static getAction(): Action {
@@ -20,11 +22,11 @@ export class ConfigManager {
 		const action = args[2] as Action | undefined;
 
 		if (!action || !ACTIONS.includes(action)) {
-			log.bold("No action provided. Available actions:");
-			log.info("  api   — generate types and API client from your server entry file");
-			log.info("          example: corpus api -m ./src/main.ts -o ./src/corpus.gen.ts");
-			log.info("  init  — scaffold an empty Corpus project");
-			log.info("          example: corpus init");
+			logger.bold("No action provided. Available actions:");
+			logger.info("  api   — generate types and API client from your server entry file");
+			logger.info("          example: corpus api -m ./src/main.ts -o ./src/corpus.gen.ts");
+			logger.info("  init  — scaffold an empty Corpus project");
+			logger.info("          example: corpus init");
 			logFatal("Please provide an action and try again.");
 		}
 		return action;
@@ -219,40 +221,34 @@ export class ConfigManager {
 		if (this.configFileExists()) return;
 
 		const f = new Formatter();
-		const b = new StringBuilder();
 
-		b.line(`import { defineConfig } from "@ozanarslan/corpus-cli/config";`);
-		b.line(`export default defineConfig({`);
-		b.line(`    main: "${config.main}",`);
-		b.line(`    pkgPath: "${config.pkgPath}",`);
-		b.line(
-			`    validationLibrary: ${config.validationLibrary ? `"${config.validationLibrary}"` : `null`},`,
-		);
-		b.line(`    packageManager: "${config.packageManager ?? `bun`}",`);
-		b.line(`    casing: "${config.casing}",`);
-		b.line(`    output: "${config.output}",`);
-		b.line(`    exportClientAs: "${config.exportClientAs}",`);
-		b.line(`    exportModelsAs: "${config.exportModelsAs}",`);
-		b.line(`    exportArgsAs: "${config.exportArgsAs}",`);
-		b.line(`    exportEntitiesAs: "${config.exportEntitiesAs}",`);
-		b.line(
-			`    // The \`fallback: ctx => ctx.base\` strategy silently drops unsupported constraints and`,
-		);
-		b.line(
-			`    // keeps the rest of the schema intact. The least surprising behaviour for codegen purposes.`,
-		);
-		b.line(`    jsonSchemaOptions: {`);
-		b.line(`        target: "draft-07",`);
-		b.line(`        fallback: (ctx: any) => ctx.base,`);
-		b.line(`    },`);
-		b.line(`})`);
+		const raw = `import { defineConfig } from "@ozanarslan/corpus-cli/config";
 
-		const content = await f.format(b.read(), "typescript");
+export default defineConfig({
+    main: "${config.main}",
+    pkgPath: "${config.pkgPath}",
+    validationLibrary: ${config.validationLibrary ? `"${config.validationLibrary}"` : `null`},
+    packageManager: "${config.packageManager ?? `bun`}",
+    casing: "${config.casing}",
+    output: "${config.output}",
+    exportClientAs: "${config.exportClientAs}",
+    exportModelsAs: "${config.exportModelsAs}",
+    exportArgsAs: "${config.exportArgsAs}",
+    exportEntitiesAs: "${config.exportEntitiesAs}",
+    // The \`fallback: ctx => ctx.base\` strategy silently drops unsupported constraints and
+    // keeps the rest of the schema intact. The least surprising behaviour for codegen purposes.
+    jsonSchemaOptions: {
+        target: "draft-07",
+        fallback: (ctx: any) => ctx.base,
+    },
+});`;
+
+		const content = await f.format(raw, "typescript");
 		const fpath = path.resolve(process.cwd(), CONFIG_FILE_NAME);
 		fs.mkdirSync(path.dirname(fpath), { recursive: true });
 		fs.writeFileSync(fpath, content);
 
-		log.info(`Config written to ${CONFIG_FILE_NAME}`);
+		logger.info(`Config written to ${CONFIG_FILE_NAME}`);
 	}
 
 	static configFileExists() {

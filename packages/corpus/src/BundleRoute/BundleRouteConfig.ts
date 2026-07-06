@@ -1,4 +1,4 @@
-import type { Func } from "corpus-utils/Func";
+import type { Func } from "@/utils/functions";
 
 import type { CacheControlDirectiveInterface } from "@/CommonHeaders/CacheControlDirectiveInterface";
 import type { Res } from "@/Res/Res";

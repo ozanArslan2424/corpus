@@ -1,5 +1,5 @@
-import type { Func } from "corpus-utils/Func";
-import { joinPathSegments } from "corpus-utils/joinPathSegments";
+import type { Func } from "@/utils/functions";
+import { joinPathSegments } from "@/utils/joinPathSegments";
 
 import { BaseRouteAbstract } from "@/BaseRoute/BaseRouteAbstract";
 import { RouteVariant } from "@/BaseRoute/RouteVariant";
@@ -37,5 +37,5 @@ export abstract class WebSocketRouteAbstract<
 		return () => this;
 	}
 
-	model = undefined;
+	override model = undefined;
 }

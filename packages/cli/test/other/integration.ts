@@ -1,4 +1,4 @@
-import { TestHelper } from "corpus-utils/TestHelper";
+import { TestHelper } from "@/utils/TestHelper";
 
 import { CorpusApi } from "./generated";
 import { startServer } from "./startServer";

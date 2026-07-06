@@ -1,4 +1,4 @@
-import { TestHelper } from "corpus-utils/TestHelper";
+import { TestHelper } from "@/utils/TestHelper";
 
 import { TC } from "../_modules";
 import { createTestWebSocketRoute } from "../utils/createTestWebSocketRoute";

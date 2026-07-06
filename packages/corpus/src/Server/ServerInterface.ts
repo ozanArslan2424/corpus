@@ -1,6 +1,5 @@
-import type { Func } from "corpus-utils/Func";
-import type { MaybePromise } from "corpus-utils/MaybePromise";
-import type { OrString } from "corpus-utils/OrString";
+import type { Func } from "@/utils/functions";
+import type { OrString } from "@/utils/strings";
 
 import type { RouterData } from "@/Router/RouterData";
 import type { ErrorHandler } from "@/Server/ErrorHandler";
@@ -46,9 +45,9 @@ export interface ServerInterface {
 	setOnNotFound(handler: RequestHandler): void;
 	defaultNotFoundHandler: RequestHandler;
 
-	setOnBeforeListen(handler: Func<[], MaybePromise<void>> | undefined): void;
-	defaultOnBeforeListen: Func<[], MaybePromise<void>> | undefined;
+	setOnBeforeListen(handler: Func<[], Bun.MaybePromise<void>> | undefined): void;
+	defaultOnBeforeListen: Func<[], Bun.MaybePromise<void>> | undefined;
 
-	setOnBeforeClose(handler: () => MaybePromise<void>): void;
-	defaultOnBeforeClose: Func<[], MaybePromise<void>> | undefined;
+	setOnBeforeClose(handler: () => Bun.MaybePromise<void>): void;
+	defaultOnBeforeClose: Func<[], Bun.MaybePromise<void>> | undefined;
 }

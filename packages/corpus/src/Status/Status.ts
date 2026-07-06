@@ -1,5 +1,4 @@
-import type { OrNumber } from "corpus-utils/OrNumber";
-import type { ValueOf } from "corpus-utils/ValueOf";
+import type { ValueOf } from "@/utils/ValueOf";
 
 /** Commonly used HTTP status codes. */
 
@@ -139,4 +138,4 @@ export const Status = {
 	NETWORK_AUTHENTICATION_REQUIRED: 511,
 } as const;
 
-export type Status = OrNumber<ValueOf<typeof Status>>;
+export type Status = ValueOf<typeof Status> | (number & {});

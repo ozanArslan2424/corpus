@@ -2,16 +2,17 @@ import fs from "node:fs";
 import path from "path";
 
 import type { EntityDefinition } from "@ozanarslan/corpus";
-import { log } from "corpus-utils/internalLog";
-import type { UnknownObject } from "corpus-utils/UnknownObject";
+
+import { logger } from "@/utils/logger";
+import type { UnknownObject } from "@/utils/objects";
+import { StringBuilder } from "@/utils/StringBuilder";
+import { toPascalCase } from "@/utils/strings";
 
 import type { Config, PartialConfig } from "../config";
 import { ConfigManager } from "../ConfigManager/ConfigManager";
 import { Formatter } from "../Formatter/Formatter";
 import { SchemaManager } from "../SchemaManager/SchemaManager";
-import { StringBuilder } from "../StringBuilder/StringBuilder";
 import type { Schema } from "../utils/Schema";
-import { toPascalCase } from "../utils/toPascalCase";
 
 type DocEntry = { id: string; endpoint: string; method: string; model?: any };
 type MapEntry = {
@@ -113,7 +114,7 @@ export class ApiClientGenerator {
 		fs.mkdirSync(path.dirname(fpath), { recursive: true });
 		fs.writeFileSync(fpath, content);
 
-		log.info(`Api Client written to: ${fpath}`);
+		logger.info(`Api Client written to: ${fpath}`);
 	}
 
 	private getRouteMap(routes: DocEntry[]) {
@@ -149,9 +150,9 @@ export class ApiClientGenerator {
 			}
 		}
 
-		b.line(`const newable = <T>() => class {`);
-		b.line(`    constructor(values: T) { Object.assign(this, values); } `);
-		b.line(`} as unknown as new (values: T) => T;`);
+		b.line(
+			`const newable = <T>() => class { constructor(values: T) { Object.assign(this, values); } } as unknown as new (values: T) => T;`,
+		);
 		b.line(``);
 
 		const useTemplate = this.entitiesNS.includes("$");

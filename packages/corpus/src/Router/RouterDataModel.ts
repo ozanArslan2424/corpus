@@ -1,4 +1,4 @@
-import type { SchemaValidator } from "corpus-utils/Schema";
+import type { SchemaValidator } from "@/utils/Schema";
 
 export type RouterDataModel = {
 	body?: SchemaValidator<any>;

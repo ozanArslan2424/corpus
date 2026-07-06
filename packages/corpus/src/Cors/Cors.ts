@@ -1,5 +1,5 @@
-import { boolToString } from "corpus-utils/boolToString";
-import { isSomeArray } from "corpus-utils/isSomeArray";
+import { isSomeArray } from "@/utils/arrays";
+import { boolToString } from "@/utils/booleans";
 
 import { CommonHeaders } from "@/CommonHeaders/CommonHeaders";
 import type { CorsInterface } from "@/Cors/CorsInterface";

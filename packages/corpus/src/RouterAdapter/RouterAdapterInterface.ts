@@ -1,4 +1,4 @@
-import type { Func } from "corpus-utils/Func";
+import type { Func } from "@/utils/functions";
 
 import type { Req } from "@/Req/Req";
 import type { RouterData } from "@/Router/RouterData";

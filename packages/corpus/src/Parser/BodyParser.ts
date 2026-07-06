@@ -1,6 +1,6 @@
-import { arrIncludes } from "corpus-utils/arrIncludes";
-import type { UnknownArray } from "corpus-utils/UnknownArray";
-import type { UnknownObject } from "corpus-utils/UnknownObject";
+import { arrIncludes } from "@/utils/arrays";
+import type { UnknownArray } from "@/utils/UnknownArray";
+import type { UnknownObject } from "@/utils/UnknownObject";
 
 import { CommonHeaders } from "@/CommonHeaders/CommonHeaders";
 import { Method } from "@/Method/Method";

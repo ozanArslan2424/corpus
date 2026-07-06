@@ -1,4 +1,4 @@
-import type { UnknownObject } from "corpus-utils/UnknownObject";
+import type { UnknownObject } from "@/utils/UnknownObject";
 
 import { ObjectParserAbstract } from "@/Parser/ObjectParserAbstract";
 

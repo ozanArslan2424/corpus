@@ -3,14 +3,11 @@ import { readFileSync, unlinkSync, writeFileSync } from "fs";
 import { dirname, join, resolve } from "path";
 import { fileURLToPath } from "url";
 
-import { logFatal } from "corpus-utils/internalLog";
+import { DIST_API_GENERATOR_FILE, API_GENERATOR_CLASS_NAME } from "@/constants";
+import { hoistFunctionBody } from "@/utils/functions";
+import { logFatal } from "@/utils/logger";
 
 import type { Config } from "../config";
-import {
-	DIST_API_GENERATOR_FILE,
-	API_GENERATOR_CLASS_NAME,
-} from "../utils/DIST_API_GENERATOR_FILE";
-import { hoistFunctionBody } from "./hoistFunctionBody";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
