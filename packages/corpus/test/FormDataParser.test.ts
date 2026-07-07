@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
 
-import { FormDataParser } from "@/Parser/FormDataParser";
+import { FormDataParser } from "@/Parsers/FormDataParser";
 
 describe("FormDataParser", () => {
 	const parser = new FormDataParser();

@@ -1,9 +1,9 @@
-import { BaseRouteAbstract } from "@/BaseRoute/BaseRouteAbstract";
-import type { RouteAddress } from "@/BaseRoute/RouteAddress";
-import type { RouteModel } from "@/BaseRoute/RouteModel";
-import type { Method } from "@/C";
+import type { Context } from "@/Context/Context";
+import type { Method } from "@/enums/Method";
+import { resolveRouteAddress } from "@/Route/resolveRouteAddress";
 import { RouteAbstract } from "@/Route/RouteAbstract";
-import type { RouteCallback } from "@/Route/RouteCallback";
+import type { RouteAddress, RouteModel } from "@/Route/types";
+import type { Func } from "@/utils/functions";
 
 /**
  * Defines an HTTP endpoint. Accepts a {@link RouteAddress} which can either be a plain
@@ -28,7 +28,6 @@ import type { RouteCallback } from "@/Route/RouteCallback";
  *     return { created: c.body.name };
  * }, { body: UserModel });
  */
-
 export class Route<
 	B = unknown,
 	S = unknown,
@@ -38,19 +37,19 @@ export class Route<
 > extends RouteAbstract<B, S, P, R, E> {
 	constructor(
 		address: RouteAddress<E>,
-		callback: RouteCallback<B, S, P, R>,
+		callback: Func<[context: Context<B, S, P, R>], Bun.MaybePromise<R>>,
 		model?: RouteModel<B, S, P, R>,
 	) {
 		super();
-		const resolved = BaseRouteAbstract.resolveAddress(address);
+		const resolved = resolveRouteAddress(address);
 		this.endpoint = resolved.path;
 		this.method = resolved.method;
-		this.callback = callback;
+		this.handler = callback;
 		this.model = model;
 		this.register();
 	}
 
-	override callback: RouteCallback<B, S, P, R>;
 	override endpoint: E;
 	override method: Method;
+	override handler: Func<[context: Context<B, S, P, R>], Bun.MaybePromise<R>>;
 }

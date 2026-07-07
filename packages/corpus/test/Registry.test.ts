@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 
-import { MiddlewareRouter } from "@/MiddlewareRouter/MiddlewareRouter";
+import { MiddlewareRouter } from "@/Router/MiddlewareRouter";
 
 import type { RouterAdapterInterface, RouterData, RouterReturn } from "./_modules";
 import { $registryTesting, TC } from "./_modules";
@@ -144,7 +144,7 @@ describe("Registry - swapped fields are honored by the server", () => {
 			handler: () => {
 				corsCalls++;
 			},
-			getPreflightHandler: () => () => new TC.Res(null, { status: 204 }),
+			handlePreflight: () => new TC.Res(null, { status: 204 }),
 		} as typeof $registryTesting.cors extends infer T ? T : never; // cast to CorsInterface
 
 		new TC.Route("/cors-route", (c) => {

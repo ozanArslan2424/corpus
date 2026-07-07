@@ -1,10 +1,11 @@
 import { describe, it, expect } from "bun:test";
 
-import { CommonHeaders } from "@/CommonHeaders/CommonHeaders";
-import { BodyParser } from "@/Parser/BodyParser";
-import { FormDataParser } from "@/Parser/FormDataParser";
-import { SearchParamsParser } from "@/Parser/SearchParamsParser";
+import { BodyParser } from "@/Parsers/BodyParser";
+import { FormDataParser } from "@/Parsers/FormDataParser";
+import { SearchParamsParser } from "@/Parsers/SearchParamsParser";
 import { Req } from "@/Req/Req";
+
+import { TC } from "./_modules";
 
 describe("BodyParser", () => {
 	const parser = new BodyParser(new FormDataParser(), new SearchParamsParser());
@@ -165,7 +166,7 @@ describe("BodyParser", () => {
 			fd.append("ids", "2");
 
 			const req = new Req("http://localhost/", { method: "POST", body: fd });
-			expect(req.headers.get(CommonHeaders.ContentType)).toInclude("form-data");
+			expect(req.headers.get(TC.CommonHeaders.ContentType)).toInclude("form-data");
 			expect(await parser.parse(req)).toEqual({ title: "hello", ids: [1, 2] });
 		});
 

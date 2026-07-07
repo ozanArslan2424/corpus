@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
 
-import { URLParamsParser } from "@/Parser/URLParamsParser";
+import { URLParamsParser } from "@/Parsers/URLParamsParser";
 
 describe("URLParamsParser", () => {
 	const parser = new URLParamsParser();

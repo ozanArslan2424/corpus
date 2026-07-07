@@ -1,15 +1,15 @@
-import type { CHeaderKey } from "@/CHeaders/CHeaderKey";
-import type { CHeadersInit } from "@/CHeaders/CHeadersInit";
+import type { CHeadersInit, HeaderKey } from "@/CHeaders/types";
+import { objGetEntries } from "@/utils/objects";
 import { strIsDefined } from "@/utils/strings";
 
-/** Headers is extended to include helpers and intellisense for common header names. */
+/** CHeaders is extended to include helpers and intellisense for common header names. */
 
 export class CHeaders extends Headers {
 	constructor(init?: CHeadersInit) {
-		super(init);
+		super(init as HeadersInit);
 	}
 
-	override append(name: CHeaderKey, value: string | string[]): void {
+	override append(name: HeaderKey, value: string | string[]): void {
 		if (Array.isArray(value)) {
 			for (const v of value) {
 				super.append(name, v);
@@ -19,19 +19,19 @@ export class CHeaders extends Headers {
 		}
 	}
 
-	override set(name: CHeaderKey, value: string | number | boolean): void {
+	override set(name: HeaderKey, value: string | number | boolean): void {
 		super.set(name, String(value));
 	}
 
-	override get(name: CHeaderKey): string | null {
+	override get(name: HeaderKey): string | null {
 		return super.get(name) ?? super.get(name.toLowerCase());
 	}
 
-	override has(name: CHeaderKey): boolean {
+	override has(name: HeaderKey): boolean {
 		return super.has(name) || super.has(name.toLowerCase());
 	}
 
-	override delete(name: CHeaderKey): void {
+	override delete(name: HeaderKey): void {
 		return super.delete(name);
 	}
 
@@ -52,23 +52,12 @@ export class CHeaders extends Headers {
 	}
 
 	setMany(
-		init: [string, string][] | (Record<string, string> & Partial<Record<CHeaderKey, string>>),
+		init: [string, string][] | (Record<string, string> & Partial<Record<HeaderKey, string>>),
 	): void {
-		const entries = Array.isArray(init) ? init : Object.entries(init);
+		const entries = Array.isArray(init) ? init : objGetEntries(init);
 		for (const [key, value] of entries) {
 			if (!strIsDefined(value)) continue;
 			this.set(key, value);
-		}
-	}
-
-	/** @deprecated */
-	static findHeaderInInit(init: CHeadersInit, name: CHeaderKey): string | null {
-		if (init instanceof CHeaders || init instanceof Headers) {
-			return init.get(name);
-		} else if (Array.isArray(init)) {
-			return init.find((entry) => entry[0] === name)?.[1] ?? null;
-		} else {
-			return init[name] ?? null;
 		}
 	}
 }

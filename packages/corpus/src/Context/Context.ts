@@ -1,10 +1,10 @@
 import type { CHeaders } from "@/CHeaders/CHeaders";
-import type { CookiesInterface } from "@/Cookies/CookiesInterface";
+import type { Cookies } from "@/Cookies/Cookies";
 import { $registry } from "@/registry";
 import { Req } from "@/Req/Req";
 import { Res } from "@/Res/Res";
-import type { RouterReturn } from "@/Router/RouterReturn";
-import type { ContextDataInterface } from "@/types.d.ts";
+import type { RouterReturn } from "@/Router/types";
+import type { ContextDataInterface } from "@/types";
 
 /**
  * The context object used in Route "callback" parameter.
@@ -18,7 +18,7 @@ import type { ContextDataInterface } from "@/types.d.ts";
  * req = Req instance (readonly)
  * res = Res instance
  * url = Request URL object
- * headers = Request Headers
+ * headers = Request CHeaders
  * cookies = Request Cookies
  * body = Parsed Request body
  * search = Parsed Request URL search params
@@ -39,7 +39,7 @@ export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	res: Res<R>;
 	url: URL;
 	headers: CHeaders;
-	cookies: CookiesInterface;
+	cookies: Cookies;
 	body: B = Object.create(null);
 	search: S = Object.create(null);
 	params: P = Object.create(null);
@@ -61,10 +61,18 @@ export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 		if (body instanceof ReadableStream) {
 			ctx.body = body as B;
 		} else {
-			ctx.body = await $registry.schemaParser.parse("body", body, match.route.model?.body);
+			ctx.body = await $registry.schemaParser.parse("body", body, match.route.validators?.body);
 		}
-		ctx.search = await $registry.schemaParser.parse("search", search, match.route.model?.search);
-		ctx.params = await $registry.schemaParser.parse("params", params, match.route.model?.params);
+		ctx.search = await $registry.schemaParser.parse(
+			"search",
+			search,
+			match.route.validators?.search,
+		);
+		ctx.params = await $registry.schemaParser.parse(
+			"params",
+			params,
+			match.route.validators?.params,
+		);
 
 		ctx.req = clone;
 	}

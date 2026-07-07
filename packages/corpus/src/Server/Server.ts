@@ -1,28 +1,23 @@
-import { RouteVariant } from "@/BaseRoute/RouteVariant";
 import { Context } from "@/Context/Context";
+import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
 import { $registry } from "@/registry";
 import { Req } from "@/Req/Req";
 import { Res } from "@/Res/Res";
-import type { RouterData } from "@/Router/RouterData";
-import type { ErrorHandler } from "@/Server/ErrorHandler";
-import type { RequestHandler } from "@/Server/RequestHandler";
-import type { ServerApp } from "@/Server/ServerApp";
-import type { ServerInterface } from "@/Server/ServerInterface";
-import type { ServerOptions } from "@/Server/ServerOptions";
-import { Status } from "@/Status/Status";
+import { RouteVariant } from "@/Route/types";
+import type { WebSocketRoute } from "@/Route/WebSocketRoute";
+import type { RouterData } from "@/Router/types";
+import type { ErrorHandler, RequestHandler, ServerApp, ServerOptions } from "@/Server/types";
 import type { Func } from "@/utils/functions";
 import { logger, logFatal } from "@/utils/logger";
 import type { OrString } from "@/utils/strings";
-import { WebSocketRoute } from "@/WebSocketRoute/WebSocketRoute";
 import { XConfig } from "@/XConfig/XConfig";
 
 /**
  * Server is the entrypoint to the app. It must be initialized before registering routes and middlewares.
  * ".listen()" to start listening.
  */
-
-export class Server implements ServerInterface {
+export class Server {
 	constructor(protected readonly opts?: ServerOptions) {}
 
 	protected app: ServerApp | undefined;
@@ -172,6 +167,21 @@ export class Server implements ServerInterface {
 	defaultOnBeforeClose: Func<[], Bun.MaybePromise<void>> | undefined = undefined;
 
 	protected handleError: ErrorHandler = (err, c) => this.defaultErrorHandler(err, c);
+	/**
+	 *
+	 * Default error handler response will have a status of C.Error or 500 and json:
+	 *
+	 * ```typescript
+	 * { error: unknown | true, message: string }
+	 * ```
+	 *
+	 * If throw something other than an Error instance, you should probably handle it.
+	 * However the default response will have a status of 500 and json:
+	 *
+	 * ```typescript
+	 * { error: Instance, message: "Unknown" }
+	 * ```
+	 */
 	setOnError(handler: ErrorHandler): void {
 		this.handleError = handler;
 	}
@@ -184,6 +194,14 @@ export class Server implements ServerInterface {
 	};
 
 	protected handleNotFound: RequestHandler = (req) => this.defaultNotFoundHandler(req);
+	/**
+	 *
+	 * Default not found handler response will have a status of 404 and json:
+	 *
+	 * ```typescript
+	 * { error: true, message: `${req.method} on ${req.url} does not exist.` }
+	 * ```
+	 */
 	setOnNotFound(handler: RequestHandler): void {
 		this.handleNotFound = handler;
 	}
@@ -198,7 +216,6 @@ export class Server implements ServerInterface {
 		if (!$registry.cors) {
 			return new Res(undefined, { status: Status.NO_CONTENT });
 		}
-		const handler = $registry.cors.getPreflightHandler();
-		return handler(req);
+		return $registry.cors.handlePreflight(req);
 	};
 }

@@ -1,4 +1,4 @@
-import type { RouteModel } from "@/BaseRoute/RouteModel";
+import type { RouteModel } from "@/Route/types";
 import type { InferSchemaOut, Schema } from "@/utils/Schema";
 import type { Prettify } from "@/utils/types";
 

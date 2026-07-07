@@ -42,7 +42,7 @@ describe("C.Context", () => {
 				handler: () => {},
 				method: "POST",
 				variant: "dynamic",
-				model: undefined,
+				validators: undefined,
 			},
 		};
 

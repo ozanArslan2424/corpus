@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 
-import { MiddlewareRouter } from "@/MiddlewareRouter/MiddlewareRouter";
 import { Route } from "@/Route/Route";
+import { MiddlewareRouter } from "@/Router/MiddlewareRouter";
 
 import { createTestController } from "./utils/createTestController";
 

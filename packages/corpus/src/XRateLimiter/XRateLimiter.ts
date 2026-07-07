@@ -1,15 +1,17 @@
 import crypto from "crypto";
 
-import { RouteVariant } from "@/BaseRoute/RouteVariant";
 import { CHeaders } from "@/CHeaders/CHeaders";
-import { CommonHeaders } from "@/CommonHeaders/CommonHeaders";
+import { CommonHeaders } from "@/enums/CommonHeaders";
+import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
 import { MiddlewareAbstract } from "@/Middleware/MiddlewareAbstract";
-import type { MiddlewareHandler } from "@/Middleware/MiddlewareHandler";
-import type { MiddlewareUseOn } from "@/Middleware/MiddlewareUseOn";
-import { MiddlewareVariant } from "@/Middleware/MiddlewareVariant";
+import {
+	MiddlewareVariant,
+	type MiddlewareUseOn,
+	type MiddlewareHandler,
+} from "@/Middleware/types";
 import { $registry } from "@/registry";
-import { Status } from "@/Status/Status";
+import { RouteVariant } from "@/Route/types";
 import { logFatal } from "@/utils/logger";
 import { strIsDefined } from "@/utils/strings";
 import type { RateLimitConfig } from "@/XRateLimiter/RateLimitConfig";
@@ -38,8 +40,8 @@ export class XRateLimiter extends MiddlewareAbstract {
 	override handler: MiddlewareHandler = async (c) => {
 		const result = await this.getResult(c.headers);
 		c.res.headers.innerCombine(result.headers);
-		const exposedHeaders = Object.values(this.config.headerNames);
-		c.res.headers.append(CommonHeaders.AccessControlExposeHeaders, exposedHeaders);
+		const exposedCHeaders = Object.values(this.config.headerNames);
+		c.res.headers.append(CommonHeaders.AccessControlExposeCHeaders, exposedCHeaders);
 
 		if (!result.success) {
 			throw new Exception("Too many requests", Status.TOO_MANY_REQUESTS, c.res);

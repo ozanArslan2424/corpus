@@ -1,17 +1,16 @@
-import type { BaseRouteInterface } from "@/BaseRoute/BaseRouteInterface";
-import { RouteVariant } from "@/BaseRoute/RouteVariant";
 import { $registry } from "@/registry";
+import type { RouterInterface, RouterAdapterInterface } from "@/Registry/types";
 import type { Req } from "@/Req/Req";
-import type { RouterData } from "@/Router/RouterData";
-import type { RouterInterface } from "@/Router/RouterInterface";
-import type { RouterReturn } from "@/Router/RouterReturn";
-import type { RouterAdapterInterface } from "@/RouterAdapter/RouterAdapterInterface";
+import type { BaseRoute } from "@/Route/BaseRoute";
+import { RouteVariant } from "@/Route/types";
+import type { RouterReturn } from "@/Router/types";
+import type { RouterData } from "@/Router/types";
 import { arrIncludes } from "@/utils/arrays";
 import type { Func } from "@/utils/functions";
 import { internFunc } from "@/utils/functions";
 import { joinPathSegments } from "@/utils/joinPathSegments";
 import { logger } from "@/utils/logger";
-import { objGetKeys } from "@/utils/objects";
+import { objGetEntries } from "@/utils/objects";
 import { strRemoveWhitespace } from "@/utils/strings";
 
 export class Router implements RouterInterface {
@@ -20,27 +19,13 @@ export class Router implements RouterInterface {
 	private readonly cache = new WeakMap<Req, RouterReturn>();
 	private readonly funcMap = new Map<string, Func>();
 
-	add(route: BaseRouteInterface<any, any, any, any>): void {
+	add(route: BaseRoute<any, any, any, any>): void {
 		const data = this.routeToRouterData(route);
-		if (route.model) {
-			data.model ??= {};
-			for (const key of objGetKeys(route.model)) {
-				if (key === "response") continue;
-				const schema = route.model[key];
-				if (!schema) continue;
-				data.model[key] = internFunc(
-					this.funcMap,
-					schema["~standard"].validate,
-					"model",
-					strRemoveWhitespace(JSON.stringify(schema)),
-				);
-			}
-		}
 		this.adapter.add(data);
-		$registry.docs.set(route.id, {
-			id: route.id,
-			endpoint: route.endpoint,
-			method: route.method,
+		$registry.docs.set(data.id, {
+			id: data.id,
+			endpoint: data.endpoint,
+			method: data.method,
 			model: route.model,
 		});
 	}
@@ -61,18 +46,33 @@ export class Router implements RouterInterface {
 		return fn();
 	}
 
-	private routeToRouterData(route: BaseRouteInterface): RouterData {
-		let endpoint = route.endpoint;
-		if (arrIncludes(route.variant, [RouteVariant.dynamic, RouteVariant.websocket])) {
-			endpoint = joinPathSegments($registry.prefix, route.endpoint);
-		}
-
-		return {
+	private routeToRouterData(route: BaseRoute): RouterData {
+		const data: RouterData = {
 			id: route.id,
-			endpoint,
+			endpoint: route.endpoint,
 			method: route.method,
 			handler: route.handler,
 			variant: route.variant,
 		};
+
+		if (arrIncludes(data.variant, [RouteVariant.dynamic, RouteVariant.websocket])) {
+			data.endpoint = joinPathSegments($registry.prefix, route.endpoint);
+		}
+
+		if (route.model) {
+			data.validators ??= {};
+			for (const [key, schema] of objGetEntries(route.model)) {
+				if (key === "response") continue;
+				if (!schema) continue;
+				data.validators[key] = internFunc(
+					this.funcMap,
+					schema["~standard"].validate,
+					"model",
+					strRemoveWhitespace(JSON.stringify(schema)),
+				);
+			}
+		}
+
+		return data;
 	}
 }

@@ -1,13 +1,15 @@
-import { CommonHeaders } from "@/CommonHeaders/CommonHeaders";
-import type { CorsInterface } from "@/Cors/CorsInterface";
-import type { CorsOptions } from "@/Cors/CorsOptions";
-import type { MiddlewareHandler } from "@/Middleware/MiddlewareHandler";
-import type { MiddlewareUseOn } from "@/Middleware/MiddlewareUseOn";
-import { MiddlewareVariant } from "@/Middleware/MiddlewareVariant";
+import type { CorsOptions } from "@/Cors/types";
+import { CommonHeaders } from "@/enums/CommonHeaders";
+import { Status } from "@/enums/Status";
+import {
+	MiddlewareVariant,
+	type MiddlewareUseOn,
+	type MiddlewareHandler,
+} from "@/Middleware/types";
 import { $registry } from "@/registry";
+import type { CorsInterface } from "@/Registry/types";
 import { Res } from "@/Res/Res";
-import type { RequestHandler } from "@/Server/RequestHandler";
-import { Status } from "@/Status/Status";
+import type { RequestHandler } from "@/Server/types";
 import { isSomeArray } from "@/utils/arrays";
 import { boolToString } from "@/utils/booleans";
 
@@ -27,16 +29,16 @@ export class Cors implements CorsInterface {
 	variant: MiddlewareVariant = MiddlewareVariant.outbound;
 	useOn: MiddlewareUseOn = "*";
 	handler: MiddlewareHandler = (c) => {
-		this.applyHeaders(c.res, c.headers.get("origin") ?? "");
+		this.applyCHeaders(c.res, c.headers.get("origin") ?? "");
 	};
 
-	/** Applies CORS headers to a Headers object given the request origin. */
-	protected applyHeaders(res: Res, reqOrigin: string, includeMaxAge = false): void {
+	/** Applies CORS headers to a CHeaders object given the request origin. */
+	protected applyCHeaders(res: Res, reqOrigin: string, includeMaxAge = false): void {
 		const {
 			allowedOrigins,
 			allowedMethods,
-			allowedHeaders,
-			exposedHeaders,
+			allowedCHeaders,
+			exposedCHeaders,
 			credentials,
 			maxAge = 86400,
 		} = this.opts ?? {};
@@ -59,12 +61,12 @@ export class Cors implements CorsInterface {
 			res.headers.set(CommonHeaders.AccessControlAllowMethods, allowedMethods.join(", "));
 		}
 
-		if (isSomeArray(allowedHeaders)) {
-			res.headers.set(CommonHeaders.AccessControlAllowHeaders, allowedHeaders.join(", "));
+		if (isSomeArray(allowedCHeaders)) {
+			res.headers.set(CommonHeaders.AccessControlAllowCHeaders, allowedCHeaders.join(", "));
 		}
 
-		if (isSomeArray(exposedHeaders)) {
-			res.headers.set(CommonHeaders.AccessControlExposeHeaders, exposedHeaders.join(", "));
+		if (isSomeArray(exposedCHeaders)) {
+			res.headers.set(CommonHeaders.AccessControlExposeCHeaders, exposedCHeaders.join(", "));
 		}
 
 		if (includeMaxAge) {
@@ -75,11 +77,9 @@ export class Cors implements CorsInterface {
 	}
 
 	/** Preflight handler for OPTIONS requests. */
-	getPreflightHandler(): RequestHandler {
-		return (req) => {
-			const res = new Res(undefined, { status: Status.NO_CONTENT });
-			this.applyHeaders(res, req.headers.get("origin") ?? "", true);
-			return res;
-		};
-	}
+	handlePreflight: RequestHandler = (req) => {
+		const res = new Res(undefined, { status: Status.NO_CONTENT });
+		this.applyCHeaders(res, req.headers.get("origin") ?? "", true);
+		return res;
+	};
 }

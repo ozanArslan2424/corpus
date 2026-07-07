@@ -1,5 +1,5 @@
+import { Status } from "@/enums/Status";
 import { Res } from "@/Res/Res";
-import { Status } from "@/Status/Status";
 
 export class Exception extends Error {
 	constructor(

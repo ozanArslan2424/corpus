@@ -1,20 +1,22 @@
-import type { CorsInterface } from "@/Cors/CorsInterface";
-import { MiddlewareRouter } from "@/MiddlewareRouter/MiddlewareRouter";
-import type { MiddlewareRouterInterface } from "@/MiddlewareRouter/MiddlewareRouterInterface";
-import { BodyParser } from "@/Parser/BodyParser";
-import type { BodyParserInterface } from "@/Parser/BodyParserInterface";
-import { FormDataParser } from "@/Parser/FormDataParser";
-import type { ObjectParserInterface } from "@/Parser/ObjectParserInterface";
-import { SchemaParser } from "@/Parser/SchemaParser";
-import type { SchemaParserInterface } from "@/Parser/SchemaParserInterface";
-import { SearchParamsParser } from "@/Parser/SearchParamsParser";
-import { URLParamsParser } from "@/Parser/URLParamsParser";
-import type { RegistryDocEntry } from "@/Registry/RegistryDocEntry";
-import type { RegistryInterface } from "@/Registry/RegistryInterface";
+import { BodyParser } from "@/Parsers/BodyParser";
+import { FormDataParser } from "@/Parsers/FormDataParser";
+import { SchemaParser } from "@/Parsers/SchemaParser";
+import { SearchParamsParser } from "@/Parsers/SearchParamsParser";
+import { URLParamsParser } from "@/Parsers/URLParamsParser";
+import type {
+	BodyParserInterface,
+	CorsInterface,
+	MiddlewareRouterInterface,
+	ObjectParserInterface,
+	RegistryDocEntry,
+	RegistryInterface,
+	RouterAdapterInterface,
+	RouterInterface,
+	SchemaParserInterface,
+} from "@/Registry/types";
+import { BranchRouterAdapter } from "@/Router/BranchRouterAdapter";
+import { MiddlewareRouter } from "@/Router/MiddlewareRouter";
 import { Router } from "@/Router/Router";
-import type { RouterInterface } from "@/Router/RouterInterface";
-import { BranchAdapter } from "@/RouterAdapter/BranchAdapter";
-import type { RouterAdapterInterface } from "@/RouterAdapter/RouterAdapterInterface";
 
 export class Registry implements RegistryInterface {
 	constructor() {
@@ -22,7 +24,7 @@ export class Registry implements RegistryInterface {
 	}
 
 	reset(): void {
-		this.adapter = new BranchAdapter();
+		this.adapter = new BranchRouterAdapter();
 		this.router = new Router(this.adapter);
 		this.docs = new Map();
 		this.cors = null;

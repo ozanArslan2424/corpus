@@ -1,14 +1,10 @@
 import { CHeaders } from "@/CHeaders/CHeaders";
-import { CommonHeaders } from "@/CommonHeaders/CommonHeaders";
 import { Cookies } from "@/Cookies/Cookies";
-import type { CookiesInterface } from "@/Cookies/CookiesInterface";
+import { CommonHeaders } from "@/enums/CommonHeaders";
+import { DefaultStatusTexts } from "@/enums/DefaultStatusTexts";
+import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
-import type { NdjsonSource } from "@/Res/NdjsonSource";
-import type { ResBody } from "@/Res/ResBody";
-import type { ResInit } from "@/Res/ResInit";
-import type { SseSource } from "@/Res/SseSource";
-import { DefaultStatusTexts } from "@/Status/DefaultStatusTexts";
-import { Status } from "@/Status/Status";
+import type { ResBody, ResInit, SseSource, NdjsonSource } from "@/Res/types";
 import { isNil } from "@/utils/nil";
 import { isPrimitive } from "@/utils/primitives";
 import { XFile } from "@/XFile/XFile";
@@ -55,13 +51,13 @@ export class Res<R = unknown> {
 	headers: CHeaders;
 	status: Status;
 	statusText: string;
-	cookies: CookiesInterface;
+	cookies: Cookies;
 
 	get response(): Response {
-		const setCookieHeaders = this.cookies.toSetCookieHeaders();
+		const setCookieCHeaders = this.cookies.toSetCookieHeaders();
 
-		if (setCookieHeaders.length > 0) {
-			for (const header of setCookieHeaders) {
+		if (setCookieCHeaders.length > 0) {
+			for (const header of setCookieCHeaders) {
 				this.headers.append(CommonHeaders.SetCookie, header);
 			}
 		}
@@ -73,7 +69,7 @@ export class Res<R = unknown> {
 		});
 	}
 
-	private resolveCookies(): CookiesInterface {
+	private resolveCookies(): Cookies {
 		return new Cookies(this.init?.cookies);
 	}
 

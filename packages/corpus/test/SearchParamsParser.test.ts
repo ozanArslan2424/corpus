@@ -1,6 +1,6 @@
 import { describe, it, expect } from "bun:test";
 
-import { SearchParamsParser } from "@/Parser/SearchParamsParser";
+import { SearchParamsParser } from "@/Parsers/SearchParamsParser";
 
 describe("SearchParamsParser", () => {
 	const parser = new SearchParamsParser();

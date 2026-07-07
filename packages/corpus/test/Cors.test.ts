@@ -89,24 +89,24 @@ describe("C.Cors", () => {
 		expect(res.headers.get("Access-Control-Allow-Methods")).toBeNull();
 	});
 
-	// ─── allowedHeaders ───────────────────────────────────────────
+	// ─── allowedCHeaders ───────────────────────────────────────────
 
 	it("HEADERS - SETS HEADER WHEN HEADERS ARE PROVIDED", async () => {
 		const s = createTestServer();
-		new TC.Cors({ allowedHeaders: ["Content-Type", "Authorization"] });
+		new TC.Cors({ allowedCHeaders: ["Content-Type", "Authorization"] });
 		new TC.Route("/cors-headers", () => "ok");
 
 		const res = await s.handle(req("/cors-headers"));
-		expect(res.headers.get("Access-Control-Allow-Headers")).toBe("Content-Type, Authorization");
+		expect(res.headers.get("Access-Control-Allow-CHeaders")).toBe("Content-Type, Authorization");
 	});
 
 	it("HEADERS - DOES NOT SET HEADER WHEN HEADERS ARE EMPTY", async () => {
 		const s = createTestServer();
-		new TC.Cors({ allowedHeaders: [] });
+		new TC.Cors({ allowedCHeaders: [] });
 		new TC.Route("/cors-headers-empty", () => "ok");
 
 		const res = await s.handle(req("/cors-headers-empty"));
-		expect(res.headers.get("Access-Control-Allow-Headers")).toBeNull();
+		expect(res.headers.get("Access-Control-Allow-CHeaders")).toBeNull();
 	});
 
 	// ─── credentials ──────────────────────────────────────────────
@@ -145,7 +145,7 @@ describe("C.Cors", () => {
 		new TC.Cors({
 			allowedOrigins: [allowedOrigin],
 			allowedMethods: ["GET", "POST"],
-			allowedHeaders: ["Content-Type"],
+			allowedCHeaders: ["Content-Type"],
 			credentials: true,
 		});
 		new TC.Route("/cors-combined", () => "ok");
@@ -153,7 +153,7 @@ describe("C.Cors", () => {
 		const res = await s.handle(req("/cors-combined", { headers: { origin: allowedOrigin } }));
 		expect(res.headers.get("Access-Control-Allow-Origin")).toBe(allowedOrigin);
 		expect(res.headers.get("Access-Control-Allow-Methods")).toBe("GET, POST");
-		expect(res.headers.get("Access-Control-Allow-Headers")).toBe("Content-Type");
+		expect(res.headers.get("Access-Control-Allow-CHeaders")).toBe("Content-Type");
 		expect(res.headers.get("Access-Control-Allow-Credentials")).toBe("true");
 	});
 });

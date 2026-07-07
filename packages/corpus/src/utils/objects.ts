@@ -2,8 +2,6 @@
 
 import type { OrString } from "./strings";
 
-export type UnknownObject = Record<string, unknown>;
-
 export function objGetKeys<O extends object>(o: O): Array<keyof O> {
 	return Object.keys(o) as Array<keyof O>;
 }
@@ -131,7 +129,7 @@ export function objDiff(source: object, target: object, options: DiffOptions = {
 	return result;
 }
 
-export function isObjectWith<T extends UnknownObject>(
+export function isObjectWith<T extends Record<string, unknown>>(
 	item: unknown,
 	key: OrString<keyof T>,
 ): item is T {
@@ -141,17 +139,17 @@ export function isObjectWith<T extends UnknownObject>(
 // oxlint-disable-next-line typescript/no-restricted-types
 type DeepObjectWith<T> = T extends object ? { [K in keyof T]: DeepObjectWith<T[K]> } : T;
 
-export function isDeepObjectWith<T extends UnknownObject>(
+export function isDeepObjectWith<T extends Record<string, unknown>>(
 	item: unknown,
 	shape: T,
 ): item is DeepObjectWith<T> {
 	const firstKey = Object.keys(shape)[0];
 	if (!firstKey) return false;
-	if (!isObjectWith<UnknownObject>(item, firstKey)) return false;
+	if (!isObjectWith<Record<string, unknown>>(item, firstKey)) return false;
 	return Object.entries(shape).every(([key, value]) => {
-		if (!isObjectWith<UnknownObject>(item, key)) return false;
+		if (!isObjectWith<Record<string, unknown>>(item, key)) return false;
 		if (typeof value === "object" && value !== null) {
-			return isDeepObjectWith(item[key], value as UnknownObject);
+			return isDeepObjectWith(item[key], value as Record<string, unknown>);
 		}
 		return true;
 	});
@@ -160,8 +158,8 @@ export function isDeepObjectWith<T extends UnknownObject>(
 export function isObjectWithKeys<T>(item: unknown, ...keys: string[]): item is T {
 	let current = item;
 	for (const key of keys) {
-		if (!isObjectWith<UnknownObject>(current, key)) return false;
-		current = (current as UnknownObject)[key];
+		if (!isObjectWith<Record<string, unknown>>(current, key)) return false;
+		current = (current as Record<string, unknown>)[key];
 	}
 	return true;
 }

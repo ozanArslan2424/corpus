@@ -10,7 +10,7 @@ export function createTestWebSocketRoute(log: Logger, withAbstract: boolean) {
 				this.register();
 			}
 
-			path: string = "/ws";
+			endpoint: string = "/ws";
 
 			onOpen?: WebSocketRouteDefinition["onOpen"] | undefined = (ws) => {
 				log.info(`[ws] New connection opened — remoteAddress: ${ws.remoteAddress}`);

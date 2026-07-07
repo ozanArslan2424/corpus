@@ -1,10 +1,8 @@
 import { CHeaders } from "@/CHeaders/CHeaders";
-import { CommonHeaders } from "@/CommonHeaders/CommonHeaders";
 import { Cookies } from "@/Cookies/Cookies";
-import type { CookiesInterface } from "@/Cookies/CookiesInterface";
-import { Method } from "@/Method/Method";
-import type { ReqInfo } from "@/Req/ReqInfo";
-import type { ReqInit } from "@/Req/ReqInit";
+import { CommonHeaders } from "@/enums/CommonHeaders";
+import { Method } from "@/enums/Method";
+import type { ReqInfo, ReqInit } from "@/Req/types";
 import { strSplit } from "@/utils/strings";
 
 /** Req includes a cookie jar, better headers, and some utilities. */
@@ -23,7 +21,7 @@ export class Req extends Request {
 
 	override readonly headers: CHeaders;
 	readonly urlObject: URL;
-	readonly cookies: CookiesInterface;
+	readonly cookies: Cookies;
 
 	get isPreflight(): boolean {
 		return (
@@ -37,7 +35,7 @@ export class Req extends Request {
 		return isUpgrade && isWebsocket;
 	}
 
-	private resolveCookies(): CookiesInterface {
+	private resolveCookies(): Cookies {
 		const jar = new Cookies();
 
 		const cookieHeader = this.headers.get(CommonHeaders.Cookie);

@@ -1,10 +1,11 @@
-import type { MiddlewareHandler } from "@/Middleware/MiddlewareHandler";
-import type { MiddlewareInterface } from "@/Middleware/MiddlewareInterface";
-import type { MiddlewareUseOn } from "@/Middleware/MiddlewareUseOn";
-import { MiddlewareVariant } from "@/Middleware/MiddlewareVariant";
+import {
+	MiddlewareVariant,
+	type MiddlewareUseOn,
+	type MiddlewareHandler,
+} from "@/Middleware/types";
 import { $registry } from "@/registry";
 
-export abstract class MiddlewareAbstract implements MiddlewareInterface {
+export abstract class MiddlewareAbstract {
 	variant: MiddlewareVariant = MiddlewareVariant.inbound;
 
 	abstract useOn: MiddlewareUseOn;

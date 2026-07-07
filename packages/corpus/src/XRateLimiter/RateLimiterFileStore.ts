@@ -3,8 +3,8 @@ import fs from "node:fs/promises";
 import * as path from "node:path";
 import * as os from "os";
 
+import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
-import { Status } from "@/Status/Status";
 import type { RateLimitEntry } from "@/XRateLimiter/RateLimitEntry";
 import type { RateLimitStoreInterface } from "@/XRateLimiter/RateLimitStoreInterface";
 

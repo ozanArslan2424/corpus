@@ -1,6 +1,6 @@
 import { MiddlewareAbstract } from "@/Middleware/MiddlewareAbstract";
-import type { MiddlewareOptions } from "@/Middleware/MiddlewareOptions";
-import { MiddlewareVariant } from "@/Middleware/MiddlewareVariant";
+import type { MiddlewareOptions } from "@/Middleware/types";
+import { isNil } from "@/utils/nil";
 
 /**
  * Simple Middleware registration class.
@@ -12,11 +12,11 @@ import { MiddlewareVariant } from "@/Middleware/MiddlewareVariant";
 export class Middleware extends MiddlewareAbstract {
 	constructor(opts: MiddlewareOptions) {
 		super();
-		this.variant = opts.variant ?? MiddlewareVariant.inbound;
+
+		if (!isNil(opts.variant)) this.variant = opts.variant;
+		if (!isNil(opts.useOn)) this.useOn = opts.useOn;
 		this.handler = opts.handler;
-		if (opts.useOn) {
-			this.useOn = opts.useOn;
-		}
+
 		this.register();
 	}
 

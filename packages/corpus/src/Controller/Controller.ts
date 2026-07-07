@@ -1,9 +1,9 @@
-import { BaseRouteAbstract } from "@/BaseRoute/BaseRouteAbstract";
-import type { MiddlewareHandler } from "@/Middleware/MiddlewareHandler";
+import type { MiddlewareHandler } from "@/Middleware/types";
+import { resolveRouteAddress } from "@/Route/resolveRouteAddress";
 import { Route } from "@/Route/Route";
-import { StaticRoute } from "@/StaticRoute/StaticRoute";
+import { StaticRoute } from "@/Route/StaticRoute";
+import { WebSocketRoute } from "@/Route/WebSocketRoute";
 import { joinPathSegments } from "@/utils/joinPathSegments";
-import { WebSocketRoute } from "@/WebSocketRoute/WebSocketRoute";
 
 /**
  * Base class for grouping related routes under a shared prefix and optional middleware.
@@ -42,7 +42,7 @@ export abstract class Controller {
 		...args: ConstructorParameters<typeof Route<B, S, P, R, E>>
 	): Route<B, S, P, R, E> {
 		const [address, handler, model] = args;
-		const resolved = BaseRouteAbstract.resolveAddress(address);
+		const resolved = resolveRouteAddress(address);
 		const method = resolved.method;
 		const path = joinPathSegments<E>(this.prefix, resolved.path);
 		const route = new Route(
@@ -65,7 +65,7 @@ export abstract class Controller {
 		...args: ConstructorParameters<typeof StaticRoute<B, S, P, E>>
 	): StaticRoute<B, S, P, E> {
 		const [address, ...rest] = args;
-		const resolved = BaseRouteAbstract.resolveAddress(address);
+		const resolved = resolveRouteAddress(address);
 		const method = resolved.method;
 		const path = joinPathSegments<E>(this.prefix, resolved.path);
 		const route = new StaticRoute({ method, path }, ...rest);
