@@ -1,6 +1,4 @@
 import type { CorsInterface } from "@/Cors/CorsInterface";
-import { EntityStore } from "@/EntityStore/EntityStore";
-import type { EntityStoreInterface } from "@/EntityStore/EntityStoreInterface";
 import { MiddlewareRouter } from "@/MiddlewareRouter/MiddlewareRouter";
 import type { MiddlewareRouterInterface } from "@/MiddlewareRouter/MiddlewareRouterInterface";
 import { BodyParser } from "@/Parser/BodyParser";
@@ -27,7 +25,6 @@ export class Registry implements RegistryInterface {
 		this.adapter = new BranchAdapter();
 		this.router = new Router(this.adapter);
 		this.docs = new Map();
-		this.entities = new EntityStore();
 		this.cors = null;
 		this.prefix = "";
 		this.middlewares = new MiddlewareRouter();
@@ -125,13 +122,5 @@ export class Registry implements RegistryInterface {
 	}
 	private set docs(value: Map<string, RegistryDocEntry>) {
 		this._docs = value;
-	}
-
-	private _entities!: EntityStoreInterface;
-	public get entities(): EntityStoreInterface {
-		return this._entities;
-	}
-	private set entities(value: EntityStoreInterface) {
-		this._entities = value;
 	}
 }

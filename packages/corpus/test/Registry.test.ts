@@ -24,7 +24,6 @@ describe("Registry - plug & play", () => {
 			bodyParser: $registryTesting.bodyParser,
 			schemaParser: $registryTesting.schemaParser,
 			docs: $registryTesting.docs,
-			entities: $registryTesting.entities,
 			cors: $registryTesting.cors,
 			prefix: $registryTesting.prefix,
 		};
@@ -40,7 +39,6 @@ describe("Registry - plug & play", () => {
 		expect($registryTesting.bodyParser).not.toBe(before.bodyParser);
 		expect($registryTesting.schemaParser).not.toBe(before.schemaParser);
 		expect($registryTesting.docs).not.toBe(before.docs);
-		expect($registryTesting.entities).not.toBe(before.entities);
 		expect($registryTesting.cors).toBeNull();
 		expect($registryTesting.prefix).toBe("");
 	});

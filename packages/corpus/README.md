@@ -79,12 +79,6 @@ export class ItemModel {
 // This helper type could also work for similar prototypes
 export type ItemType = X.InferModel<typeof ItemModel>;
 
-// Entity is for data transfer objects.
-export class ItemEntity extends C.Entity({
-    name: "Item",
-    schema: { ... }
-}) {}
-
 // Repository layer isn't included.
 export class ItemRepository {
 	// ...
@@ -92,7 +86,7 @@ export class ItemRepository {
 
 // Service layer isn't included.
 export class ItemService {
-	constructor(private readonly itemRepository: ItemRepository) {}
+	constructor(private readonly repo: ItemRepository) {}
 
 	create(body: ItemType["create"]["body"]) {
 		// ...
@@ -101,14 +95,14 @@ export class ItemService {
 
 // Controller is an abstract class
 export class ItemController extends C.Controller {
-	constructor(private readonly itemService: ItemService) {
+	constructor(private readonly service: ItemService) {
 		super({ prefix: "/item" });
 	}
 
 	// Helper instead of new Route()
 	create = this.route(
 		{ method: "POST", path: "/create" },
-		(c) => this.itemService.create(c.body),
+		(c) => this.service.create(c.body),
 		ItemModel.create,
 	);
 

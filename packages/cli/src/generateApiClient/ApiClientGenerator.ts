@@ -1,12 +1,8 @@
 import fs from "node:fs";
 import path from "path";
 
-import type { EntityDefinition } from "@ozanarslan/corpus";
-
 import { logger } from "@/utils/logger";
-import type { UnknownObject } from "@/utils/objects";
 import { StringBuilder } from "@/utils/StringBuilder";
-import { toPascalCase } from "@/utils/strings";
 
 import type { Config, PartialConfig } from "../config";
 import { ConfigManager } from "../ConfigManager/ConfigManager";
@@ -34,11 +30,9 @@ export class ApiClientGenerator {
 		private readonly cliOverrides: Omit<PartialConfig, "jsonSchemaOptions">,
 	) {
 		this.docs = this.registry.docs;
-		this.entities = this.registry.entities.map;
 	}
 
 	private readonly docs: Map<string, DocEntry>;
-	private readonly entities: Map<string, EntityDefinition>;
 	private readonly schemaManager = new SchemaManager(this.config);
 
 	get config(): Config {
@@ -67,15 +61,6 @@ export class ApiClientGenerator {
 			: `${this.argsNS}.${pascalKey}`;
 	}
 
-	private get entitiesNS() {
-		return this.config.exportEntitiesAs;
-	}
-	private entityKey(pascalKey: string) {
-		return this.entitiesNS.includes("$")
-			? this.entitiesNS.replace("$", pascalKey)
-			: `${this.entitiesNS}.${pascalKey}`;
-	}
-
 	public async generate() {
 		const routes = Array.from(this.docs.values());
 
@@ -99,9 +84,6 @@ export class ApiClientGenerator {
 		b.line(`    init?: Omit<RequestInit, "headers">;`);
 		b.line(`}`);
 
-		if (this.entities.size > 0) {
-			await this.writeEntities(b, this.entities);
-		}
 		await this.writeModels(b, map);
 		this.writeArgs(b, map);
 		this.writeApiClientClass(b, map);
@@ -137,37 +119,6 @@ export class ApiClientGenerator {
 		}
 
 		return map;
-	}
-
-	private async writeEntities(b: StringBuilder, map: Map<string, EntityDefinition>) {
-		const types = new Map<string, string>();
-
-		for (const def of map.values()) {
-			if (def.jsonSchema) {
-				types.set(def.name, await this.buildJsonSchemaType(def.jsonSchema as UnknownObject));
-			} else {
-				types.set(def.name, await this.buildSchemaType(def.schema));
-			}
-		}
-
-		b.line(
-			`const newable = <T>() => class { constructor(values: T) { Object.assign(this, values); } } as unknown as new (values: T) => T;`,
-		);
-		b.line(``);
-
-		const useTemplate = this.entitiesNS.includes("$");
-
-		if (!useTemplate) b.line(`export namespace ${this.entitiesNS} {`);
-
-		for (const [name, typedef] of types.entries()) {
-			const pascalKey = toPascalCase(name);
-			const key = useTemplate ? this.entityKey(pascalKey) : pascalKey;
-			b.line(`export type ${key} = ${typedef};`);
-			b.line(`export const ${key} = newable<${key}>();`);
-			b.line(``);
-		}
-
-		if (!useTemplate) b.line(`}`);
 	}
 
 	private async writeModels(b: StringBuilder, map: Map<string, MapEntry>) {
@@ -362,19 +313,6 @@ export class ApiClientGenerator {
 		return result + method.slice(0, 1).toUpperCase() + method.slice(1).toLowerCase();
 	}
 
-	private async buildJsonSchemaType(json: UnknownObject): Promise<string> {
-		try {
-			const inter = await this.schemaManager.toInterface(json);
-			return inter;
-		} catch (err) {
-			console.error(
-				`[corpus] Failed to convert json schema to TypeScript interface. ` +
-					`Check your definition.\n` +
-					`Schema: ${JSON.stringify(json, null, 2)}`,
-			);
-			throw err;
-		}
-	}
 	private async buildSchemaType(schema: Schema): Promise<string> {
 		try {
 			const json = this.schemaManager.toJsonSchema(schema);

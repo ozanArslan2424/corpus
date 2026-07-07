@@ -44,7 +44,6 @@ export class ConfigManager {
 			exportClientAs: "CorpusApi",
 			exportModelsAs: "Models",
 			exportArgsAs: "Args",
-			exportEntitiesAs: "Entities",
 			ignoreGlobalPrefix: false,
 			jsonSchemaOptions: {
 				fallback: (ctx: any) => ctx.base,
@@ -234,7 +233,6 @@ export default defineConfig({
     exportClientAs: "${config.exportClientAs}",
     exportModelsAs: "${config.exportModelsAs}",
     exportArgsAs: "${config.exportArgsAs}",
-    exportEntitiesAs: "${config.exportEntitiesAs}",
     // The \`fallback: ctx => ctx.base\` strategy silently drops unsupported constraints and
     // keeps the rest of the schema intact. The least surprising behaviour for codegen purposes.
     jsonSchemaOptions: {

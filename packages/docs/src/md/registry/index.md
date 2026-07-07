@@ -69,10 +69,6 @@ Implements `SchemaParserInterface`. Parses and validates data against route sche
 
 Readonly. Holds the documentation map used by the CLI tool.
 
-### entities
-
-Readonly. Holds registered entities, used by the CLI tool.
-
 ### router
 
 Technically assignable but default instance depends on the adapter. Implements `RouterInterface`. See the [Router docs](/router/index.html).

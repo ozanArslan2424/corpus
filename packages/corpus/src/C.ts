@@ -35,8 +35,6 @@ export * from "./Router/Router";
 
 export * from "./RouterAdapter/BranchAdapter";
 
-export * from "./Entity/Entity";
-
 export * from "./CommonHeaders/CacheControlDirective";
 
 export * from "./CommonHeaders/CommonHeaders";

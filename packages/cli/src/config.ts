@@ -113,29 +113,6 @@ export type Config = {
 	exportArgsAs: OrString<"Args">;
 
 	/**
-	 * Controls how generated model types are exported.
-	 *
-	 * Pass a plain string to use it as a namespace that wraps all Entities.
-	 * Pass a string containing `$` to export each model individually, with `$`
-	 * replaced by the model's name.
-	 *
-	 * @default "Entities"
-	 *
-	 * @example
-	 * // Namespace mode (no `$`):
-	 * exportEntitiesAs: "Entities"
-	 * // → Entities.User
-	 * // → Entities.Profile
-	 *
-	 * @example
-	 * // Template mode (with `$`):
-	 * exportEntitiesAs: "Entity$"
-	 * // → EntityUser
-	 * // → EntityProfile
-	 */
-	exportEntitiesAs: OrString<"Entities">;
-
-	/**
 	 * Generated method names use endpoint paths by default,
 	 * you can optionally ignore the global prefix.
 	 */

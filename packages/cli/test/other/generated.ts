@@ -12,26 +12,6 @@ interface RequestDescriptor {
 	headers?: HeadersInit;
 	init?: Omit<RequestInit, "headers">;
 }
-const newable = <T,>() =>
-	class {
-		constructor(values: T) {
-			Object.assign(this, values);
-		}
-	} as unknown as new (values: T) => T;
-
-export namespace Entities {
-	export type User = {
-		age: number;
-		createdAt: string;
-		id: number;
-		name: string;
-		role: "admin" | "editor" | "viewer";
-		status: "active" | "banned" | "inactive";
-		tags: string[];
-		updatedAt: string;
-	};
-	export const User = newable<User>();
-}
 export namespace Models {
 	export type Param1Param2Get = _pretty<
 		{ response: void } & { params: { param1: _prim; param2: _prim } } & { search?: UnkObj }

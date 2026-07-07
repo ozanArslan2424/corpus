@@ -1,5 +1,4 @@
 import type { CorsInterface } from "@/Cors/CorsInterface";
-import type { EntityStoreInterface } from "@/EntityStore/EntityStoreInterface";
 import type { MiddlewareRouterInterface } from "@/MiddlewareRouter/MiddlewareRouterInterface";
 import type { BodyParserInterface } from "@/Parser/BodyParserInterface";
 import type { ObjectParserInterface } from "@/Parser/ObjectParserInterface";
@@ -15,7 +14,6 @@ export interface RegistryInterface {
 	cors: CorsInterface | null;
 	prefix: string;
 	middlewares: MiddlewareRouterInterface;
-	entities: EntityStoreInterface;
 	urlParamsParser: ObjectParserInterface<Record<string, string>>;
 	searchParamsParser: ObjectParserInterface<URLSearchParams>;
 	formDataParser: ObjectParserInterface<FormData>;

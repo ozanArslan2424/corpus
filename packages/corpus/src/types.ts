@@ -10,9 +10,6 @@ export type { CHeadersInit as HeadersInit } from "./CHeaders/CHeadersInit";
 export * from "./Cors/CorsInterface";
 export * from "./Cors/CorsOptions";
 
-export * from "./Entity/EntityDefinition";
-export * from "./Entity/EntityJsonSchema";
-
 export * from "./Middleware/MiddlewareHandler";
 export * from "./Middleware/MiddlewareUseOn";
 export * from "./Middleware/MiddlewareOptions";

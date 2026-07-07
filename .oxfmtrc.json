@@ -1,6 +1,6 @@
 {
 	"$schema": "./node_modules/oxfmt/configuration_schema.json",
-	"ignorePatterns": [],
+	"ignorePatterns": ["*.toml"],
 	"useTabs": true,
 	"sortPackageJson": true,
 	"sortImports": true,

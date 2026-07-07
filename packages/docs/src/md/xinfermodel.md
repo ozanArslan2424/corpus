@@ -22,7 +22,7 @@ class UserModel {
 	};
 }
 
-type M = X.InferModel<typeof UserModel>;
-// M["create"] = { body: { name: string }, response: { id: number, name: string } }
-// M["single"] = { params: { id: number }, response: { id: number, name: string } }
+type UserModelType = X.InferModel<typeof UserModel>;
+// UserModelType["create"] --> { body: { name: string }, response: { id: number, name: string } }
+// UserModelType["single"] --> { params: { id: number }, response: { id: number, name: string } }
 ```

@@ -1,4 +1,3 @@
-import { C } from "@ozanarslan/corpus";
 import { type } from "arktype";
 
 export function getArkSchemas() {
@@ -23,19 +22,16 @@ export function getArkSchemas() {
 	});
 	const UserSearch = Pagination.and(type({ "role?": Role, "status?": Status }));
 
-	const User = C.Entity({
-		name: "User",
-		schema: type({
-			id: "number",
-			name: "string",
-			age: "number",
-			role: Role,
-			status: Status,
-			tags: "string[]",
-		}).and(Timestamp),
-	});
+	const User = type({
+		id: "number",
+		name: "string",
+		age: "number",
+		role: Role,
+		status: Status,
+		tags: "string[]",
+	}).and(Timestamp);
 
-	const UserResponse = User.schema;
+	const UserResponse = User;
 
 	const PostBody = type({
 		title: "string",

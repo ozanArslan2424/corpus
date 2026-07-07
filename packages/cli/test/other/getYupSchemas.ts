@@ -1,4 +1,3 @@
-import { C } from "@ozanarslan/corpus";
 import * as y from "yup";
 
 export function getYupSchemas() {
@@ -32,21 +31,18 @@ export function getYupSchemas() {
 		y.object({ role: Role.optional(), status: Status.optional() }),
 	);
 
-	const User = C.Entity({
-		name: "User",
-		schema: y
-			.object({
-				id: y.number().required(),
-				name: y.string().required(),
-				age: y.number().required(),
-				role: Role.required(),
-				status: Status.required(),
-				tags: y.array(y.string().required()).required(),
-			})
-			.concat(Timestamp),
-	});
+	const User = y
+		.object({
+			id: y.number().required(),
+			name: y.string().required(),
+			age: y.number().required(),
+			role: Role.required(),
+			status: Status.required(),
+			tags: y.array(y.string().required()).required(),
+		})
+		.concat(Timestamp);
 
-	const UserResponse = User.schema;
+	const UserResponse = User;
 
 	const PostBody = y.object({
 		title: y.string().required(),
