@@ -1,6 +1,6 @@
 # Route (Dynamic)
 
-The Route (DynamicRoute internally) class defines an HTTP endpoint with automatic registration to the global router. It accepts a flexible definition (either a path string or an object with `method` and `path`) and a handler that receives the request context. Routes can optionally include a model for request/response validation and type safety.
+The `Route` class (variant `dynamic` internally) defines an HTTP endpoint with automatic registration to the global router. It accepts a flexible address (a path string, a `"VERB /path"` string, or an object with `method` and `path`) and a handler that receives the request context. Routes can optionally include a model for request/response validation and type safety.
 
 <section class="table-of-contents">
 
@@ -25,26 +25,9 @@ import { C } from "@ozanarslan/corpus";
 new C.Route("/users", () => [{ id: 1, name: "Alice" }]);
 ```
 
-### Extending the abstract class
-
-I wouldn't recommend extending since the model parsing basically becomes useless.
-
-```ts
-class MyRoute extends C.RouteAbstract {
-	constructor() {
-		super();
-		// this method needs to be called to register it to the router
-		// here or where you instantiate
-		this.register();
-	}
-
-	definition: C.RouteDefinition<string> = "/extended";
-	callback: C.RouteCallback = () => "extended";
-	model?: C.RouteModel | undefined = undefined;
-}
-```
-
 ### Route with specific HTTP method
+
+Either use the object form or prefix the path string with an HTTP verb:
 
 ```ts
 import { C } from "@ozanarslan/corpus";
@@ -52,6 +35,11 @@ import { C } from "@ozanarslan/corpus";
 // POST /users
 new C.Route({ method: C.Method.POST, path: "/users" }, (c) => {
 	return { created: c.body.name };
+});
+
+// DELETE /users/:id
+new C.Route("DELETE /users/:id", (c) => {
+	return { deleted: c.params.id };
 });
 ```
 
@@ -80,8 +68,9 @@ new C.Route(
 
 Handlers can return:
 
-- **Plain data** — automatically wrapped in `Res` (objects → JSON, strings → text, etc.) with applied headers.
-- **`Res`** — for custom status codes, headers, or response control
+- **Plain data**: automatically wrapped in `Res` (objects become JSON, strings become text, etc.) with applied headers.
+- **`Res`**: for custom status codes, headers, or response control.
+- **Web `Response`**: a plain standard `Response` for cases where full control over the response is needed.
 
 ```ts
 // Automatic JSON response
@@ -93,20 +82,45 @@ new C.Route("/error", () => {
 });
 ```
 
+### Extending the abstract class
+
+I wouldn't recommend extending since the model parsing basically becomes useless.
+
+```ts
+class MyRoute extends C.RouteAbstract {
+	constructor() {
+		super();
+		// this method needs to be called to register it to the router
+		// here or where you instantiate
+		this.register();
+	}
+
+	override endpoint: string = "/extended";
+	override method: C.Method = C.Method.GET;
+	override handler: Func<[context: C.Context<unknown, unknown, unknown, unknown>], unknown> = () =>
+		"extended";
+}
+```
+
 ## Constructor Parameters
 
-### definition
+### address
 
-`string | { method: Method; path: string }`
+`RouteAddress<E>`
 
-The route definition. If a string is provided, defaults to `GET`. For other HTTP methods, use the object form.
+The route address. A plain path string defaults to `GET`. A string containing whitespace must start with a valid HTTP verb (case-insensitive, resolved to uppercase) followed by the path, otherwise resolution throws. The object form is equivalent to the verb-prefixed string.
 
-| Value                                       | Result        |
-| ------------------------------------------- | ------------- |
-| `"/users"`                                  | `GET /users`  |
-| `{ method: C.Method.POST, path: "/users" }` | `POST /users` |
+```ts
+type RouteAddress<E extends string = string> = E | `${Method} ${E}` | { method: Method; path: E };
+```
 
-### handler
+| Value                                | Result              |
+| ------------------------------------ | ------------------- |
+| `"/users"`                           | `GET /users`        |
+| `"DELETE /users/:id"`                | `DELETE /users/:id` |
+| `{ method: "POST", path: "/users" }` | `POST /users`       |
+
+### callback
 
 `(context: Context<B, S, P, R>) => MaybePromise<R>`
 
@@ -116,7 +130,7 @@ The route handler function. Receives the request context with typed access to bo
 
 `RouteModel<B, S, P, R>`
 
-Optional validation model for the request body, search params, URL params, and response. When provided, the context properties are typed and validated automatically. See [Model](/model.html). You can pass generics if you don't want to bother with validation but still typecast your data: `RouteInterface<B, S, P, R, E extends string> `
+Optional validation model for the request body, search params, URL params, and response. When provided, the context properties are typed and validated automatically. See [Model](/model.html). You can pass generics if you don't want to bother with validation but still typecast your data: `Route<B, S, P, R, E extends string>`
 
 ```ts
 // type Schema is any standard schema library validator.
@@ -130,13 +144,13 @@ type RouteModel<B = unknown, S = unknown, P = unknown, R = unknown> = {
 
 ## Properties
 
-All constructor options are stored as readonly properties after resolve methods:
+All constructor options are stored as properties after resolve methods:
 
-| Property   | Type                      | Description                                     |
-| ---------- | ------------------------- | ----------------------------------------------- |
-| `id`       | `string`                  | Unique route identifier (`{method}:{endpoint}`) |
-| `method`   | `Method`                  | HTTP method enum value                          |
-| `endpoint` | `E`                       | Resolved path                                   |
-| `handler`  | `Func`                    | The route handler function                      |
-| `model`    | `RouteModel \| undefined` | Validation model if provided                    |
-| `variant`  | `RouteVariant.dynamic`    | Fixed to `dynamic` for this class               |
+| Property   | Type                      | Description                                                        |
+| ---------- | ------------------------- | ------------------------------------------------------------------ |
+| `id`       | `string`                  | Unique route identifier (`{METHOD} {endpoint}`, e.g. `GET /users`) |
+| `method`   | `Method`                  | HTTP method resolved from the address, defaults to `GET`           |
+| `endpoint` | `E`                       | Resolved path                                                      |
+| `handler`  | `Func`                    | The route handler function                                         |
+| `model`    | `RouteModel \| undefined` | Validation model if provided                                       |
+| `variant`  | `RouteVariant.dynamic`    | Fixed to `dynamic` for this class                                  |

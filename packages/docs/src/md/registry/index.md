@@ -23,13 +23,13 @@ All interfaces can be imported by name, they are not namespaced to C or X.
 
 ```ts
 import { $registry } from "@ozanarslan/corpus";
-// Just assign it directly.
+// Assign it directly through the setter.
 $registry["what_you_need_to_replace"] = new MyReplacement();
 ```
 
 ## Swappable Fields
 
-Each of the following fields can be reassigned on `$registry` with a custom implementation that satisfies the listed interface. All interfaces and supporting types are exported by name from the package.
+Each of the following fields can be reassigned with a custom implementation that satisfies the listed interface. All interfaces and supporting types are exported by name from the package.
 
 ### adapter
 
@@ -71,7 +71,7 @@ Readonly. Holds the documentation map used by the CLI tool.
 
 ### router
 
-Technically assignable but default instance depends on the adapter. Implements `RouterInterface`. See the [Router docs](/router/index.html).
+Technically assignable but it isn't recommended. Implements `RouterInterface`. See the [Router docs](/router/index.html).
 
 ### prefix
 
@@ -87,37 +87,71 @@ server.setGlobalPrefix("/api");
 All importable by name.
 
 ```ts
-interface RouterAdapterInterface {
+export interface RegistryInterface {
+	adapter: RouterAdapterInterface;
+	router: RouterInterface;
+	docs: Map<string, RegistryDocEntry>;
+	cors: CorsInterface | null;
+	prefix: string;
+	middlewares: MiddlewareRouterInterface;
+	urlParamsParser: ObjectParserInterface<Record<string, string>>;
+	searchParamsParser: ObjectParserInterface<URLSearchParams>;
+	formDataParser: ObjectParserInterface<FormData>;
+	bodyParser: BodyParserInterface;
+	schemaParser: SchemaParserInterface;
+	reset(): void;
+}
+
+export type RegistryDocEntry = {
+	id: string;
+	endpoint: string;
+	method: string;
+	model: RouteModel<any, any, any, any> | undefined;
+};
+
+export interface RouterAdapterInterface {
 	readonly __brand: string;
 	find(req: Req): RouterReturn | null;
 	add(data: RouterData): void;
 	list: Func<[], Array<RouterData>> | undefined;
 }
 
-interface RouterInterface {
-	add(route: BaseRouteInterface<any, any, any, any>): void;
+export interface RouterInterface {
+	add(route: BaseRoute<any, any, any, any>): void;
 	find(req: Req): RouterReturn | null;
 	list(): Array<RouterData>;
 }
 
-interface MiddlewareRouterInterface {
-	add(middleware: MiddlewareInterface): void;
-	find(routeId: string): MiddlewareStoreReturn;
-}
-
-interface CorsInterface extends MiddlewareInterface {
+export interface CorsInterface extends Middleware {
 	/** Preflight handler for OPTIONS requests. */
-	getPreflightHandler(): RequestHandler;
+	handlePreflight: RequestHandler;
 }
 
-interface ObjectParserInterface<T> {
-	parse(input: T): UnknownObject;
+export interface MiddlewareRouterInterface {
+	add(middleware: Middleware): void;
+	find(routeId: string): MiddlewareRouterReturn;
 }
 
-type SchemaValidator<T = unknown> = StandardSchemaV1.Props<unknown, T>["validate"];
+export interface ObjectParserInterface<T> {
+	parse(input: T): Record<string, unknown>;
+}
 
-interface SchemaParserInterface {
-	parse<T = UnknownObject>(label: string, data: unknown, validate?: SchemaValidator<T>): Promise<T>;
-	parseSync<T = UnknownObject>(label: string, data: unknown, validate?: SchemaValidator<T>): T;
+export interface BodyParserInterface {
+	parse(
+		r: Req | Res | Response,
+	): Promise<Record<string, unknown> | Array<unknown> | string | ReadableStream<Uint8Array>>;
+}
+
+export interface SchemaParserInterface {
+	parse<T = Record<string, unknown>>(
+		label: string,
+		data: unknown,
+		validate?: SchemaValidator<T>,
+	): Promise<T>;
+	parseSync<T = Record<string, unknown>>(
+		label: string,
+		data: unknown,
+		validate?: SchemaValidator<T>,
+	): T;
 }
 ```

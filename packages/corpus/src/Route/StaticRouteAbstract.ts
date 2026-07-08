@@ -1,6 +1,6 @@
 import { CacheControlDirective } from "@/CacheControlDirective/CacheControlDirective";
 import type { Context } from "@/Context/Context";
-import { CommonHeaders } from "@/enums/CommonHeaders";
+import { HeaderKey } from "@/enums/HeaderKey";
 import { Method } from "@/enums/Method";
 import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
@@ -49,11 +49,9 @@ export abstract class StaticRouteAbstract<
 
 			if (this.callback !== undefined) {
 				const content = await file.text();
-				c.res.headers.setMany({
-					[CommonHeaders.ContentType]: file.mimeType,
-					[CommonHeaders.ContentLength]: content.length.toString(),
-					[CommonHeaders.CacheControl]: cacheHeader,
-				});
+				c.res.headers.set(HeaderKey.ContentType, file.mimeType);
+				c.res.headers.set(HeaderKey.ContentLength, content.length.toString());
+				c.res.headers.set(HeaderKey.CacheControl, cacheHeader);
 				return this.callback(c, content);
 			}
 
@@ -65,7 +63,7 @@ export abstract class StaticRouteAbstract<
 				res = await Res.streamFile(file, this.disposition);
 			}
 
-			res.headers.set(CommonHeaders.CacheControl, cacheHeader);
+			res.headers.set(HeaderKey.CacheControl, cacheHeader);
 			return res;
 		};
 	}

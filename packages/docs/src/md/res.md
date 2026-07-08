@@ -12,6 +12,7 @@ The `Res` class represents an HTTP response with automatic body serialization, c
 4. [Static Methods](#static-methods)
 5. [Body Serialization](#body-serialization)
 6. [Status Enum](#status-enum)
+7. [types](#types)
 
 </section>
 
@@ -345,4 +346,24 @@ const Status = {
 	/** Network Authentication Required */
 	NETWORK_AUTHENTICATION_REQUIRED: 511,
 } as const;
+```
+
+## types
+
+```ts
+export type SseSource = Func<
+	[send: Func<[item: { data: unknown; event?: string; id?: string }], void>],
+	void | Func<[], void>
+>;
+
+export type ResInit = {
+	cookies?: CookiesInit;
+	headers?: HeadersInit;
+	status?: Status;
+	statusText?: string;
+};
+
+export type ResBody<R = unknown> = R | BodyInit | null | undefined;
+
+export type NdjsonSource = Func<[send: Func<[item: unknown], void>], void | Func<[], void>>;
 ```

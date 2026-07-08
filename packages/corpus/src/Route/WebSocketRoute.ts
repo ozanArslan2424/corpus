@@ -1,8 +1,8 @@
-import type { WebSocketRouteDefinition } from "@/Route/types";
+import type { WebSocketRouteCallbacks } from "@/Route/types";
 import { WebSocketRouteAbstract } from "@/Route/WebSocketRouteAbstract";
 
 export class WebSocketRoute<E extends string = string> extends WebSocketRouteAbstract<E> {
-	constructor(path: E, callbacks: WebSocketRouteDefinition) {
+	constructor(path: E, callbacks: WebSocketRouteCallbacks) {
 		super();
 		this.endpoint = path;
 		this.onOpen = callbacks.onOpen;
@@ -11,11 +11,11 @@ export class WebSocketRoute<E extends string = string> extends WebSocketRouteAbs
 		this.register();
 	}
 
-	readonly onOpen?: WebSocketRouteDefinition["onOpen"];
+	readonly onOpen?: WebSocketRouteCallbacks["onOpen"];
 
-	readonly onClose?: WebSocketRouteDefinition["onClose"];
+	readonly onClose?: WebSocketRouteCallbacks["onClose"];
 
-	readonly onMessage: WebSocketRouteDefinition["onMessage"];
+	readonly onMessage: WebSocketRouteCallbacks["onMessage"];
 
 	override endpoint: string;
 }

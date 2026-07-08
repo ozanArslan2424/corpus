@@ -6,9 +6,7 @@ export * from "./Controller/Controller";
 
 export * from "./Cookies/Cookies";
 
-export { CHeaders as Headers } from "./CHeaders/CHeaders";
-
-export * from "./enums/CommonHeaders";
+export * from "./enums/HeaderKey";
 export * from "./enums/Method";
 export * from "./enums/Status";
 

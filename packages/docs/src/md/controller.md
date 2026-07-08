@@ -88,11 +88,11 @@ new AssetController();
 
 ## Properties
 
-| Property          | Type                  | Description                                     |
-| ----------------- | --------------------- | ----------------------------------------------- |
-| `abstract prefix` | `string \| undefined` | The controller's URL prefix                     |
-| `beforeEach`      | `Func \| undefined`   | Optional middleware run before each handler     |
-| `routeIds`        | `Set<string>`         | Set of registered route IDs for this controller |
+| Property            | Type                  | Description                                     |
+| ------------------- | --------------------- | ----------------------------------------------- |
+| `abstract prefix`   | `string \| undefined` | The controller's URL prefix                     |
+| `beforeEach`        | `Func \| undefined`   | Optional middleware run before each handler     |
+| `readonly routeIds` | `Set<string>`         | Set of registered route IDs for this controller |
 
 ## Methods
 

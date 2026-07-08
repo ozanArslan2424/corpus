@@ -1,6 +1,5 @@
-import { CHeaders } from "@/CHeaders/CHeaders";
 import { Cookies } from "@/Cookies/Cookies";
-import { CommonHeaders } from "@/enums/CommonHeaders";
+import { HeaderKey } from "@/enums/HeaderKey";
 import { Method } from "@/enums/Method";
 import type { ReqInfo, ReqInit } from "@/Req/types";
 import { strSplit } from "@/utils/strings";
@@ -13,32 +12,30 @@ export class Req extends Request {
 		readonly init?: ReqInit,
 	) {
 		super(info, init);
-		this.headers = new CHeaders(super.headers);
+		this.headers = new Headers(super.headers);
 		this.urlObject = new URL(super.url);
 		if (!this.urlObject.pathname) this.urlObject.pathname += "/";
 		this.cookies = this.resolveCookies();
 	}
 
-	override readonly headers: CHeaders;
+	override readonly headers: Headers;
 	readonly urlObject: URL;
 	readonly cookies: Cookies;
 
 	get isPreflight(): boolean {
-		return (
-			this.method === Method.OPTIONS && this.headers.has(CommonHeaders.AccessControlRequestMethod)
-		);
+		return this.method === Method.OPTIONS && this.headers.has(HeaderKey.AccessControlRequestMethod);
 	}
 
 	get isWebsocket(): boolean {
-		const isUpgrade = this.headers.get(CommonHeaders.Connection)?.toLowerCase() === "upgrade";
-		const isWebsocket = this.headers.get(CommonHeaders.Upgrade)?.toLowerCase() === "websocket";
+		const isUpgrade = this.headers.get(HeaderKey.Connection)?.toLowerCase() === "upgrade";
+		const isWebsocket = this.headers.get(HeaderKey.Upgrade)?.toLowerCase() === "websocket";
 		return isUpgrade && isWebsocket;
 	}
 
 	private resolveCookies(): Cookies {
 		const jar = new Cookies();
 
-		const cookieHeader = this.headers.get(CommonHeaders.Cookie);
+		const cookieHeader = this.headers.get(HeaderKey.Cookie);
 
 		if (cookieHeader) {
 			const pairs = strSplit(";", cookieHeader);

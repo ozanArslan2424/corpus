@@ -9,6 +9,7 @@ The Middleware class registers inbound or outbound middleware into the global ro
 1. [Usage](#usage)
 2. [Constructor Parameters](#constructor-parameters)
 3. [Properties](#properties)
+4. [types](#types)
 
 </section>
 
@@ -82,15 +83,7 @@ Either "inbound" or "outbound". Defaults to "inbound". Inbound middlewares run b
 
 ### `useOn`
 
-The route(s) and controller(s) this middleware applies to. Pass `"*"` to apply globally to all routes.
-
-```ts
-export type MiddlewareUseOn =
-	| Array<RouteInterface | Controller>
-	| RouteInterface
-	| Controller
-	| "*";
-```
+The route(s) and/or controller(s) this middleware applies to. Pass `"*"` to apply globally to all routes.
 
 ### `handler`
 
@@ -99,3 +92,28 @@ The middleware function. Receives the request context and can return a Res or th
 ## Properties
 
 All constructor options are stored as readonly properties: `variant`, `useOn`, and `handler`.
+
+## types
+
+```ts
+export const MiddlewareVariant = {
+	inbound: "inbound",
+	outbound: "outbound",
+} as const;
+
+export type MiddlewareVariant = ValueOf<typeof MiddlewareVariant>;
+
+export type MiddlewareHandler = Func<[context: Context], Bun.MaybePromise<void | Res>>;
+
+export type MiddlewareOptions = {
+	variant?: MiddlewareVariant;
+	useOn?: MiddlewareUseOn;
+	handler: MiddlewareHandler;
+};
+
+export type MiddlewareUseOn =
+	| Array<BaseRoute<any, any, any, any> | Controller | string>
+	| BaseRoute<any, any, any, any>
+	| Controller
+	| "*";
+```

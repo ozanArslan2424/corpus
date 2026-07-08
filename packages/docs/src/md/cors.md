@@ -11,6 +11,7 @@ See [MDN: Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/doc
 1. [Usage](#usage)
 2. [Constructor Parameters](#constructor-parameters)
 3. [Preflight Handling](#preflight-handling)
+4. [types](#types)
 
 </section>
 
@@ -57,7 +58,7 @@ CORS configuration options. Pass `undefined` for permissive defaults (wildcard o
 
 ## Preflight Handling
 
-Cors exposes a `getPreflightHandler()` method that returns a request handler suitable for `server.handlePreflight`. This handles `OPTIONS` preflight requests with the same origin logic as the outbound middleware, and additionally sets the `Access-Control-Max-Age` header.
+Cors exposes a `handlePreflight`. It's a request handler suitable for `server.handlePreflight`. This handles `OPTIONS` preflight requests with the same origin logic as the outbound middleware, and additionally sets the `Access-Control-Max-Age` header.
 
 ```ts
 import { C } from "@ozanarslan/corpus";
@@ -66,12 +67,44 @@ const server = new C.Server();
 const cors = new C.Cors({ allowedOrigins: ["https://example.com"] });
 
 // handled internally:
-// protected handlePreflight: RequestHandler = async (req) => {
-// 	const cors = $routerStore.get().cors;
-// 	if (!cors) {
-// 		return new Res(undefined, { status: Status.NO_CONTENT });
-// 	}
-// 	const handler = cors.getPreflightHandler();
-// 	return await handler(req);
-// };
+export class Server {
+    ...
+
+	protected handlePreflight: RequestHandler = async (req) => {
+		if ($registry.cors === null) {
+			return new Res(undefined, { status: Status.NO_CONTENT });
+		}
+		return $registry.cors.handlePreflight(req);
+	};
+
+    ...
+}
+```
+
+## types
+
+```ts
+export type CorsOptions = {
+	/** Which origins are allowed to access the resource. Use ["*"] for any origin, or specific domains. */
+	allowedOrigins?: string[];
+
+	/** Which HTTP methods are allowed (GET, POST, etc.) */
+	allowedMethods?: string[];
+
+	/** Which headers can be sent in the request */
+	allowedHeaders?: HeaderKey[];
+
+	/** Which headers should be exposed to the client/browser JavaScript
+	 * These are response headers that the client can read
+	 * @example ['RateLimit-Limit', 'RateLimit-Remaining', 'X-Custom-Header']
+	 */
+	exposedHeaders?: HeaderKey[];
+
+	/** Whether to expose cookies and auth headers to the client */
+	credentials?: boolean;
+
+	/** How long (in seconds) browsers can cache preflight results. Default: 86400 (24 hours) */
+	maxAge?: number;
+	includeMaxAgeResponseHeader?: boolean;
+};
 ```

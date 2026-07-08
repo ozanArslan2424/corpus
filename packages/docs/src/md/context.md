@@ -15,7 +15,7 @@ The small c in Corpus. The `Context` class is the request context object passed 
 
 ## Usage
 
-The context is automatically created and passed to your route handlers. Access request data and build responses through its properties.
+The context is automatically created and passed to your route handlers. Access request data and build responses through its properties. Most of the context properties come from the request. the body is parsed using a clone which means you can consume the body even after it's parsed.
 
 ### Basic context access
 
@@ -85,7 +85,7 @@ const authMiddleware = new C.Middleware({
 
 // Handler accesses typed data
 new C.Route("/profile", (c) => {
-	// you can also assign here but I'm not sure what that would accomplish
+	// you can also assign here
 	// c.data.user is typed as { id: number; name: string } | undefined
 	return { user: c.data.user, requestId: c.data.requestId };
 });
@@ -95,7 +95,7 @@ See [Extensibility](/intro.html#extensibility) for other extendable interfaces.
 
 ## Constructor Parameters
 
-Context is typically not instantiated directly — it is created by the framework. The constructor parameters are:
+Context is typically not instantiated directly — it is created by the framework router. The constructor parameters are:
 
 | Parameter | Type | Description                                      |
 | --------- | ---- | ------------------------------------------------ |

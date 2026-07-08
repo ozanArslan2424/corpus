@@ -1,7 +1,6 @@
-import { CHeaders } from "@/CHeaders/CHeaders";
 import { Cookies } from "@/Cookies/Cookies";
-import { CommonHeaders } from "@/enums/CommonHeaders";
 import { DefaultStatusTexts } from "@/enums/DefaultStatusTexts";
+import { HeaderKey } from "@/enums/HeaderKey";
 import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
 import type { ResBody, ResInit, SseSource, NdjsonSource } from "@/Res/types";
@@ -48,17 +47,17 @@ export class Res<R = unknown> {
 	}
 
 	body: BodyInit;
-	headers: CHeaders;
+	headers: Headers;
 	status: Status;
 	statusText: string;
 	cookies: Cookies;
 
 	get response(): Response {
-		const setCookieCHeaders = this.cookies.toSetCookieHeaders();
+		const setCookieHeaders = this.cookies.toSetCookieHeaders();
 
-		if (setCookieCHeaders.length > 0) {
-			for (const header of setCookieCHeaders) {
-				this.headers.append(CommonHeaders.SetCookie, header);
+		if (setCookieHeaders.length > 0) {
+			for (const header of setCookieHeaders) {
+				this.headers.append(HeaderKey.SetCookie, header);
 			}
 		}
 
@@ -73,13 +72,13 @@ export class Res<R = unknown> {
 		return new Cookies(this.init?.cookies);
 	}
 
-	private resolveHeaders(): CHeaders {
-		return new CHeaders(this.init?.headers);
+	private resolveHeaders(): Headers {
+		return new Headers(this.init?.headers);
 	}
 
 	private resolveStatus(): Status {
 		if (this.init?.status) return this.init.status;
-		if (this.headers.has(CommonHeaders.Location)) {
+		if (this.headers.has(HeaderKey.Location)) {
 			return Status.FOUND;
 		}
 		return Status.OK;
@@ -87,10 +86,10 @@ export class Res<R = unknown> {
 
 	private setContentType(value: string): void {
 		if (
-			!this.headers.has(CommonHeaders.ContentType) ||
-			this.headers.get(CommonHeaders.ContentType) === "text/plain"
+			!this.headers.has(HeaderKey.ContentType) ||
+			this.headers.get(HeaderKey.ContentType) === "text/plain"
 		) {
-			this.headers.set(CommonHeaders.ContentType, value);
+			this.headers.set(HeaderKey.ContentType, value);
 		}
 	}
 
@@ -153,7 +152,7 @@ export class Res<R = unknown> {
 			statusText: init?.statusText ?? DefaultStatusTexts[Status.FOUND],
 		});
 		const urlString = url instanceof URL ? url.toString() : url;
-		res.headers.set(CommonHeaders.Location, urlString);
+		res.headers.set(HeaderKey.Location, urlString);
 		return res;
 	}
 
@@ -187,9 +186,9 @@ export class Res<R = unknown> {
 		});
 		const res = new Res(stream, { ...init, status: Status.OK });
 		res.headers.setMany({
-			[CommonHeaders.ContentType]: "text/event-stream",
-			[CommonHeaders.CacheControl]: "no-cache",
-			[CommonHeaders.Connection]: "keep-alive",
+			[HeaderKey.ContentType]: "text/event-stream",
+			[HeaderKey.CacheControl]: "no-cache",
+			[HeaderKey.Connection]: "keep-alive",
 		});
 		return res;
 	}
@@ -204,8 +203,8 @@ export class Res<R = unknown> {
 		});
 		const res = new Res(stream, { ...init, status: Status.OK });
 		res.headers.setMany({
-			[CommonHeaders.ContentType]: "application/x-ndjson",
-			[CommonHeaders.CacheControl]: "no-cache",
+			[HeaderKey.ContentType]: "application/x-ndjson",
+			[HeaderKey.CacheControl]: "no-cache",
 		});
 		return res;
 	}
@@ -242,8 +241,8 @@ export class Res<R = unknown> {
 		const stream = await file.stream();
 		const res = new Res(stream, { ...init, status: Status.OK });
 		res.headers.setMany({
-			[CommonHeaders.ContentType]: file.mimeType,
-			[CommonHeaders.ContentDisposition]: `${disposition}; filename="${file.fullname}"`,
+			[HeaderKey.ContentType]: file.mimeType,
+			[HeaderKey.ContentDisposition]: `${disposition}; filename="${file.fullname}"`,
 		});
 		return res;
 	}
@@ -253,8 +252,8 @@ export class Res<R = unknown> {
 		const content = await file.text();
 		const res = new Res(content, init);
 		res.headers.setMany({
-			[CommonHeaders.ContentType]: file.mimeType,
-			[CommonHeaders.ContentLength]: content.length.toString(),
+			[HeaderKey.ContentType]: file.mimeType,
+			[HeaderKey.ContentLength]: content.length.toString(),
 		});
 		return res;
 	}

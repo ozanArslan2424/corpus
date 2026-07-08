@@ -1,210 +1,153 @@
-# CHeaders
+# Headers
 
-The `CHeaders` class extends the native Web API `Headers` with additional utilities for common header names, case-insensitive lookups, batch operations, and header combination. Provides IntelliSense for standard HTTP headers via the `CommonHeaders` enum.
+Corpus augments the standard web `Headers` prototype globally with quality-of-life extensions: array appends, value coercion, case-insensitive lookups, bulk sets, and merging. There is no wrapper class. Every `Headers` instance (including `c.res.headers` and `c.req.headers`) gets these behaviors, and the standard API remains fully intact.
+
+The augmentation is applied when Corpus is loaded. No import or setup is needed in user code.
+
+Header names are typed as `HeaderKey` for autocomplete on known headers.
 
 <section class="table-of-contents">
 
 ##### Contents
 
 1. [Usage](#usage)
-2. [Constructor Parameters](#constructor-parameters)
-3. [Methods](#methods)
-4. [CommonHeaders Enum](#commonheaders-enum)
+2. [Modified Methods](#modified-methods)
+3. [Added Methods](#added-methods)
+4. [types](#types)
 
 </section>
 
 ## Usage
 
-### Basic header operations
+### Coerced values
 
 ```ts
-import { C } from "@ozanarslan/corpus";
+const headers = new Headers();
 
-const headers = new C.Headers();
-
-// Set with IntelliSense for common headers
-headers.set(C.CommonHeaders.ContentType, "application/json");
-headers.set(C.CommonHeaders.Authorization, "Bearer token");
-
-// Case-insensitive get
-headers.get("content-type"); // "application/json"
-headers.get("Content-Type"); // "application/json"
-
-// Append multiple values
-headers.append(C.CommonHeaders.SetCookie, "session=abc");
-headers.append(C.CommonHeaders.SetCookie, "user=john");
+// numbers and booleans are stringified automatically
+headers.set("content-length", 1024);
+headers.set("x-cache-hit", true);
 ```
 
-### Batch set headers
+### Appending multiple values
 
 ```ts
-const headers = new C.Headers();
+const headers = new Headers();
 
-// From object
+// each array item is appended separately
+headers.append("set-cookie", ["a=1; Path=/", "b=2; Path=/"]);
+```
+
+### Bulk set
+
+```ts
+const headers = new Headers();
+
 headers.setMany({
-	[C.CommonHeaders.ContentType]: "application/json",
-	[C.CommonHeaders.CacheControl]: "no-cache",
-	"X-Custom": "value",
+	"cache-control": "no-cache",
+	"x-request-id": requestId,
+	// empty and whitespace-only values are skipped
+	"x-optional": maybeValue ?? "",
 });
 
-// From entries array
+// entries form also works
 headers.setMany([
-	["Content-Type", "text/html"],
-	["Cache-Control", "max-age=3600"],
+	["cache-control", "no-cache"],
+	["x-request-id", requestId],
 ]);
 ```
 
-### Combine headers
+### Merging two Headers instances
 
 ```ts
-const source = new C.Headers();
-source.set("X-From", "source");
-
-const target = new C.Headers();
-target.set("X-From", "target");
-
-// source into target (modifies target)
-source.innerCombine(target);
-
-// Or static method (returns new)
-const combined = C.Headers.combine(source, target);
-// Set-Cookie headers are appended, others are overwritten
+// copy everything from source into target
+// Set-Cookie values are appended, everything else overwrites
+target.mergeWith(source);
 ```
 
-## Constructor Parameters
+## Modified Methods
 
-### `init` (optional)
-
-`CHeadersInit`
-
-Initial headers value. Accepts:
-
-| Type                     | Description                          |
-| ------------------------ | ------------------------------------ |
-| `Headers`                | Native Web API Headers instance      |
-| `CHeaders`               | Existing CHeaders instance           |
-| `[string, string][]`     | Array of header entries              |
-| `Record<string, string>` | Plain object with header keys/values |
-
-## Methods
-
-### set
-
-`set(name: CHeaderKey, value: string): void`
-
-Sets a header value, overwriting any existing value.
+These override the standard `Headers` methods. Standard behavior is preserved; only the signatures are widened.
 
 ### append
 
-`append(name: CHeaderKey, value: string | string[]): void`
+`append(name: HeaderKey, value: string | string[]): void`
 
-Appends a header value. For arrays, appends each value. Use for multi-value headers like `Set-Cookie`.
+Standard append, but also accepts an array. Each array item is appended as a separate call, which matters for headers like `Set-Cookie` where values must not be combined.
+
+### set
+
+`set(name: HeaderKey, value: string | number | boolean): void`
+
+Standard set, but the value is coerced with `String()`, so numbers and booleans can be passed directly.
 
 ### get
 
-`get(name: CHeaderKey): string | null`
+`get(name: HeaderKey): string | null`
 
-Retrieves a header value. Case-insensitive lookup.
+Standard get, retried with the lowercased name if the first lookup returns nothing.
 
 ### has
 
-`has(name: CHeaderKey): boolean`
+`has(name: HeaderKey): boolean`
 
-Checks if a header exists. Case-insensitive lookup.
+Standard has, retried with the lowercased name if the first lookup is false.
 
 ### delete
 
-`delete(name: CHeaderKey): void`
+`delete(name: HeaderKey): void`
 
-Removes a header.
+Standard delete, retyped to `HeaderKey`. Behavior is unchanged.
+
+## Added Methods
 
 ### setMany
 
-`setMany(init: [string, string][] | Record<string, string>): void`
+`setMany(init: [HeaderKey, string][] | Partial<Record<HeaderKey, string>>): void`
 
-Sets multiple headers at once. Skips undefined or empty string values.
-
-### innerCombine
-
-`innerCombine(source: CHeaders): void`
-
-Combines headers from source into this instance. `Set-Cookie` headers are appended; others overwrite existing values.
-
-### combine (static)
-
-`static combine(source: CHeaders, target: CHeaders): CHeaders`
-
-Static method to combine source headers into target. Returns the target instance.
-
-## CommonHeaders Enum
-
-Just some common headers.
+Sets multiple headers at once from an entries array or a record. Values that are empty or whitespace-only are skipped, so conditionally built records don't need manual filtering. Each entry is a `set`, not an `append`, so existing values are overwritten.
 
 ```ts
-type CommonHeaders = ValueOf<typeof CommonHeaders>;
+headers.setMany({
+	"content-type": "application/json",
+	"x-trace-id": trace ?? "", // skipped when empty
+});
+```
 
-const CommonHeaders = {
-	/** Controls caching mechanisms for requests and responses */
-	CacheControl: "Cache-Control",
-	/** Specifies the media type of the resource or data */
-	ContentType: "Content-Type",
-	/** Indicates the size of the entity-body in bytes */
-	ContentLength: "Content-Length",
-	/** Whether to display payload inline within the page or prompt the user to download it as an attachment. */
-	ContentDisposition: "Content-Disposition",
-	/** Specifies the character encodings that are acceptable */
-	AcceptEncoding: "Accept-Encoding",
-	/** Informs the server about the types of data that can be sent back */
-	Accept: "Accept",
-	/** Contains the credentials to authenticate with the server */
-	Authorization: "Authorization",
-	/** The user agent string of the client software */
-	UserAgent: "User-Agent",
-	/** The domain name of the server and port number */
-	Host: "Host",
-	/** The address of the previous web page from which the current request originated */
-	Referer: "Referer",
-	/** Indicates whether the connection should be kept alive */
-	Connection: "Connection",
-	/** Requests that the server switch to a different protocol (e.g. WebSocket) */
-	Upgrade: "Upgrade",
-	/** Used to specify directives that must be obeyed by caching mechanisms */
-	Pragma: "Pragma",
-	/** The date and time at which the message was sent */
-	Date: "Date",
-	/** Makes the request conditional based on the ETag of the resource */
-	IfNoneMatch: "If-None-Match",
-	/** Makes the request conditional based on the last modification date */
-	IfModifiedSince: "If-Modified-Since",
-	/** An identifier for a specific version of a resource */
-	ETag: "ETag",
-	/** The date and time after which the response is considered stale */
-	Expires: "Expires",
-	/** The last modification date of the resource */
-	LastModified: "Last-Modified",
-	/** Indicates the URL to redirect a page to */
-	Location: "Location",
-	/** Defines the authentication method that should be used */
-	WWWAuthenticate: "WWW-Authenticate",
-	/** Determines how long the results of a preflight request can be cached */
-	AccessControlMaxAge: "Access-Control-Max-Age",
-	/** Indicates whether the response can be shared with resources with credentials */
-	AccessControlAllowCredentials: "Access-Control-Allow-Credentials",
-	/** Indicates which HTTP method will be used in the actual CORS request */
-	AccessControlRequestMethod: "Access-Control-Request-Method",
-	/** Indicates which headers can be exposed to the browser in a CORS response */
-	AccessControlExposeHeaders: "Access-Control-Expose-Headers",
-	/** Indicates which origins are allowed to access the resource */
-	AccessControlAllowOrigin: "Access-Control-Allow-Origin",
-	/** Specifies the HTTP methods allowed when accessing the resource in a CORS request */
-	AccessControlAllowMethods: "Access-Control-Allow-Methods",
-	/** Specifies the HTTP headers allowed in a CORS request */
-	AccessControlAllowHeaders: "Access-Control-Allow-Headers",
-	/** Sends cookies from the server to the client */
-	SetCookie: "Set-Cookie",
-	/** Sends cookies from the client to the server */
-	Cookie: "Cookie",
-	/** Determines which headers should be used to select a response from cache when content negotiation is in use */
-	Vary: "Vary",
-};
+### mergeWith
+
+`mergeWith(source: Headers): void`
+
+Copies all headers from `source` into this instance.
+
+| Header          | Behavior                                          |
+| --------------- | ------------------------------------------------- |
+| `Set-Cookie`    | Appended, so cookies from both instances are kept |
+| Everything else | Overwritten with the value from `source`          |
+
+```ts
+const base = new Headers({ "x-a": "1", "x-b": "2" });
+const extra = new Headers({ "x-b": "override" });
+extra.append("set-cookie", "session=abc; Path=/");
+
+base.mergeWith(extra);
+// x-a: 1
+// x-b: override
+// set-cookie: session=abc; Path=/
+```
+
+## types
+
+```ts
+declare global {
+	interface Headers {
+		append(name: HeaderKey, value: string | string[]): void;
+		set(name: HeaderKey, value: string | number | boolean): void;
+		get(name: HeaderKey): string | null;
+		has(name: HeaderKey): boolean;
+		delete(name: HeaderKey): void;
+		setMany(init: [HeaderKey, string][] | Partial<Record<HeaderKey, string>>): void;
+		mergeWith(source: Headers): void;
+	}
+}
 ```

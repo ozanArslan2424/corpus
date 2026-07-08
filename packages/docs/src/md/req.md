@@ -9,6 +9,7 @@ Req extends the native [Request](https://developer.mozilla.org/en-US/docs/Web/AP
 1. [Constructor](#constructor)
 2. [Properties](#properties)
 3. [Method Enum](#method-enum)
+4. [types](#types)
 
 </section>
 
@@ -74,4 +75,15 @@ const Method = {
 	/* Echo back received request */
 	TRACE: "TRACE",
 } as const;
+```
+
+## types
+
+```ts
+export type ReqInfo = Request | string | Req | URL;
+
+export type ReqInit = Omit<RequestInit, "headers" | "method"> & {
+	headers?: HeadersInit;
+	method?: Method;
+};
 ```

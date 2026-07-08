@@ -1,7 +1,6 @@
 import crypto from "crypto";
 
-import { CHeaders } from "@/CHeaders/CHeaders";
-import { CommonHeaders } from "@/enums/CommonHeaders";
+import { HeaderKey } from "@/enums/HeaderKey";
 import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
 import { MiddlewareAbstract } from "@/Middleware/MiddlewareAbstract";
@@ -13,6 +12,7 @@ import {
 import { $registry } from "@/registry";
 import { RouteVariant } from "@/Route/types";
 import { logFatal } from "@/utils/logger";
+import { objGetValues } from "@/utils/objects";
 import { strIsDefined } from "@/utils/strings";
 import type { RateLimitConfig } from "@/XRateLimiter/RateLimitConfig";
 import { RateLimiterFileStore } from "@/XRateLimiter/RateLimiterFileStore";
@@ -39,9 +39,9 @@ export class XRateLimiter extends MiddlewareAbstract {
 	}
 	override handler: MiddlewareHandler = async (c) => {
 		const result = await this.getResult(c.headers);
-		c.res.headers.innerCombine(result.headers);
-		const exposedCHeaders = Object.values(this.config.headerNames);
-		c.res.headers.append(CommonHeaders.AccessControlExposeCHeaders, exposedCHeaders);
+		c.res.headers.mergeWith(result.headers);
+		const exposedHeaders = objGetValues(this.config.headerNames);
+		c.res.headers.append(HeaderKey.AccessControlExposeHeaders, exposedHeaders);
 
 		if (!result.success) {
 			throw new Exception("Too many requests", Status.TOO_MANY_REQUESTS, c.res);
@@ -53,9 +53,9 @@ export class XRateLimiter extends MiddlewareAbstract {
 	private storedSalt: string;
 	private saltRotatesAt: number;
 
-	async getResult(headers: CHeaders): Promise<{
+	async getResult(headers: Headers): Promise<{
 		success: boolean;
-		headers: CHeaders;
+		headers: Headers;
 	}> {
 		await this.maybeCleanStore();
 
@@ -80,7 +80,7 @@ export class XRateLimiter extends MiddlewareAbstract {
 
 		const keys = this.config.headerNames;
 
-		const responseHeaders = new CHeaders();
+		const responseHeaders = new Headers();
 		responseHeaders.setMany({
 			[keys.limit]: max.toString(),
 			[keys.remaining]: remaining.toString(),
@@ -100,9 +100,9 @@ export class XRateLimiter extends MiddlewareAbstract {
 		return { headers: responseHeaders, success: false };
 	}
 
-	private getId(headers: CHeaders): string {
+	private getId(headers: Headers): string {
 		// --- Authenticated: hash the JWT token ---
-		const authHeader = headers.get(CommonHeaders.Authorization);
+		const authHeader = headers.get(HeaderKey.Authorization);
 		const token = authHeader?.split(" ")[1];
 		if (strIsDefined(token) && token.length >= 20 && token.length <= 2048) {
 			return `u:${this.hash(token, 16)}`;
@@ -128,7 +128,7 @@ export class XRateLimiter extends MiddlewareAbstract {
 		return this.config.limits[prefix];
 	}
 
-	private extractIp(headers: CHeaders): string | null {
+	private extractIp(headers: Headers): string | null {
 		const raw =
 			headers.get("cf-connecting-ip") ??
 			headers.get("x-real-ip") ??

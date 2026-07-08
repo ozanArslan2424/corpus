@@ -15,7 +15,7 @@ describe("X.RateLimiter", () => {
 	const makeAuthReq = (path: string, token: string) =>
 		req(path, { headers: { authorization: `Bearer ${token}` } });
 
-	// ─── Response CHeaders ─────────────────────────────────────────
+	// ─── Response Headers ─────────────────────────────────────────
 
 	it("HEADERS - SETS RATELIMIT-LIMIT HEADER ON RESPONSE", async () => {
 		new TC.Route("/rl-limit-header", () => "ok");

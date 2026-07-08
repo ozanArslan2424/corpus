@@ -2,7 +2,7 @@ import path from "node:path";
 
 import { CacheControlDirective } from "@/CacheControlDirective/CacheControlDirective";
 import type { Context } from "@/Context/Context";
-import { CommonHeaders } from "@/enums/CommonHeaders";
+import { HeaderKey } from "@/enums/HeaderKey";
 import { Method } from "@/enums/Method";
 import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
@@ -113,17 +113,17 @@ export abstract class BundleRouteAbstract<
 
 		if (file.name === idx) {
 			res.headers.set(
-				CommonHeaders.CacheControl,
+				HeaderKey.CacheControl,
 				CacheControlDirective.createHeaderString(this.cache.indexHtml),
 			);
 		} else if (file.path.includes(`/${this.assetsDir}/`)) {
 			res.headers.set(
-				CommonHeaders.CacheControl,
+				HeaderKey.CacheControl,
 				CacheControlDirective.createHeaderString(this.cache.assetsDir),
 			);
 		} else if (this.cache.fallback) {
 			res.headers.set(
-				CommonHeaders.CacheControl,
+				HeaderKey.CacheControl,
 				CacheControlDirective.createHeaderString(this.cache.fallback),
 			);
 		}

@@ -33,7 +33,7 @@ new C.Route("/health", () => "ok");
 
 // Or in a Controller with prefix
 export class ItemController extends C.Controller {
-	constructor(private itemService: ItemService) {
+	constructor(private service: ItemService) {
 		super();
 	}
 
@@ -41,7 +41,7 @@ export class ItemController extends C.Controller {
 
 	create = this.route(
 		{ method: "POST", path: "/create" },
-		(c) => this.itemService.create(c.body),
+		(c) => this.service.create(c.body),
 		ItemModel.create, // schema validation
 	);
 }
@@ -69,7 +69,7 @@ export class ItemModel {
 
 ### Context (c)
 
-Handlers receive a RouteContext object with request data, body, params, and a data object for storing request-scoped values.
+Handlers receive a [Context](/context.html) object with request data, body, params, and a data object for storing request-scoped values.
 
 ```ts
 create = this.route(
@@ -78,7 +78,7 @@ create = this.route(
 		// c.body is already validated
 		// c.params has path parameters
 		// c.data is a plain object you can use
-		return this.itemService.create(c.body);
+		return this.service.create(c.body);
 	},
 	ItemModel.create,
 );
@@ -90,8 +90,8 @@ Register middleware to run before routes. Middleware can validate, log, authenti
 
 ```ts
 export class AuthMiddleware extends C.Middleware {
-	override handler: C.MiddlewareHandler = async (c) => {
-		const token = c.headers.authorization;
+	override handler: MiddlewareHandler = async (c) => {
+		const token = c.headers.get("authorization");
 		if (!token) throw new C.Exception("no token", 401);
 		c.data.user = await verifyToken(token);
 	};

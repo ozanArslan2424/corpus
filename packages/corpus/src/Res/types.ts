@@ -1,4 +1,3 @@
-import type { CHeadersInit } from "@/CHeaders/types";
 import type { CookiesInit } from "@/Cookies/types";
 import type { Status } from "@/enums/Status";
 import type { Func } from "@/utils/functions";
@@ -10,7 +9,7 @@ export type SseSource = Func<
 
 export type ResInit = {
 	cookies?: CookiesInit;
-	headers?: CHeadersInit;
+	headers?: HeadersInit;
 	status?: Status;
 	statusText?: string;
 };

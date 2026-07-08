@@ -38,10 +38,20 @@ export type BundleRouteCacheConfig = {
 
 export type StaticRouteRes = Res | string;
 
-export type WebSocketRouteDefinition = {
-	onOpen?: Func<[ws: ServerWebSocket], Bun.MaybePromise<void>>;
-	onClose?: Func<[ws: ServerWebSocket, code?: number, reason?: string], Bun.MaybePromise<void>>;
-	onMessage: Func<[ws: ServerWebSocket, message: string | Buffer], Bun.MaybePromise<void>>;
+export type WebSocketOnOpen = Func<[ws: ServerWebSocket], Bun.MaybePromise<void>>;
+export type WebSocketOnClose = Func<
+	[ws: ServerWebSocket, code?: number, reason?: string],
+	Bun.MaybePromise<void>
+>;
+export type WebSocketOnMessage = Func<
+	[ws: ServerWebSocket, message: string | Buffer],
+	Bun.MaybePromise<void>
+>;
+
+export type WebSocketRouteCallbacks = {
+	onOpen?: WebSocketOnOpen;
+	onClose?: WebSocketOnClose;
+	onMessage: WebSocketOnMessage;
 };
 
 export type StaticRouteDefinition =

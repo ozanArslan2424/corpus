@@ -5,10 +5,10 @@ import { $registryTesting, TC } from "./_modules";
 beforeEach(() => $registryTesting.reset());
 
 describe("C.Res", () => {
-	const ctHeader = TC.CommonHeaders.ContentType;
+	const ctHeader = TC.HeaderKey.ContentType;
 	const otherHeader = "other-header";
 	const otherHeaderValue = "other-header-value";
-	const locHeader = TC.CommonHeaders.Location;
+	const locHeader = TC.HeaderKey.Location;
 	const locUrl = "/hello";
 
 	function expectData({
@@ -29,7 +29,7 @@ describe("C.Res", () => {
 		expectedOK?: boolean;
 	}) {
 		// types and instances
-		expect(res.headers).toBeInstanceOf(TC.Headers);
+		expect(res.headers).toBeInstanceOf(Headers);
 		expect(res.cookies).toBeInstanceOf(TC.Cookies);
 		expect(res.status).toBeTypeOf("number");
 		expect(res.statusText).toBeTypeOf("string");
@@ -149,10 +149,10 @@ describe("C.Res", () => {
 
 		expect(res.status).toBe(TC.Status.OK);
 		expect(res.body).toBeInstanceOf(ReadableStream);
-		expect(res.headers.get(TC.CommonHeaders.ContentType)).toBe("text/event-stream");
-		expect(res.headers.get(TC.CommonHeaders.CacheControl)).toBe("no-cache");
-		expect(res.headers.get(TC.CommonHeaders.Connection)).toBe("keep-alive");
-		expect(response.headers.get(TC.CommonHeaders.ContentType)).toBe("text/event-stream");
+		expect(res.headers.get(TC.HeaderKey.ContentType)).toBe("text/event-stream");
+		expect(res.headers.get(TC.HeaderKey.CacheControl)).toBe("no-cache");
+		expect(res.headers.get(TC.HeaderKey.Connection)).toBe("keep-alive");
+		expect(response.headers.get(TC.HeaderKey.ContentType)).toBe("text/event-stream");
 	});
 
 	it("SSE - STREAM EMITS CORRECT CHUNKS", async () => {
@@ -244,7 +244,7 @@ describe("C.Res", () => {
 		expect(res.status).toBe(TC.Status.OK);
 		expect(res.body).toBeInstanceOf(ReadableStream);
 		expect(res.headers.get(ctHeader)).toBe("text/plain");
-		expect(res.headers.get(TC.CommonHeaders.ContentDisposition)).toBe(
+		expect(res.headers.get(TC.HeaderKey.ContentDisposition)).toBe(
 			'attachment; filename="sample.txt"',
 		);
 	});
@@ -266,9 +266,7 @@ describe("C.Res", () => {
 
 	it("STREAM FILE - INLINE DISPOSITION", async () => {
 		const res = await TC.Res.streamFile("test/fixtures/sample.txt", "inline");
-		expect(res.headers.get(TC.CommonHeaders.ContentDisposition)).toBe(
-			'inline; filename="sample.txt"',
-		);
+		expect(res.headers.get(TC.HeaderKey.ContentDisposition)).toBe('inline; filename="sample.txt"');
 	});
 
 	it("STREAM FILE - THROWS NOT FOUND FOR MISSING FILE", () => {

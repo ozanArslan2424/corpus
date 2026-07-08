@@ -126,10 +126,6 @@ export function strBeforeMark(mark: string, input: string): string {
 	return index === -1 ? input : input.slice(0, index);
 }
 
-export function strIsDefined(input: string | undefined | null): input is string {
-	return !!input?.trim() && typeof input === "string";
-}
-
 export function strRemoveExt(str: string) {
 	return str.replace(/\.(ts|js|tsx|jsx)$/, "");
 }

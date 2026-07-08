@@ -1,4 +1,4 @@
-import { CommonHeaders } from "@/enums/CommonHeaders";
+import { HeaderKey } from "@/enums/HeaderKey";
 import { Method } from "@/enums/Method";
 import type { BodyParserInterface, ObjectParserInterface } from "@/Registry/types";
 import type { Req } from "@/Req/Req";
@@ -66,7 +66,7 @@ export class BodyParser implements BodyParserInterface {
 	}
 
 	private getContentTypeDisco(input: Request | Response): NormalizedContentType {
-		const contentTypeHeader = input.headers.get(CommonHeaders.ContentType) ?? "";
+		const contentTypeHeader = input.headers.get(HeaderKey.ContentType) ?? "";
 
 		if (contentTypeHeader.includes("application/json")) {
 			return "json";
@@ -128,7 +128,7 @@ export class BodyParser implements BodyParserInterface {
 	}
 
 	private async getTextBody(input: Request | Response): Promise<string> {
-		const contentLength = input.headers.get(CommonHeaders.ContentLength);
+		const contentLength = input.headers.get(HeaderKey.ContentLength);
 		const length = contentLength ? parseInt(contentLength) : 0;
 
 		// 1MB threshold
@@ -137,7 +137,7 @@ export class BodyParser implements BodyParserInterface {
 		}
 
 		const buffer = await input.arrayBuffer();
-		const contentType = input.headers.get(CommonHeaders.ContentType) ?? "";
+		const contentType = input.headers.get(HeaderKey.ContentType) ?? "";
 		const match = contentType.match(/charset=([^;]+)/i);
 		const charset = match?.[1] ? match[1].trim() : null;
 

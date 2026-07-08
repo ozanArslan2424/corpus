@@ -1,4 +1,3 @@
-import type { CHeaders } from "@/CHeaders/CHeaders";
 import type { Cookies } from "@/Cookies/Cookies";
 import { $registry } from "@/registry";
 import { Req } from "@/Req/Req";
@@ -18,7 +17,7 @@ import type { ContextDataInterface } from "@/types";
  * req = Req instance (readonly)
  * res = Res instance
  * url = Request URL object
- * headers = Request CHeaders
+ * headers = Request Headers
  * cookies = Request Cookies
  * body = Parsed Request body
  * search = Parsed Request URL search params
@@ -38,7 +37,7 @@ export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	req: Req;
 	res: Res<R>;
 	url: URL;
-	headers: CHeaders;
+	headers: Headers;
 	cookies: Cookies;
 	body: B = Object.create(null);
 	search: S = Object.create(null);

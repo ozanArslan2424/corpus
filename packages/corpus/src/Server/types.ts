@@ -1,12 +1,10 @@
 import type { Context } from "@/Context/Context";
-import type { RouterAdapterInterface } from "@/Registry/types";
 import type { Req } from "@/Req/Req";
 import type { Res } from "@/Res/Res";
 import type { WebSocketRoute } from "@/Route/WebSocketRoute";
 import type { Func } from "@/utils/functions";
 
 export type ServerOptions = {
-	adapter?: RouterAdapterInterface;
 	idleTimeout?: number;
 	tls?: {
 		cert: string | Buffer;

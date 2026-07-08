@@ -1,4 +1,4 @@
-import type { Env } from "@/types.d.ts";
+import type { Env } from "@/types";
 import type { Func } from "@/utils/functions";
 import { type OrString, strIsDefined } from "@/utils/strings";
 

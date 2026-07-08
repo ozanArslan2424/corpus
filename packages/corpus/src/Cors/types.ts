@@ -1,4 +1,4 @@
-import type { HeaderKey } from "@/CHeaders/types";
+import type { HeaderKey } from "@/enums/HeaderKey";
 
 export type CorsOptions = {
 	/** Which origins are allowed to access the resource. Use ["*"] for any origin, or specific domains. */
@@ -8,13 +8,13 @@ export type CorsOptions = {
 	allowedMethods?: string[];
 
 	/** Which headers can be sent in the request */
-	allowedCHeaders?: HeaderKey[];
+	allowedHeaders?: HeaderKey[];
 
 	/** Which headers should be exposed to the client/browser JavaScript
 	 * These are response headers that the client can read
 	 * @example ['RateLimit-Limit', 'RateLimit-Remaining', 'X-Custom-Header']
 	 */
-	exposedCHeaders?: HeaderKey[];
+	exposedHeaders?: HeaderKey[];
 
 	/** Whether to expose cookies and auth headers to the client */
 	credentials?: boolean;

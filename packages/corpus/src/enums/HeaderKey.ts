@@ -1,7 +1,8 @@
+import type { OrString } from "@/utils/strings";
 import type { ValueOf } from "@/utils/ValueOf";
 
 /** Just some common headers. */
-export const CommonHeaders = {
+export const HeaderKey = {
 	/** Controls caching mechanisms for requests and responses */
 	CacheControl: "Cache-Control",
 	/** Specifies the media type of the resource or data */
@@ -51,13 +52,13 @@ export const CommonHeaders = {
 	/** Indicates which HTTP method will be used in the actual CORS request */
 	AccessControlRequestMethod: "Access-Control-Request-Method",
 	/** Indicates which headers can be exposed to the browser in a CORS response */
-	AccessControlExposeCHeaders: "Access-Control-Expose-CHeaders",
+	AccessControlExposeHeaders: "Access-Control-Expose-Headers",
 	/** Indicates which origins are allowed to access the resource */
 	AccessControlAllowOrigin: "Access-Control-Allow-Origin",
 	/** Specifies the HTTP methods allowed when accessing the resource in a CORS request */
 	AccessControlAllowMethods: "Access-Control-Allow-Methods",
 	/** Specifies the HTTP headers allowed in a CORS request */
-	AccessControlAllowCHeaders: "Access-Control-Allow-CHeaders",
+	AccessControlAllowHeaders: "Access-Control-Allow-Headers",
 	/** Sends cookies from the server to the client */
 	SetCookie: "Set-Cookie",
 	/** Sends cookies from the client to the server */
@@ -66,4 +67,4 @@ export const CommonHeaders = {
 	Vary: "Vary",
 } as const;
 
-export type CommonHeaders = ValueOf<typeof CommonHeaders>;
+export type HeaderKey = OrString<ValueOf<typeof HeaderKey>>;

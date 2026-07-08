@@ -4,7 +4,7 @@ This example uses the "[memoirist](https://github.com/SaltyAom/memoirist)" packa
 
 ```ts
 import Memoirist from "memoirist";
-import type { C } from "@ozanarslan/corpus";
+import type { C, RouterAdapterInterface, RouterReturn, RouterData } from "@ozanarslan/corpus";
 
 /**
  * Router adapter wrapping the "memoirist" package.
@@ -26,11 +26,11 @@ import type { C } from "@ozanarslan/corpus";
  * P99:        0.0005ms
  * RPS:        19849324
  */
-export class MemoiristAdapter implements C.RouterAdapterInterface {
+export class MemoiristAdapter implements RouterAdapterInterface {
 	readonly __brand: string = "MemoiristAdapter";
-	private router = new Memoirist<C.RouterData>();
+	private router = new Memoirist<RouterData>();
 
-	find(req: C.Req): C.RouterReturn | null {
+	find(req: C.Req): RouterReturn | null {
 		const method = req.method;
 		const pathname = req.urlObject.pathname;
 
@@ -41,11 +41,11 @@ export class MemoiristAdapter implements C.RouterAdapterInterface {
 		return { route, params };
 	}
 
-	list: (() => Array<C.RouterData>) | undefined = () => {
+	list: (() => Array<RouterData>) | undefined = () => {
 		return this.router.history.map((v) => v[2]);
 	};
 
-	add(data: C.RouterData): void {
+	add(data: RouterData): void {
 		this.router.add(data.method, data.endpoint, data);
 	}
 }

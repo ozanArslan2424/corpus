@@ -37,7 +37,7 @@ const file = new X.File("assets/report.pdf");
 
 if (await file.exists()) {
 	console.log(file.mimeType); // "application/pdf"
-	return C.Res.file(file.path);
+	return C.Res.file(file); // or file.path
 }
 ```
 
@@ -65,22 +65,26 @@ See [XConfig](/xconfig.html) for the full API including `has`, `set`, and enviro
 Helper type for inferring all schemas from a single object containing multiple RouteModels. Useful when you prefer to colocate all your route schemas in one place.
 
 ```ts
-import { C, X } from "@ozanarslan/corpus";
+import { X } from "@ozanarslan/corpus";
 
-// You can also use a regular object.
 class UserModel {
-	static readonly entity = z.object({
+	static entity = z.object({
 		id: z.number(),
 		name: z.string(),
 	});
-	static readonly create = {
+
+	static create = {
 		body: z.object({ name: z.string() }),
+		response: this.entity,
+	};
+
+	static single = {
+		params: z.object({ id: z.coerce.number() }),
 		response: this.entity,
 	};
 }
 
-type M = X.InferModel<typeof UserModel>;
-// M["create"] = { body: { name: string }, response: { id: number, name: string } }
+type UserModelType = X.InferModel<typeof UserModel>;
+// UserModelType["create"] --> { body: { name: string }, response: { id: number, name: string } }
+// UserModelType["single"] --> { params: { id: number }, response: { id: number, name: string } }
 ```
-
-See [Model](/model.html) for more on route validation and type inference.

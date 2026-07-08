@@ -1,5 +1,5 @@
 import type { CorsOptions } from "@/Cors/types";
-import { CommonHeaders } from "@/enums/CommonHeaders";
+import { HeaderKey } from "@/enums/HeaderKey";
 import { Status } from "@/enums/Status";
 import {
 	MiddlewareVariant,
@@ -29,16 +29,16 @@ export class Cors implements CorsInterface {
 	variant: MiddlewareVariant = MiddlewareVariant.outbound;
 	useOn: MiddlewareUseOn = "*";
 	handler: MiddlewareHandler = (c) => {
-		this.applyCHeaders(c.res, c.headers.get("origin") ?? "");
+		this.applyHeaders(c.res, c.headers.get("origin") ?? "");
 	};
 
-	/** Applies CORS headers to a CHeaders object given the request origin. */
-	protected applyCHeaders(res: Res, reqOrigin: string, includeMaxAge = false): void {
+	/** Applies CORS headers to a Headers object given the request origin. */
+	protected applyHeaders(res: Res, reqOrigin: string, includeMaxAge = false): void {
 		const {
 			allowedOrigins,
 			allowedMethods,
-			allowedCHeaders,
-			exposedCHeaders,
+			allowedHeaders,
+			exposedHeaders,
 			credentials,
 			maxAge = 86400,
 		} = this.opts ?? {};
@@ -48,38 +48,38 @@ export class Cors implements CorsInterface {
 
 		// Credentials mode forbids wildcard origin — reflect actual origin instead
 		if (credentials && isWildcard && reqOrigin) {
-			res.headers.set(CommonHeaders.AccessControlAllowOrigin, reqOrigin);
-			res.headers.append(CommonHeaders.Vary, "Origin");
+			res.headers.set(HeaderKey.AccessControlAllowOrigin, reqOrigin);
+			res.headers.append(HeaderKey.Vary, "Origin");
 		} else if (isWildcard) {
-			res.headers.set(CommonHeaders.AccessControlAllowOrigin, "*");
+			res.headers.set(HeaderKey.AccessControlAllowOrigin, "*");
 		} else if (originAllowed) {
-			res.headers.set(CommonHeaders.AccessControlAllowOrigin, reqOrigin);
-			res.headers.append(CommonHeaders.Vary, "Origin");
+			res.headers.set(HeaderKey.AccessControlAllowOrigin, reqOrigin);
+			res.headers.append(HeaderKey.Vary, "Origin");
 		}
 
 		if (isSomeArray(allowedMethods)) {
-			res.headers.set(CommonHeaders.AccessControlAllowMethods, allowedMethods.join(", "));
+			res.headers.set(HeaderKey.AccessControlAllowMethods, allowedMethods.join(", "));
 		}
 
-		if (isSomeArray(allowedCHeaders)) {
-			res.headers.set(CommonHeaders.AccessControlAllowCHeaders, allowedCHeaders.join(", "));
+		if (isSomeArray(allowedHeaders)) {
+			res.headers.set(HeaderKey.AccessControlAllowHeaders, allowedHeaders.join(", "));
 		}
 
-		if (isSomeArray(exposedCHeaders)) {
-			res.headers.set(CommonHeaders.AccessControlExposeCHeaders, exposedCHeaders.join(", "));
+		if (isSomeArray(exposedHeaders)) {
+			res.headers.set(HeaderKey.AccessControlExposeHeaders, exposedHeaders.join(", "));
 		}
 
 		if (includeMaxAge) {
-			res.headers.set(CommonHeaders.AccessControlMaxAge, maxAge.toString());
+			res.headers.set(HeaderKey.AccessControlMaxAge, maxAge.toString());
 		}
 
-		res.headers.set(CommonHeaders.AccessControlAllowCredentials, boolToString(credentials));
+		res.headers.set(HeaderKey.AccessControlAllowCredentials, boolToString(credentials));
 	}
 
 	/** Preflight handler for OPTIONS requests. */
 	handlePreflight: RequestHandler = (req) => {
 		const res = new Res(undefined, { status: Status.NO_CONTENT });
-		this.applyCHeaders(res, req.headers.get("origin") ?? "", true);
+		this.applyHeaders(res, req.headers.get("origin") ?? "", true);
 		return res;
 	};
 }

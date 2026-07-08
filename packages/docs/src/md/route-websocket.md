@@ -1,6 +1,6 @@
 # WebSocketRoute
 
-The `WebSocketRoute` class defines a WebSocket endpoint with automatic registration to the global router. It accepts a path and a definition object containing lifecycle handlers for connection open, close, and message events. This class doesn't really do much. It's just a thin wrapper on top of Bun's websocket implementation to register it to the router. Read more here: [Bun Docs](https://bun.com/docs/runtime/http/websockets).
+The `WebSocketRoute` class defines a WebSocket endpoint with automatic registration to the global router. It accepts a path and a callbacks object containing lifecycle handlers for connection open, close, and message events. This class doesn't really do much. It's just a thin wrapper on top of Bun's websocket implementation to register it to the router. Read more here: [Bun Docs](https://bun.com/docs/runtime/http/websockets).
 
 <section class="table-of-contents">
 
@@ -27,28 +27,6 @@ new C.WebSocketRoute("/ws", {
 		ws.send(`Echo: ${message}`);
 	},
 });
-```
-
-### Extending the abstract class
-
-It makes sense to extend the abstract class since the definition involves 3 callbacks and can become pretty ugly.
-
-```ts
-class MyRoute extends C.WebSocketRouteAbstract {
-	constructor() {
-		super();
-		// this method needs to be called to register it to the router
-		// here or where you instantiate
-		this.register();
-	}
-
-	path: string = "/ws";
-	onClose?: C.WebSocketOnClose | undefined = undefined;
-	onOpen?: C.WebSocketOnOpen | undefined = undefined;
-	onMessage: C.WebSocketOnMessage = (ws, message) => {
-		ws.send(`ECHO: ${message}`);
-	};
-}
 ```
 
 ### Full lifecycle handlers
@@ -84,6 +62,30 @@ new C.WebSocketRoute("/binary", {
 });
 ```
 
+### Extending the abstract class
+
+It makes sense to extend the abstract class since the callbacks object involves 3 callbacks and can become pretty ugly.
+
+```ts
+class MyRoute extends C.WebSocketRouteAbstract {
+	constructor() {
+		super();
+		// this method needs to be called to register it to the router
+		// here or where you instantiate
+		this.register();
+	}
+
+	override endpoint: string = "/ws";
+	readonly onOpen?: WebSocketOnOpen | undefined = undefined;
+	readonly onClose?: WebSocketOnClose | undefined = undefined;
+	readonly onMessage: WebSocketOnMessage = (ws, message) => {
+		ws.send(`ECHO: ${message}`);
+	};
+}
+```
+
+> Note: since this wraps Bun's pub/sub, published messages are not delivered back to the sender. If the sender should also receive the message, send it to the sender explicitly.
+
 ## Constructor Parameters
 
 ### path
@@ -92,17 +94,24 @@ new C.WebSocketRoute("/binary", {
 
 The URL endpoint path. Always uses `GET` method (WebSocket upgrade handshake).
 
-### definition
+### callbacks
 
-`WebSocketRouteDefinition`
+`WebSocketRouteCallbacks`
 
-The WebSocket lifecycle definition object.
+The WebSocket lifecycle definition object. `ws` is Bun's `ServerWebSocket`.
 
 ```ts
-type WebSocketRouteDefinition = {
-	onOpen?: Func<[ws: CWebSocketInterface], MaybePromise<void>>;
-	onClose?: Func<[ws: CWebSocketInterface, code?: number, reason?: string], MaybePromise<void>>;
-	onMessage: Func<[ws: CWebSocketInterface, message: string | Buffer], MaybePromise<void>>;
+type WebSocketOnOpen = Func<[ws: ServerWebSocket], MaybePromise<void>>;
+type WebSocketOnClose = Func<
+	[ws: ServerWebSocket, code?: number, reason?: string],
+	MaybePromise<void>
+>;
+type WebSocketOnMessage = Func<[ws: ServerWebSocket, message: string | Buffer], MaybePromise<void>>;
+
+type WebSocketRouteCallbacks = {
+	onOpen?: WebSocketOnOpen;
+	onClose?: WebSocketOnClose;
+	onMessage: WebSocketOnMessage;
 };
 ```
 
@@ -116,14 +125,14 @@ type WebSocketRouteDefinition = {
 
 All constructor options are stored as readonly properties:
 
-| Property    | Type                     | Description                                     |
-| ----------- | ------------------------ | ----------------------------------------------- |
-| `id`        | `string`                 | Unique route identifier (`{method}:{endpoint}`) |
-| `method`    | `Method`                 | Fixed to `Method.GET` (WebSocket upgrade)       |
-| `endpoint`  | `E`                      | Resolved path                                   |
-| `handler`   | `Func`                   | Returns `this` for internal routing             |
-| `model`     | `undefined`              | Not applicable for WebSocket routes             |
-| `variant`   | `RouteVariant.websocket` | Fixed to `websocket` for this class             |
-| `onOpen`    | `Func \| undefined`      | Connection open handler                         |
-| `onClose`   | `Func \| undefined`      | Connection close handler                        |
-| `onMessage` | `Func`                   | Message receive handler (required)              |
+| Property    | Type                     | Description                                                          |
+| ----------- | ------------------------ | -------------------------------------------------------------------- |
+| `id`        | `string`                 | Unique route identifier (`{METHOD} {endpoint}`, e.g. `GET /ws`)      |
+| `method`    | `Method`                 | Fixed to `Method.GET` (WebSocket upgrade)                            |
+| `endpoint`  | `E`                      | Resolved path                                                        |
+| `handler`   | `Func`                   | Getter returning `() => this` so the router can resolve the instance |
+| `model`     | `undefined`              | Not applicable for WebSocket routes                                  |
+| `variant`   | `RouteVariant.websocket` | Fixed to `websocket` for this class                                  |
+| `onOpen`    | `Func \| undefined`      | Connection open handler                                              |
+| `onClose`   | `Func \| undefined`      | Connection close handler                                             |
+| `onMessage` | `Func`                   | Message receive handler (required)                                   |

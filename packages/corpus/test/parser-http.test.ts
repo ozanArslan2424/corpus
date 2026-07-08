@@ -33,7 +33,7 @@ const postRoute = (
 		new Request(url, {
 			method: "POST",
 			body: JSON.stringify(body),
-			headers: { [TC.CommonHeaders.ContentType]: "application/json" },
+			headers: { [TC.HeaderKey.ContentType]: "application/json" },
 		}),
 	);
 };

@@ -213,7 +213,7 @@ export class Server {
 	};
 
 	protected handlePreflight: RequestHandler = async (req) => {
-		if (!$registry.cors) {
+		if ($registry.cors === null) {
 			return new Res(undefined, { status: Status.NO_CONTENT });
 		}
 		return $registry.cors.handlePreflight(req);

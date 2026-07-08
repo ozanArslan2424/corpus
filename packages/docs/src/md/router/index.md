@@ -20,8 +20,8 @@ The router instance can be accessed through `$registry.router`.
 ## Interface
 
 ```ts
-interface RouterInterface {
-	add(route: BaseRouteInterface<any, any, any, any>): void;
+export interface RouterInterface {
+	add(route: BaseRoute<any, any, any, any>): void;
 	find(req: Req): RouterReturn | null;
 	list(): Array<RouterData>;
 }
@@ -42,7 +42,7 @@ When instantiating a new `Server`, you may optionally provide a supported adapte
 
 ### BranchAdapter (default)
 
-The default router adapter, based on [@medley/router](https://github.com/medleyjs/router) by [nwoltman (Nathan Woltman)](https://github.com/nwoltman). This is an extremely fast radix-tree router. The original library is CJS only so i had to fork it for this package.
+The default router adapter, based on [@medley/router](https://github.com/medleyjs/router) by [nwoltman (Nathan Woltman)](https://github.com/nwoltman). This is an extremely fast radix-tree router. The original library is CJS only so i had to fork it internally for this package.
 (Attributions included.)
 
 ### MemoiristAdapter
@@ -52,6 +52,7 @@ An alternative adapter layer for [memoirist](https://github.com/SaltyAom/memoiri
 ```ts
 import { C, $registry } from "@ozanarslan/corpus";
 import { MemoiristAdapter } from "./MemoiristAdapter";
+
 $registry.adapter = new MemoiristAdapter();
 
 const server = new C.Server();
@@ -66,6 +67,8 @@ import { C, $registry } from "@ozanarslan/corpus";
 import type { RouterAdapterInterface, RouterReturn, RouterData } from "@ozanarslan/corpus";
 
 class MyAdapter implements RouterAdapterInterface {
+	readonly __brand: string = "MyAdapter";
+
 	add(data: RouterData): void {
 		// register a route
 	}
@@ -77,7 +80,7 @@ class MyAdapter implements RouterAdapterInterface {
 	}
 
 	// optionally return all registered routes
-	list: (() => Array<RouterData>) | undefined;
+	list: Func<[], Array<RouterData>> | undefined;
 }
 
 $registry.adapter = new MyAdapter();

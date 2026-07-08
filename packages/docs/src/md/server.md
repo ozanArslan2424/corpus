@@ -15,10 +15,6 @@ The `Server` class is typically the first module you'll interact with in Corpus.
 
 When instantiating a new `Server`, you may optionally provide a configuration object with the following properties:
 
-### `adapter`
-
-Allows you to specify a custom router adapter implementation. This is useful when you need to integrate with alternative routing mechanisms or extend the default routing behavior. For detailed information on creating and using router adapters, please refer to the [Router module](/router.html) documentation.
-
 ### `idleTimeout`
 
 Sets the maximum time (in milliseconds) that an idle connection will be kept open before being automatically closed. This helps manage server resources by cleaning up connections that are no longer active.

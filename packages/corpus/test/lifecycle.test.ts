@@ -16,7 +16,7 @@ beforeEach(() => {
 	const throwRoute = new TC.Route("/throw-guarded", (c) => ({
 		user: (c.data as any).user,
 	}));
-	const outboundCHeaders = new TC.Route("/outbound-headers", () => ({
+	const outboundHeaders = new TC.Route("/outbound-headers", () => ({
 		ok: true,
 	}));
 	const outboundCookies = new TC.Route("/outbound-cookies", () => ({
@@ -24,7 +24,7 @@ beforeEach(() => {
 	}));
 	new TC.Route("/global-one", (c) => ({ traced: (c.data as any).traced }));
 	new TC.Route("/global-two", (c) => ({ traced: (c.data as any).traced }));
-	const inboundCHeaders = new TC.Route("/inbound-headers", (c) => ({
+	const inboundHeaders = new TC.Route("/inbound-headers", (c) => ({
 		receivedToken: (c.data as any).token,
 	}));
 	const inboundCookies = new TC.Route("/inbound-cookies", (c) => ({
@@ -59,7 +59,7 @@ beforeEach(() => {
 	// Simulates a CORS or cache-control interceptor running after the handler.
 	new TC.Middleware({
 		variant: "outbound",
-		useOn: [outboundCHeaders],
+		useOn: [outboundHeaders],
 		handler: (c) => {
 			c.res.headers.set("x-powered-by", "corpus");
 			c.res.headers.set("cache-control", "no-store");
@@ -92,7 +92,7 @@ beforeEach(() => {
 	// ── 5a) inbound — read request header ─────────────────────────────────────
 	// Simulates an API-key extractor that normalises the token into (c.data as any).
 	new TC.Middleware({
-		useOn: [inboundCHeaders],
+		useOn: [inboundHeaders],
 		handler: (c) => {
 			(c.data as any).token = c.req.headers.get("x-api-key") ?? null;
 		},

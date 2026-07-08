@@ -1,5 +1,4 @@
-import type { CHeaders } from "@/CHeaders/CHeaders";
-import { CommonHeaders } from "@/enums/CommonHeaders";
+import { HeaderKey } from "@/enums/HeaderKey";
 
 export class CacheControlDirective {
 	constructor(opts: CacheControlDirective) {
@@ -25,8 +24,8 @@ export class CacheControlDirective {
 		return parts.join(", ");
 	}
 
-	static applyHeader(headers: CHeaders, opts: CacheControlDirective): CHeaders {
-		headers.set(CommonHeaders.CacheControl, CacheControlDirective.createHeaderString(opts));
+	static applyHeader(headers: Headers, opts: CacheControlDirective): Headers {
+		headers.set(HeaderKey.CacheControl, CacheControlDirective.createHeaderString(opts));
 		return headers;
 	}
 }

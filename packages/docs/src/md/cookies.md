@@ -12,6 +12,7 @@ The `Cookies` class provides a unified interface for managing HTTP cookies with 
 2. [Constructor Parameters](#constructor-parameters)
 3. [Properties](#properties)
 4. [Methods](#methods)
+5. [types](#types)
 
 </section>
 
@@ -123,7 +124,7 @@ Checks if a cookie exists.
 Sets a cookie with options.
 
 ```ts
-type CookieOptions = {
+export type CookieOptions = {
 	name: string;
 	value: string;
 	domain?: string;
@@ -174,3 +175,24 @@ Returns all cookie values.
 `toSetCookieHeaders(): Array<string>`
 
 Generates `Set-Cookie` header strings for all set cookies. Called automatically when building the response.
+
+## types
+
+```ts
+export type CookiesInit = CookieOptions | CookieOptions[];
+
+export type CookieOptions = {
+	name: string;
+	value: string;
+	domain?: string;
+	/** Defaults to '/'. */
+	path?: string;
+	expires?: number | Date;
+	secure?: boolean;
+	/** Defaults to `lax`. */
+	sameSite?: "strict" | "lax" | "none";
+	httpOnly?: boolean;
+	partitioned?: boolean;
+	maxAge?: number;
+};
+```

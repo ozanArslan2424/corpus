@@ -15,7 +15,7 @@ describe("C.Context", () => {
 		new TC.Route("/ctx-shape", (c) => {
 			expect(c.req).toBeInstanceOf(TC.Req);
 			expect(c.url).toBeInstanceOf(URL);
-			expect(c.headers).toBeInstanceOf(TC.Headers);
+			expect(c.headers).toBeInstanceOf(Headers);
 			expect(c.cookies).toBeInstanceOf(TC.Cookies);
 			expect(c.res).toBeInstanceOf(TC.Res);
 			expect(c.body).toBeDefined();
@@ -185,7 +185,7 @@ describe("C.Context", () => {
 		});
 
 		const res = await s.handle(req("/ctx-res-cookie"));
-		expect(res.headers.get(TC.CommonHeaders.SetCookie)).toContain("session=abc123");
+		expect(res.headers.get(TC.HeaderKey.SetCookie)).toContain("session=abc123");
 	});
 
 	it("REQ - READ COOKIE", async () => {

@@ -166,7 +166,7 @@ describe("BodyParser", () => {
 			fd.append("ids", "2");
 
 			const req = new Req("http://localhost/", { method: "POST", body: fd });
-			expect(req.headers.get(TC.CommonHeaders.ContentType)).toInclude("form-data");
+			expect(req.headers.get(TC.HeaderKey.ContentType)).toInclude("form-data");
 			expect(await parser.parse(req)).toEqual({ title: "hello", ids: [1, 2] });
 		});
 

@@ -14,13 +14,19 @@ async function clean(outdir: string) {
 async function build(outdir: string, tsconfig: string) {
 	const res = await Bun.build({
 		entrypoints: ["./src/index.ts"],
+		external: [],
 		format: "esm",
 		target: "bun",
 		minify: true,
 		sourcemap: true,
 		outdir,
 		tsconfig,
-		plugins: [dts({ compilationOptions: { preferredConfigPath: tsconfig } })],
+		plugins: [
+			dts({
+				compilationOptions: { preferredConfigPath: tsconfig },
+				output: { inlineDeclareGlobals: true },
+			}),
+		],
 	});
 
 	if (!res.success) res.logs.forEach((l) => logger.error(l));

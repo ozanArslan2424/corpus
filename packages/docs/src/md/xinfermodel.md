@@ -3,7 +3,7 @@
 Helper type for inferring all schemas from a single object containing multiple RouteModels. Useful when you prefer to colocate all your route schemas in one place.
 
 ```ts
-import { C, X } from "@ozanarslan/corpus";
+import { X } from "@ozanarslan/corpus";
 
 class UserModel {
 	static entity = z.object({

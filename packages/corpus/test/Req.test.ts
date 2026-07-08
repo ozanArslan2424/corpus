@@ -16,7 +16,7 @@ describe("C.Req", () => {
 		expect(req.body).toBeNull();
 		expect(req.url).toBe(expectedUrlString);
 		expect(req.urlObject).toEqual(expectedUrlObject);
-		expect(req.headers).toBeInstanceOf(TC.Headers);
+		expect(req.headers).toBeInstanceOf(Headers);
 		expect(req.cookies).toBeInstanceOf(TC.Cookies);
 		expect(req.isPreflight).toBeFalse();
 	}
@@ -67,7 +67,7 @@ describe("C.Req", () => {
 		}
 	});
 
-	const acrmHeader = TC.CommonHeaders.AccessControlRequestMethod;
+	const acrmHeader = TC.HeaderKey.AccessControlRequestMethod;
 
 	it("PREFLIGHT - INIT HEADERS OBJECT", () => {
 		const req = new TC.Req(urlString, {
@@ -75,17 +75,6 @@ describe("C.Req", () => {
 			headers: {
 				[acrmHeader]: TC.Method.GET,
 			},
-		});
-		expect(req.isPreflight).toBe(true);
-		expect(req.headers.get(acrmHeader)).toBe(TC.Method.GET);
-	});
-
-	it("PREFLIGHT - INIT HEADERS C.HEADERS", () => {
-		const headers = new TC.Headers();
-		headers.set(acrmHeader, TC.Method.GET);
-		const req = new TC.Req(urlString, {
-			method: TC.Method.OPTIONS,
-			headers,
 		});
 		expect(req.isPreflight).toBe(true);
 		expect(req.headers.get(acrmHeader)).toBe(TC.Method.GET);
@@ -114,8 +103,8 @@ describe("C.Req", () => {
 	it("IS WEBSOCKET - TRUE WHEN UPGRADE HEADERS PRESENT", () => {
 		const req = new TC.Req(urlString, {
 			headers: {
-				[TC.CommonHeaders.Connection]: "upgrade",
-				[TC.CommonHeaders.Upgrade]: "websocket",
+				[TC.HeaderKey.Connection]: "upgrade",
+				[TC.HeaderKey.Upgrade]: "websocket",
 			},
 		});
 		expect(req.isWebsocket).toBeTrue();
@@ -124,7 +113,7 @@ describe("C.Req", () => {
 	it("IS WEBSOCKET - FALSE WITHOUT UPGRADE HEADER", () => {
 		const req = new TC.Req(urlString, {
 			headers: {
-				[TC.CommonHeaders.Upgrade]: "websocket",
+				[TC.HeaderKey.Upgrade]: "websocket",
 			},
 		});
 		expect(req.isWebsocket).toBeFalse();
@@ -133,7 +122,7 @@ describe("C.Req", () => {
 	it("IS WEBSOCKET - FALSE WITHOUT WEBSOCKET HEADER", () => {
 		const req = new TC.Req(urlString, {
 			headers: {
-				[TC.CommonHeaders.Connection]: "upgrade",
+				[TC.HeaderKey.Connection]: "upgrade",
 			},
 		});
 		expect(req.isWebsocket).toBeFalse();
@@ -142,8 +131,8 @@ describe("C.Req", () => {
 	it("IS WEBSOCKET - CASE INSENSITIVE", () => {
 		const req = new TC.Req(urlString, {
 			headers: {
-				[TC.CommonHeaders.Connection]: "Upgrade",
-				[TC.CommonHeaders.Upgrade]: "WebSocket",
+				[TC.HeaderKey.Connection]: "Upgrade",
+				[TC.HeaderKey.Upgrade]: "WebSocket",
 			},
 		});
 		expect(req.isWebsocket).toBeTrue();

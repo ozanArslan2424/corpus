@@ -1,6 +1,6 @@
 # XFile
 
-`XFile` is a lightweight wrapper around Bun's native `BunFile` that adds commonly needed utilities: path parsing, MIME detection, directory-aware writes, copy/move, and more — without pulling in any dependencies.
+`XFile` is a lightweight wrapper around Bun's native `BunFile` that adds commonly needed utilities: path parsing, MIME detection, directory-aware writes, copy/move, and more, without pulling in any dependencies.
 
 The underlying `BunFile` instance is always accessible via `file.bunFile` if you need to drop down to the native API.
 
@@ -35,6 +35,7 @@ if (await file.exists()) {
 ```ts
 const file = new X.File(Bun.file("assets/document.txt"));
 // file.bunFile === the BunFile you passed in
+// file.path is derived from bunFile.name (empty string if the BunFile is unnamed)
 ```
 
 ### Writing files
@@ -58,14 +59,16 @@ file.withExtension("webp"); // assets/photo.webp
 file.dir; // "assets"
 ```
 
+Derived `XFile` instances keep the original's `fallbackExtension`.
+
 ### MIME type detection
 
-MIME type is delegated to `BunFile.type`, so it covers every format Bun knows about — no manual map to maintain.
+MIME type is delegated to `BunFile.type`, so it covers every format Bun knows about, no manual map to maintain. Charset parameters are stripped (`text/html; charset=utf-8` becomes `text/html`), and unknown extensions fall back to `application/octet-stream`.
 
 ```ts
 new X.File("styles/main.css").mimeType; // "text/css"
 new X.File("photo.webp").mimeType; // "image/webp"
-new X.File("photo.WEBP").mimeType; // "image/webp" (normalized)
+new X.File("photo.WEBP").mimeType; // "image/webp" (extension is normalized to lowercase)
 
 // Fallback extension for extension-less paths
 new X.File("data", "json").mimeType; // "application/json"
@@ -77,23 +80,23 @@ new X.File("data", "json").mimeType; // "application/json"
 new X.File(pathOrBunFile: string | Bun.BunFile, fallbackExtension?: string)
 ```
 
-| Parameter           | Type                    | Default | Description                                                       |
-| ------------------- | ----------------------- | ------- | ----------------------------------------------------------------- |
-| `pathOrBunFile`     | `string \| Bun.BunFile` | —       | File path string or an existing `BunFile` instance.               |
-| `fallbackExtension` | `string`                | `"txt"` | Extension used for MIME detection when the path has no extension. |
+| Parameter           | Type                    | Default | Description                                                                                                 |
+| ------------------- | ----------------------- | ------- | ----------------------------------------------------------------------------------------------------------- |
+| `pathOrBunFile`     | `string \| Bun.BunFile` | -       | File path string or an existing `BunFile` instance. For a `BunFile`, `path` is derived from `bunFile.name`. |
+| `fallbackExtension` | `string`                | `"txt"` | Extension used for `extension`, `fullname`, and MIME detection when the path has no extension.              |
 
 ## Properties
 
-| Property     | Type          | Description                                                              |
-| ------------ | ------------- | ------------------------------------------------------------------------ |
-| `path`       | `string`      | The resolved file path.                                                  |
-| `bunFile`    | `Bun.BunFile` | The underlying `BunFile` instance.                                       |
-| `name`       | `string`      | Filename without the extension.                                          |
-| `fullname`   | `string`      | Filename including the extension.                                        |
-| `extension`  | `string`      | Lowercase file extension, excluding the leading dot.                     |
-| `dir`        | `string`      | Absolute path of the containing directory.                               |
-| `mimeType`   | `string`      | MIME type from `BunFile.type`, falls back to `application/octet-stream`. |
-| `parentDirs` | `string[]`    | Parent directory names ordered from immediate parent to root.            |
+| Property     | Type          | Description                                                                                                                            |
+| ------------ | ------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`       | `string`      | The file path as given (or derived from the `BunFile`).                                                                                |
+| `bunFile`    | `Bun.BunFile` | The underlying `BunFile` instance.                                                                                                     |
+| `name`       | `string`      | Filename without the extension.                                                                                                        |
+| `fullname`   | `string`      | Filename including the extension. For extension-less paths this includes the fallback extension, so it may not match the file on disk. |
+| `extension`  | `string`      | Lowercase file extension, excluding the leading dot. Falls back to `fallbackExtension` (lowercased) for extension-less paths.          |
+| `dir`        | `string`      | Directory path containing the file (`path.dirname`, relative if the file path is relative).                                            |
+| `mimeType`   | `string`      | MIME type from `BunFile.type` with charset parameters stripped, falls back to `application/octet-stream`.                              |
+| `parentDirs` | `string[]`    | Parent directory names ordered from immediate parent to root.                                                                          |
 
 ## Methods
 
@@ -101,7 +104,7 @@ new X.File(pathOrBunFile: string | Bun.BunFile, fallbackExtension?: string)
 
 `exists(): Promise<boolean>`
 
-Delegates to `BunFile.exists()`.
+Checks if the file exists. Uses a fresh `Bun.file` instance instead of the cached `bunFile`, because `BunFile.exists()` caches its result; a file deleted after the `XFile` was constructed would otherwise still report as existing.
 
 ```ts
 await new X.File("assets/data.json").exists(); // true | false
@@ -111,7 +114,7 @@ await new X.File("assets/data.json").exists(); // true | false
 
 `text(encoding?): Promise<string>`
 
-Reads the file as a string. Delegates to `BunFile.text()` for UTF-8, falls back to `fs.readFile` for other encodings.
+Reads the file as a string. Delegates to `BunFile.text()` for UTF-8 (the default), falls back to `fs.readFile` for other encodings.
 
 ```ts
 await new X.File("assets/template.html").text(); // utf-8
@@ -142,6 +145,8 @@ const stream = await new X.File("assets/video.mp4").stream();
 
 `write(data): Promise<void>`
 
+`data: string | ArrayBuffer | Uint8Array`
+
 Writes data to the file via `Bun.write()`, overwriting any existing content. Parent directories are created automatically.
 
 ```ts
@@ -153,7 +158,9 @@ await new X.File("output/data.bin").write(new Uint8Array([0xde, 0xad]));
 
 `append(data): Promise<void>`
 
-Appends data to the file without overwriting existing content.
+`data: string | Uint8Array`
+
+Appends data to the file via `fs.appendFile` without overwriting existing content.
 
 ```ts
 const log = new X.File("output/log.txt");
@@ -175,7 +182,7 @@ if (await file.exists()) await file.unlink();
 
 `stat(): Promise<Stats>`
 
-Returns `fs.Stats` for the file — size, timestamps, permissions, etc.
+Returns `fs.Stats` for the file: size, timestamps, permissions, etc.
 
 ```ts
 const s = await new X.File("assets/image.png").stat();
@@ -186,7 +193,7 @@ console.log(s.size, s.mtime);
 
 `size(): Promise<number | null>`
 
-Returns the file size in bytes, or `null` if the file does not exist. Reads from `BunFile.size` directly — no `stat` call.
+Returns the file size in bytes, or `null` if the file does not exist. Reads from `BunFile.size` directly, no `stat` call.
 
 ```ts
 await new X.File("assets/image.png").size(); // 204800 | null
@@ -196,7 +203,7 @@ await new X.File("assets/image.png").size(); // 204800 | null
 
 `copyTo(dest: string): Promise<XFile>`
 
-Copies the file to `dest`, creating parent directories automatically. Returns a new `XFile` pointing to the destination.
+Copies the file to `dest` via `fs.copyFile`, creating parent directories automatically. Returns a new `XFile` pointing to the destination.
 
 ```ts
 const copy = await new X.File("src/logo.png").copyTo("dist/logo.png");
@@ -206,7 +213,7 @@ const copy = await new X.File("src/logo.png").copyTo("dist/logo.png");
 
 `moveTo(dest: string): Promise<XFile>`
 
-Moves (renames) the file to `dest`, creating parent directories automatically. Returns a new `XFile` pointing to the destination.
+Moves (renames) the file to `dest` via `fs.rename`, creating parent directories automatically. Returns a new `XFile` pointing to the destination.
 
 ```ts
 const moved = await new X.File("tmp/upload.png").moveTo("assets/upload.png");
