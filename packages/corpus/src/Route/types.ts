@@ -29,7 +29,7 @@ export type RouteModel<B = unknown, S = unknown, P = unknown, R = unknown> = {
 
 export type BundleRouteCacheConfig = {
 	/** Strategy for index.html */
-	indexHtml: CacheControlDirective | "no-cache";
+	indexHtml: CacheControlDirective;
 	/** Strategy for the /assets/ folder */
 	assetsDir: CacheControlDirective;
 	/** Optional: Strategy for other root files (favicon, robots.txt, etc.) */

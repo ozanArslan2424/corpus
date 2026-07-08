@@ -43,7 +43,9 @@ export abstract class BundleRouteAbstract<
 			immutable: true,
 		},
 		// index.html must be checked every time to see if a new version exists.
-		indexHtml: "no-cache",
+		indexHtml: {
+			noCache: true,
+		},
 		// Root files (favicon, robots.txt, manifest.json) usually don't have
 		// hashes in the filename, so we tell the browser to revalidate them.
 		fallback: {
@@ -52,12 +54,12 @@ export abstract class BundleRouteAbstract<
 		},
 	};
 
-	protected onFileNotFound: Func<[], Bun.MaybePromise<Res>> = () => {
-		throw new Exception(Status.NOT_FOUND.toString(), Status.NOT_FOUND);
+	protected onFileNotFound: Func<[subPath: string], Bun.MaybePromise<Res>> = (subPath) => {
+		throw new Exception(`${subPath} file was not found.`, Status.NOT_FOUND);
 	};
 
 	protected onIgnore: Func<[], Bun.MaybePromise<Res>> = () => {
-		return this.onFileNotFound();
+		return this.onFileNotFound("");
 	};
 
 	handler: Func<[Context<B, S, P, StaticRouteRes>], Bun.MaybePromise<StaticRouteRes>> = async (
@@ -98,7 +100,7 @@ export abstract class BundleRouteAbstract<
 		}
 
 		if (!exists) {
-			return this.onFileNotFound();
+			return this.onFileNotFound(subPath);
 		}
 
 		let res: Res;

@@ -12,9 +12,7 @@ export class CacheControlDirective {
 	noCache?: boolean;
 	noStore?: boolean;
 
-	static createHeaderString(opts: CacheControlDirective | "no-cache"): string {
-		if (opts === "no-cache") return "no-cache";
-
+	static createHeaderString(opts: CacheControlDirective): string {
 		if (opts.noStore) return "no-store";
 		if (opts.noCache) return "no-cache";
 
@@ -27,7 +25,7 @@ export class CacheControlDirective {
 		return parts.join(", ");
 	}
 
-	static applyHeader(headers: CHeaders, opts: CacheControlDirective | "no-cache"): CHeaders {
+	static applyHeader(headers: CHeaders, opts: CacheControlDirective): CHeaders {
 		headers.set(CommonHeaders.CacheControl, CacheControlDirective.createHeaderString(opts));
 		return headers;
 	}
