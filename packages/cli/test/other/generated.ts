@@ -310,7 +310,7 @@ export class CorpusApi {
 		param1Param2Get: (p: Args.Param1Param2Get["params"]) =>
 			`/${String(p.param1)}/${String(p.param2)}`,
 		helloParam1Param2Get: (p: Args.HelloParam1Param2Get["params"]) =>
-			`hello/${String(p.param1)}/${String(p.param2)}`,
+			`/hello/${String(p.param1)}/${String(p.param2)}`,
 		worldParam1Param2Get: (p: Args.WorldParam1Param2Get["params"]) =>
 			`/world/${String(p.param1)}/${String(p.param2)}`,
 		lalalaParam1Param2Get: (p: Args.LalalaParam1Param2Get["params"]) =>
@@ -352,7 +352,7 @@ export class CorpusApi {
 
 	public helloParam1Param2Get(args: Args.HelloParam1Param2Get) {
 		return this.fetchFn<Models.HelloParam1Param2Get["response"]>({
-			endpoint: `hello/${String(args.params.param1)}/${String(args.params.param2)}`,
+			endpoint: `/hello/${String(args.params.param1)}/${String(args.params.param2)}`,
 			method: "GET",
 			search: args.search,
 		});
