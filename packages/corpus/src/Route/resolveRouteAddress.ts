@@ -16,7 +16,7 @@ export function resolveRouteAddress<E extends string>(
 		`Route address cannot include whitespaces unless it starts with an HTTP verb. Received: ${address}`,
 	);
 	assert(
-		endpoint !== undefined,
+		typeof endpoint === "string" && endpoint.trim() !== "",
 		`Route address cannot include whitespaces unless it starts with an HTTP verb and ends with a path. Received: ${address}`,
 	);
 	return { method: method.toUpperCase() as Method, path: endpoint as E };

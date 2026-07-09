@@ -1,8 +1,8 @@
-import { BodyParser } from "@/Parsers/BodyParser";
-import { FormDataParser } from "@/Parsers/FormDataParser";
-import { SchemaParser } from "@/Parsers/SchemaParser";
-import { SearchParamsParser } from "@/Parsers/SearchParamsParser";
-import { URLParamsParser } from "@/Parsers/URLParamsParser";
+import { BodyParser } from "@/Parser/BodyParser";
+import { FormDataParser } from "@/Parser/FormDataParser";
+import { SchemaParser } from "@/Parser/SchemaParser";
+import { SearchParamsParser } from "@/Parser/SearchParamsParser";
+import { URLParamsParser } from "@/Parser/URLParamsParser";
 import type {
 	BodyParserInterface,
 	CorsInterface,

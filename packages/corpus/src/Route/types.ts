@@ -18,6 +18,7 @@ export type RouteVariant = ValueOf<typeof RouteVariant>;
 export type RouteAddress<E extends string = string> =
 	| E
 	| `${Method} ${E}`
+	| `${Lowercase<Method>} ${E}`
 	| { method: Method; path: E };
 
 export type RouteModel<B = unknown, S = unknown, P = unknown, R = unknown> = {

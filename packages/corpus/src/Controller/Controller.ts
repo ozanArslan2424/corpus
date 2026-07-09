@@ -64,11 +64,21 @@ export abstract class Controller {
 	protected staticRoute<B = unknown, S = unknown, P = unknown, E extends string = string>(
 		...args: ConstructorParameters<typeof StaticRoute<B, S, P, E>>
 	): StaticRoute<B, S, P, E> {
-		const [address, ...rest] = args;
+		const [address, definition, callback, ...rest] = args;
 		const resolved = resolveRouteAddress(address);
 		const method = resolved.method;
 		const path = joinPathSegments<E>(this.prefix, resolved.path);
-		const route = new StaticRoute({ method, path }, ...rest);
+		const route = new StaticRoute(
+			{ method, path },
+			definition,
+			callback === undefined
+				? undefined
+				: async (ctx, content) => {
+						await this.beforeEach?.(ctx);
+						return callback(ctx, content);
+					},
+			...rest,
+		);
 		this.routeIds.add(route.id);
 		return route;
 	}

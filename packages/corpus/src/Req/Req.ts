@@ -41,7 +41,10 @@ export class Req extends Request {
 			const pairs = strSplit(";", cookieHeader);
 
 			for (const pair of pairs) {
-				const [name, value] = strSplit("=", pair);
+				const eq = pair.indexOf("=");
+				if (eq <= 0) continue;
+				const name = pair.slice(0, eq).trim();
+				const value = pair.slice(eq + 1).trim();
 				if (!name || !value) continue;
 				jar.set({ name, value });
 			}

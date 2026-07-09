@@ -67,17 +67,28 @@ export abstract class BundleRouteAbstract<
 	) => {
 		const idx = "index.html";
 		const pathname = c.url.pathname;
-		const subPath = pathname.startsWith(this.endpoint)
-			? pathname.slice(this.endpoint.length)
-			: pathname;
+
+		const base = this.endpoint.endsWith("/*")
+			? this.endpoint.slice(0, -2)
+			: this.endpoint.endsWith("*")
+				? this.endpoint.slice(0, -1)
+				: this.endpoint;
+		const subPath = base && pathname.startsWith(base) ? pathname.slice(base.length) : pathname;
 
 		const relFilePath = subPath === "" || subPath === "/" ? idx : subPath;
 		const targetPath = path.join(this.dir, relFilePath);
 
+		// guard against traversal
+		const root = path.resolve(this.dir);
+		const resolved = path.resolve(targetPath);
+		if (resolved !== root && !resolved.startsWith(root + path.sep)) {
+			return this.onFileNotFound(subPath);
+		}
+
 		const isIgnored = this.ignore.some((pattern) => {
 			if (pattern.endsWith("*")) {
 				const prefix = pattern.slice(0, -1);
-				return relFilePath.startsWith(prefix);
+				return relFilePath.startsWith(prefix) || relFilePath.startsWith(`/${prefix}`);
 			}
 			return relFilePath === pattern || relFilePath === `/${pattern}`;
 		});
@@ -111,7 +122,7 @@ export abstract class BundleRouteAbstract<
 			res = await Res.streamFile(file, "inline");
 		}
 
-		if (file.name === idx) {
+		if (file.fullname === idx) {
 			res.headers.set(
 				HeaderKey.CacheControl,
 				CacheControlDirective.createHeaderString(this.cache.indexHtml),
