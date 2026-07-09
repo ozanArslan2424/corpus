@@ -1,11 +1,6 @@
-import type { CacheControlDirective } from "@/CacheControlDirective/CacheControlDirective";
-import type { Method } from "@/enums/Method";
-import type { Res } from "@/Res/Res";
-import type { ServerWebSocket } from "@/Server/types";
-import type { Func } from "@/utils/functions";
-import type { Schema } from "@/utils/Schema";
-import type { ValueOf } from "@/utils/ValueOf";
+# Route types
 
+```ts
 export const RouteVariant = {
 	static: "static",
 	dynamic: "dynamic",
@@ -62,3 +57,4 @@ export type StaticRouteDefinition =
 			disposition?: "attachment" | "inline";
 			cache?: CacheControlDirective;
 	  };
+```
