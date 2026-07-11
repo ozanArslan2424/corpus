@@ -59,18 +59,21 @@ export class Router implements RouterInterface {
 			data.endpoint = joinPathSegments($registry.prefix, route.endpoint);
 		}
 
-		if (route.model) {
-			data.validators ??= {};
-			for (const [key, schema] of objGetEntries(route.model)) {
-				if (key === "response") continue;
-				if (!schema) continue;
-				data.validators[key] = internFunc(
-					this.funcMap,
-					schema["~standard"].validate,
-					"model",
-					strRemoveWhitespace(JSON.stringify(schema)),
-				);
-			}
+		if (!route.model) return data;
+
+		const { config, ...model } = route.model;
+		if (config) data.config = config;
+
+		data.validators ??= {};
+		for (const [key, schema] of objGetEntries(model)) {
+			if (key === "response") continue;
+			if (!schema) continue;
+			data.validators[key] = internFunc(
+				this.funcMap,
+				schema["~standard"].validate,
+				"model",
+				strRemoveWhitespace(JSON.stringify(schema)),
+			);
 		}
 
 		return data;

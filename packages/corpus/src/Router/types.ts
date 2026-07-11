@@ -1,11 +1,10 @@
 import type { MiddlewareHandler } from "@/Middleware/types";
 import type { BaseRoute } from "@/Route/BaseRoute";
+import type { RouteConfig } from "@/types";
 import type { SchemaValidator } from "@/utils/Schema";
 
-export type RouterData = Pick<
-	BaseRoute<any, any, any, any>,
-	"variant" | "id" | "method" | "endpoint" | "handler"
-> & {
+export type RouterData = Omit<BaseRoute<any, any, any, any>, "model" | "register"> & {
+	config?: RouteConfig;
 	validators?: {
 		body?: SchemaValidator<any>;
 		search?: SchemaValidator<any>;

@@ -60,6 +60,7 @@ export interface ObjectParserInterface<T> {
 export interface BodyParserInterface {
 	parse(
 		r: Req | Res | Response,
+		maxRequestBodySize?: number,
 	): Promise<Record<string, unknown> | Array<unknown> | string | ReadableStream<Uint8Array>>;
 }
 

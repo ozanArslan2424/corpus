@@ -147,6 +147,12 @@ describe("SearchParamsParser", () => {
 			sp.append("a[0]", "y");
 			expect(parser.parse(sp)).toEqual({ a: [["x", "y"]] });
 		});
+
+		it("last-write-wins", () => {
+			const urlString = "http://localhost:4444/hello?a=1&a[b]=2";
+			const url = new URL(urlString);
+			expect(parser.parse(url.searchParams)).toEqual({ a: { b: 2 } });
+		});
 	});
 
 	describe("prototype safety", () => {

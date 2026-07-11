@@ -24,13 +24,13 @@ export class SearchParamsParser extends ObjectParserAbstract<URLSearchParams> {
 			const container = this.newContainer(current);
 
 			// each part needs an entry
-			// container[part] is undefined so we assign it as inner container
+			const isIndexAssigned = typeof next === "number";
 			if (container[part] === undefined) {
-				const isIndexAssigned = typeof next === "number";
+				container[part] = isIndexAssigned ? [] : this.newSafeObject();
+			} else if (typeof container[part] !== "object" || container[part] === null) {
+				// scalar already sitting where we need to descend: replace it
 				container[part] = isIndexAssigned ? [] : this.newSafeObject();
 			}
-
-			// if container[part] defined, it is a value assigned directly
 			(current as unknown) = container[part];
 		}
 

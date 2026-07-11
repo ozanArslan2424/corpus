@@ -1,5 +1,7 @@
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Method } from "@/enums/Method";
+import { Status } from "@/enums/Status";
+import { Exception } from "@/Exception/Exception";
 import type { BodyParserInterface, ObjectParserInterface } from "@/Registry/types";
 import type { Req } from "@/Req/Req";
 import type { Res } from "@/Res/Res";
@@ -27,14 +29,22 @@ export class BodyParser implements BodyParserInterface {
 	/** This can be used for both request and response bodies */
 	async parse(
 		r: Req | Res | Response,
+		maxRequestBodySize?: number,
 	): Promise<Record<string, unknown> | Array<unknown> | string | ReadableStream<Uint8Array>> {
-		const input = this.toWebRequestResponse(r);
+		let input = this.toWebRequestResponse(r);
 		const empty = Object.create(null);
 
 		if (this.isMethodWithoutBody(input)) return empty;
 
+		const contentType = this.getContentTypeDisco(input);
+		const isStreamType = this.getIsStreamType(contentType);
+
+		if (maxRequestBodySize !== undefined && !isStreamType) {
+			input = await this.withCappedBody(input, maxRequestBodySize);
+		}
+
 		try {
-			switch (this.getContentTypeDisco(input)) {
+			switch (contentType) {
 				case "json":
 					return await this.getJsonBody(input);
 				case "form-urlencoded":
@@ -61,8 +71,49 @@ export class BodyParser implements BodyParserInterface {
 		}
 	}
 
+	/**
+	 * Buffers the body while counting bytes and throws 413 past the limit.
+	 * Returns a new Response wrapping the buffered bytes with the original
+	 * headers, so the per-type readers (.json(), .text(), .formData()) work unchanged.
+	 */
+	private async withCappedBody(input: Request | Response, limit: number): Promise<Response> {
+		// fast reject when the client declares the size
+		const declared = parseInt(input.headers.get(HeaderKey.ContentLength) ?? "");
+		if (!isNaN(declared) && declared > limit) {
+			throw new Exception("Payload too large", Status.PAYLOAD_TOO_LARGE);
+		}
+
+		if (!input.body) return new Response(null, { headers: input.headers });
+
+		// stream-count for chunked/undeclared/lying clients
+		const reader = input.body.getReader();
+		const chunks: Uint8Array[] = [];
+		let total = 0;
+		while (true) {
+			const { done, value } = await reader.read();
+			if (done) break;
+			total += value.byteLength;
+			if (total > limit) {
+				await reader.cancel();
+				throw new Exception("Payload too large", Status.PAYLOAD_TOO_LARGE);
+			}
+			chunks.push(value);
+		}
+		return new Response(Buffer.concat(chunks), { headers: input.headers });
+	}
+
 	private toWebRequestResponse(r: Req | Res | Response): Request | Response {
 		return r instanceof Request ? r : r instanceof Response ? r : r.response;
+	}
+
+	private getIsStreamType(contentType: NormalizedContentType): boolean {
+		return (
+			contentType === "binary" ||
+			contentType === "pdf" ||
+			contentType === "image" ||
+			contentType === "audio" ||
+			contentType === "video"
+		);
 	}
 
 	private getContentTypeDisco(input: Request | Response): NormalizedContentType {
@@ -128,21 +179,27 @@ export class BodyParser implements BodyParserInterface {
 	}
 
 	private async getTextBody(input: Request | Response): Promise<string> {
-		const contentLength = input.headers.get(HeaderKey.ContentLength);
-		const length = contentLength ? parseInt(contentLength) : 0;
+		const contentTypeHeader = input.headers.get(HeaderKey.ContentType) ?? "";
+		const charset =
+			contentTypeHeader
+				.match(/charset=([^;]+)/i)?.[1]
+				?.trim()
+				.toLowerCase() ?? null;
 
-		// 1MB threshold
-		if (length > 0 && length < 1024 * 1024) {
+		// Per the fetch spec, Body.text() always decodes as UTF-8,
+		// ignoring the Content-Type charset.
+		if (!charset || charset === "utf-8" || charset === "utf8") {
 			return input.text();
 		}
 
-		const buffer = await input.arrayBuffer();
-		const contentType = input.headers.get(HeaderKey.ContentType) ?? "";
-		const match = contentType.match(/charset=([^;]+)/i);
-		const charset = match?.[1] ? match[1].trim() : null;
-
-		const decoder = new TextDecoder(charset ?? "utf-8");
-		return decoder.decode(buffer);
+		let decoder: TextDecoder;
+		try {
+			decoder = new TextDecoder(charset);
+		} catch {
+			// unknown charset label, fall back to utf-8
+			decoder = new TextDecoder("utf-8");
+		}
+		return decoder.decode(await input.arrayBuffer());
 	}
 
 	private getBinaryBody(input: Request | Response): ReadableStream<Uint8Array> | null {
