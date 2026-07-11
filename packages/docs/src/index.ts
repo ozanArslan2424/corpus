@@ -1,12 +1,16 @@
-import { C } from "@ozanarslan/corpus";
+import fs from "fs";
+import os from "node:os";
+import path from "node:path";
+
+import { X } from "@ozanarslan/corpus";
 
 import { compile } from "@/compile";
+import { serve } from "@/serve";
 
-async function main() {
-	const outdir = await compile();
-	const server = new C.Server();
-	new C.BundleRoute("/*", outdir);
-	await server.listen(3000);
-}
+const outdir = X.Config.isDev
+	? fs.mkdtempSync(path.join(os.tmpdir(), "corpus-"))
+	: path.join(import.meta.dir, "public");
 
-await main();
+await compile(outdir);
+
+await serve(outdir);

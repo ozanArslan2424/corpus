@@ -1,8 +1,6 @@
 import fs from "fs";
-import os from "node:os";
 import path from "path";
 
-import { X } from "@ozanarslan/corpus";
 import * as esbuild from "esbuild";
 import hljs from "highlight.js";
 import terser from "html-minifier-terser";
@@ -19,13 +17,7 @@ type RouteFile = {
 };
 
 function getFilesDir() {
-	return path.join(process.cwd(), "src", "files");
-}
-
-function getOutdir() {
-	return X.Config.isDev
-		? fs.mkdtempSync(path.join(os.tmpdir(), "corpus-"))
-		: path.join(process.cwd(), "public");
+	return path.join(import.meta.dir, "files");
 }
 
 function getParent(filesDir: string, parentPath: string, name: string): string | null {
@@ -118,6 +110,7 @@ async function getRouteFiles(filesDir: string, outdir: string): Promise<Array<Ro
 
 	for (const entry of entries) {
 		if (!entry.isFile()) continue;
+		if (entry.name.startsWith(".")) continue;
 		const parsed = path.parse(entry.name);
 		const parent = getParent(filesDir, entry.parentPath, parsed.name);
 		const outExt = getOutExt(parsed.ext);
@@ -286,10 +279,9 @@ function writeOutFile(outPath: string, html: string) {
 	fs.writeFileSync(outPath, html);
 }
 
-export async function compile(): Promise<string> {
+export async function compile(outdir: string): Promise<void> {
 	initMarked();
 	const filesDir = getFilesDir();
-	const outdir = getOutdir();
 	const template = getTemplate();
 	const routeFiles = await getRouteFiles(filesDir, outdir);
 	const sidebar = getSidebar(routeFiles);
@@ -298,5 +290,4 @@ export async function compile(): Promise<string> {
 	for (const [outPath, html] of outFilesMap.entries()) {
 		writeOutFile(outPath, html);
 	}
-	return outdir;
 }

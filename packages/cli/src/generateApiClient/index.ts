@@ -4,7 +4,7 @@ import { dirname, join, resolve } from "path";
 import { fileURLToPath } from "url";
 
 import { DIST_API_GENERATOR_FILE, API_GENERATOR_CLASS_NAME } from "@/constants";
-import { hoistFunctionBody } from "@/utils/functions";
+import { findEnclosingFunctionName } from "@/utils/functions";
 import { logFatal } from "@/utils/logger";
 
 import type { Config } from "../config";
@@ -25,12 +25,12 @@ export function generateApiClient(config: Config) {
 		const generatorPath = join(__dirname, DIST_API_GENERATOR_FILE);
 		lines.push(`import { ${API_GENERATOR_CLASS_NAME} } from "${generatorPath}";`);
 		console.log(`📄 Reading main file: ${mainPath}`);
+
 		const mainFileContents = readFileSync(mainPath, "utf-8");
-		const REPLACE_TARGET = /^(void|await)?\s*\w+\.listen\(.*?\);.*$/m;
+		const REPLACE_TARGET = /^[ \t]*(?:void|await)?\s*\w+\.listen\(.*?\);.*$/m;
 
-		const processedContents = hoistFunctionBody(mainFileContents);
-
-		if (!REPLACE_TARGET.test(processedContents)) {
+		const match = REPLACE_TARGET.exec(mainFileContents);
+		if (!match) {
 			logFatal(
 				`⚠️  Could not find a .listen() call in: ${mainPath}.\n   Make sure your entry file calls .listen() either at the top level or inside a function.`,
 			);
@@ -41,8 +41,19 @@ export function generateApiClient(config: Config) {
 			`await generator.generate();`,
 		].join("\n");
 
-		const patched = processedContents.replace(REPLACE_TARGET, replacement);
+		let patched = mainFileContents.replace(REPLACE_TARGET, replacement);
+
+		// if the listen call lived inside a function, that function must run for the
+		// routes to register: drop any existing call sites and append exactly one
+		const funcName = findEnclosingFunctionName(mainFileContents, match!.index);
+		if (funcName) {
+			const callSite = new RegExp(`^\\s*(?:void|await)?\\s*${funcName}\\s*\\(\\s*\\);?.*$`, "gm");
+			patched = patched.replace(callSite, "");
+			patched += `\n\nawait ${funcName}();\n`;
+		}
+
 		lines.push(patched);
+
 		writeFileSync(tempPath, lines.join("\n"), "utf-8");
 		console.log(`🔧 Patched file written: ${tempPath}`);
 

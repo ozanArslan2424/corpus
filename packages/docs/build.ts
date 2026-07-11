@@ -1,27 +1,40 @@
-async function build() {
-	await Bun.$`mkdir -p ./dist`.quiet();
+import fs from "node:fs/promises";
+import path from "node:path";
 
-	await Promise.all([
-		Bun.$`cp -r ./src/html ./dist/html`.quiet(),
-		Bun.$`cp -r ./src/css ./dist/css`.quiet(),
-		Bun.$`cp -r ./src/js ./dist/js`.quiet(),
-		Bun.$`cp -r ./src/md ./dist/md`.quiet(),
-	]);
+const root = import.meta.dir;
+const srcDir = path.join(root, "src");
+const outdir = path.join(root, "dist");
+const filesDir = path.join(srcDir, "files");
+const outFilesDir = path.join(outdir, "files");
+const entrypoint = path.join(srcDir, "index.ts");
 
-	const b2 = await Bun.build({
-		entrypoints: ["./src/index.ts"],
-		outdir: "./dist",
+async function clean(dir: string) {
+	await fs.rm(dir, { recursive: true, force: true });
+}
+
+async function copy(from: string, to: string) {
+	await fs.mkdir(path.dirname(to), { recursive: true });
+	await fs.cp(from, to, { recursive: true });
+}
+
+async function build(entry: string, dir: string) {
+	const res = await Bun.build({
+		entrypoints: [entry],
+		outdir: dir,
 		target: "bun",
 		format: "esm",
+		external: ["esbuild"],
 	});
-	if (!b2.success) {
-		b2.logs.forEach((l) => console.error(l));
+	if (!res.success) {
+		res.logs.forEach((l) => console.error(l));
 		process.exit(1);
 	}
 }
 
 try {
-	await build();
+	await clean(outdir);
+	await copy(filesDir, outFilesDir);
+	await build(entrypoint, outdir);
 } catch (err) {
 	console.error(err);
 	process.exit(1);

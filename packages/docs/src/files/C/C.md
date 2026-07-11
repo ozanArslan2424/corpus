@@ -3,8 +3,9 @@
 **Corpus** is a lightweight TypeScript backend framework for personal projects and simple CRUD applications. It's not a production framework—it's built for when you want structure without complexity.
 
 <section class="table-of-contents">
- 
+
 ##### Contents
+
 1. [What is Corpus?](#what-is-corpus)
 2. [Core Building Blocks](#core-building-blocks)
 3. [The Recommended Pattern](#the-recommended-pattern)
@@ -12,7 +13,7 @@
 5. [What You Dont Get](#what-you-dont-get-and-thats-okay)
 6. [Extensibility](#extensibility)
 7. [What is a Func?](#what-is-a-func)
- 
+
 </section>
 
 ## What is Corpus?

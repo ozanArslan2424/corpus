@@ -252,7 +252,7 @@ export class BranchRouterAdapter implements RouterAdapterInterface {
 				branch = parametricChild.branch;
 			}
 
-			for (let j = 0; ; ) {
+			for (let j = 0; ;) {
 				if (j === pathPart.length) {
 					if (j < branch.part.length) {
 						// Move the current branch down
