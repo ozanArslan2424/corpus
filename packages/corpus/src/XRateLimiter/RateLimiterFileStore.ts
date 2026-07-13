@@ -1,7 +1,7 @@
 import crypto from "crypto";
-import fs from "node:fs/promises";
-import * as path from "node:path";
-import * as os from "os";
+import fs from "fs/promises";
+import os from "os";
+import path from "path";
 
 import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";

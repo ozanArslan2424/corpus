@@ -45,7 +45,7 @@ export abstract class Controller {
 		const resolved = resolveRouteAddress(address);
 		const method = resolved.method;
 		const path = joinPathSegments<E>(this.prefix, resolved.path);
-		const route = new Route(
+		const route = new Route<B, S, P, R, E>(
 			{ method, path },
 			async (ctx) => {
 				await this.beforeEach?.(ctx);
@@ -64,11 +64,11 @@ export abstract class Controller {
 	protected staticRoute<B = unknown, S = unknown, P = unknown, E extends string = string>(
 		...args: ConstructorParameters<typeof StaticRoute<B, S, P, E>>
 	): StaticRoute<B, S, P, E> {
-		const [address, definition, callback, ...rest] = args;
+		const [address, definition, callback, model] = args;
 		const resolved = resolveRouteAddress(address);
 		const method = resolved.method;
 		const path = joinPathSegments<E>(this.prefix, resolved.path);
-		const route = new StaticRoute(
+		const route = new StaticRoute<B, S, P, E>(
 			{ method, path },
 			definition,
 			callback === undefined
@@ -77,7 +77,7 @@ export abstract class Controller {
 						await this.beforeEach?.(ctx);
 						return callback(ctx, content);
 					},
-			...rest,
+			model,
 		);
 		this.routeIds.add(route.id);
 		return route;
@@ -92,7 +92,7 @@ export abstract class Controller {
 	) {
 		const [path, ...rest] = args;
 		const endpoint = joinPathSegments<E>(this.prefix, path);
-		const route = new WebSocketRoute(endpoint, ...rest);
+		const route = new WebSocketRoute<E>(endpoint, ...rest);
 		this.routeIds.add(route.id);
 		return route;
 	}

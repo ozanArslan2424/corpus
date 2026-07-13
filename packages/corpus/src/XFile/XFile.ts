@@ -1,6 +1,6 @@
-import type { Stats } from "node:fs";
-import fs from "node:fs/promises";
-import path from "node:path";
+import fs from "fs";
+import fsp from "fs/promises";
+import path from "path";
 
 export class XFile {
 	constructor(
@@ -32,7 +32,7 @@ export class XFile {
 	 */
 	async text(encoding: BufferEncoding = "utf8"): Promise<string> {
 		if (encoding === "utf8" || encoding === "utf-8") return this.bunFile.text();
-		return fs.readFile(this.path, { encoding });
+		return fsp.readFile(this.path, { encoding });
 	}
 
 	/** Opens a readable stream to the file's content. */
@@ -50,7 +50,7 @@ export class XFile {
 
 	/** Writes to the file, directories are created recursively. */
 	async write(data: string | ArrayBuffer | Uint8Array): Promise<void> {
-		await fs.mkdir(path.dirname(this.path), { recursive: true });
+		await fsp.mkdir(path.dirname(this.path), { recursive: true });
 		await Bun.write(this.bunFile, data);
 	}
 
@@ -65,8 +65,8 @@ export class XFile {
 	}
 
 	/** Returns file metadata (size, dates, etc.) */
-	async stat(): Promise<Stats> {
-		return fs.stat(this.path);
+	async stat(): Promise<fs.Stats> {
+		return fsp.stat(this.path);
 	}
 
 	/** Returns the file size in bytes, or null if the file doesn't exist. */
@@ -77,21 +77,21 @@ export class XFile {
 
 	/** Copies the file to a destination path, creating directories recursively. */
 	async copyTo(dest: string): Promise<XFile> {
-		await fs.mkdir(path.dirname(dest), { recursive: true });
-		await fs.copyFile(this.path, dest);
+		await fsp.mkdir(path.dirname(dest), { recursive: true });
+		await fsp.copyFile(this.path, dest);
 		return new XFile(dest, this.fallbackExtension);
 	}
 
 	/** Moves (renames) the file to a destination path, creating directories recursively. */
 	async moveTo(dest: string): Promise<XFile> {
-		await fs.mkdir(path.dirname(dest), { recursive: true });
-		await fs.rename(this.path, dest);
+		await fsp.mkdir(path.dirname(dest), { recursive: true });
+		await fsp.rename(this.path, dest);
 		return new XFile(dest, this.fallbackExtension);
 	}
 
 	/** Appends data to the file. */
 	async append(data: string | Uint8Array): Promise<void> {
-		await fs.appendFile(this.path, data);
+		await fsp.appendFile(this.path, data);
 	}
 
 	/** Returns a new XFile pointing to a sibling path (same directory, different name). */

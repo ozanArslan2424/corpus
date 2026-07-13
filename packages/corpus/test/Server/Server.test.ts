@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from "bun:test";
-import net from "node:net";
+import net from "net";
 
 import { TC, $registryTesting } from "../_modules";
 import { createTestServer } from "../utils/createTestServer";

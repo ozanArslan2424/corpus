@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import path from "node:path";
+import path from "path";
 
 import { $registryTesting, TC } from "../_modules";
 import { createTestServer } from "../utils/createTestServer";

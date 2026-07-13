@@ -16,7 +16,7 @@ const {
 	OrgMemberBody,
 } = getSchemas("arktype");
 
-export async function startServer(PORT: number) {
+export async function startServer(PORT: number = 9876) {
 	const server = new C.Server();
 
 	// ── Parameterised routes (existing) ──────────────────────────────────────────

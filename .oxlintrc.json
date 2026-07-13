@@ -18,7 +18,7 @@
 		"typescript/no-misused-spread": "error",
 		"typescript/no-non-null-asserted-optional-chain": "error",
 		"typescript/no-non-null-asserted-nullish-coalescing": "error",
-		"typescript/no-restricted-types": ["error", { "types": { "Object": true, "object": true } }],
+		"typescript/no-restricted-types": ["error", { "types": { "Object": true } }],
 		"typescript/no-unnecessary-boolean-literal-compare": "error",
 		"typescript/no-unnecessary-qualifier": "error",
 		"typescript/no-unnecessary-template-expression": "error",
