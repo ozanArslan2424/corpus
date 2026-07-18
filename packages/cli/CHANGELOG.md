@@ -1,5 +1,11 @@
 # @ozanarslan/corpus-cli
 
+## 0.6.0
+
+### Minor Changes
+
+- CLI rewrite
+
 ## 0.5.17
 
 ### Patch Changes
