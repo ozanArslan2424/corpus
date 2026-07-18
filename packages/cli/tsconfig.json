@@ -3,7 +3,8 @@
 	"exclude": ["dist", "node_modules"],
 	"compilerOptions": {
 		"paths": {
-			"@/*": ["./src/*"]
+			"@/*": ["./src/*"],
+			"XXXX/*": ["./test/*"]
 		}
 	}
 }

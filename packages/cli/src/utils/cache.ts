@@ -1,4 +1,4 @@
-import { isSomeArray } from "./arrays";
+import { isSomeArray } from "@/utils/is";
 
 type CacheEntry<T> = {
 	value: T;

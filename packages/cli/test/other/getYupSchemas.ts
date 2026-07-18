@@ -1,100 +1,88 @@
 import * as y from "yup";
 
+// required-by-default aliases
+const str = () => y.string().required();
+const num = () => y.number().required();
+const bool = () => y.boolean().required();
+const obj = <T extends y.ObjectShape>(shape: T) => y.object(shape).required();
+const arr = <T extends y.AnySchema>(inner: T) => y.array(inner).required();
+const lit = <const T extends readonly string[]>(...values: T) =>
+	y
+		.mixed<T[number]>()
+		.oneOf([...values])
+		.required();
+
 export function getYupSchemas() {
-	const Role = y.mixed<"admin" | "editor" | "viewer">().oneOf(["admin", "editor", "viewer"]);
-	const Status = y
-		.mixed<"active" | "inactive" | "banned">()
-		.oneOf(["active", "inactive", "banned"]);
-	const Pagination = y.object({
-		page: y.number().required(),
-		limit: y.number().required(),
+	const Role = lit("admin", "editor", "viewer");
+	const Status = lit("active", "inactive", "banned");
+
+	const Pagination = obj({ page: num(), limit: num() });
+	const Timestamp = obj({ createdAt: str(), updatedAt: str() });
+
+	const UserParams = obj({ id: num() });
+
+	const UserBody = obj({
+		name: str(),
+		age: num(),
+		role: Role,
+		tags: arr(str()),
+		address: obj({
+			city: str(),
+			country: str(),
+			zip: y.string().optional(),
+		}),
 	});
-	const Timestamp = y.object({
-		createdAt: y.string().required(),
-		updatedAt: y.string().required(),
-	});
-	const UserParams = y.object({ id: y.number().required() });
-	const UserBody = y.object({
-		name: y.string().required(),
-		age: y.number().required(),
-		role: Role.required(),
-		tags: y.array(y.string().required()).required(),
-		address: y
-			.object({
-				city: y.string().required(),
-				country: y.string().required(),
-				zip: y.string().optional(),
-			})
-			.required(),
-	});
+
 	const UserSearch = Pagination.concat(
 		y.object({ role: Role.optional(), status: Status.optional() }),
 	);
 
-	const User = y
-		.object({
-			id: y.number().required(),
-			name: y.string().required(),
-			age: y.number().required(),
-			role: Role.required(),
-			status: Status.required(),
-			tags: y.array(y.string().required()).required(),
-		})
-		.concat(Timestamp);
+	const User = obj({
+		id: num(),
+		name: str(),
+		age: num(),
+		role: Role,
+		status: Status,
+		tags: arr(str()),
+	}).concat(Timestamp);
 
 	const UserResponse = User;
 
-	const PostBody = y.object({
-		title: y.string().required(),
-		content: y.string().required(),
-		published: y.boolean().required(),
-		metadata: y
-			.object({
-				views: y.number().required(),
-				likes: y.number().required(),
-				category: y.mixed<"tech" | "life" | "other">().oneOf(["tech", "life", "other"]).required(),
-			})
-			.required(),
+	const Metadata = obj({
+		views: num(),
+		likes: num(),
+		category: lit("tech", "life", "other"),
 	});
-	const PostResponse = y
-		.object({
-			id: y.number().required(),
-			title: y.string().required(),
-			content: y.string().required(),
-			published: y.boolean().required(),
-			authorId: y.number().required(),
-			metadata: y
-				.object({
-					views: y.number().required(),
-					likes: y.number().required(),
-					category: y
-						.mixed<"tech" | "life" | "other">()
-						.oneOf(["tech", "life", "other"])
-						.required(),
-				})
-				.required(),
-		})
-		.concat(Timestamp);
-	const OrgParams = y.object({ orgId: y.number().required() });
-	const OrgBody = y.object({
-		name: y.string().required(),
-		plan: y.mixed<"free" | "pro" | "enterprise">().oneOf(["free", "pro", "enterprise"]).required(),
-		seats: y.number().required(),
-		owner: y
-			.object({
-				userId: y.number().required(),
-				role: Role.required(),
-			})
-			.required(),
+
+	const PostBody = obj({
+		title: str(),
+		content: str(),
+		published: bool(),
+		metadata: Metadata,
 	});
-	const OrgMemberParams = y.object({
-		orgId: y.number().required(),
-		memberId: y.number().required(),
+
+	const PostResponse = obj({
+		id: num(),
+		title: str(),
+		content: str(),
+		published: bool(),
+		authorId: num(),
+		metadata: Metadata,
+	}).concat(Timestamp);
+
+	const OrgParams = obj({ orgId: num() });
+
+	const OrgBody = obj({
+		name: str(),
+		plan: lit("free", "pro", "enterprise"),
+		seats: num(),
+		owner: obj({ userId: num(), role: Role }),
 	});
-	const OrgMemberBody = y.object({
-		role: Role.required(),
-		status: Status.required(),
-	});
+
+	const OrgMemberParams = obj({ orgId: num(), memberId: num() });
+
+	const OrgMemberBody = obj({ role: Role, status: Status });
+
 	return {
 		Role,
 		Status,

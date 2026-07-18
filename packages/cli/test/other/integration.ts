@@ -1,7 +1,7 @@
 import { TestHelper } from "@/utils/TestHelper";
 
-import { CorpusApi } from "./generated";
-import { startServer } from "./startServer";
+import { CorpusApi } from "./apigen/generated";
+import { startServer } from "./apigen/startServer";
 
 const PORT = 9876;
 const BASE_URL = `http://localhost:${PORT}`;

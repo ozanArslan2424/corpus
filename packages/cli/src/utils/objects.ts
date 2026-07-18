@@ -1,8 +1,6 @@
 // oxlint-disable typescript/no-restricted-types
 
-import type { OrString } from "./strings";
-
-export type UnknownObject = Record<string, unknown>;
+import type { OrString, UnknownObject } from "@/utils/types";
 
 export function objGetKeys<O extends object>(o: O): Array<keyof O> {
 	return Object.keys(o) as Array<keyof O>;
@@ -164,8 +162,4 @@ export function isObjectWithKeys<T>(item: unknown, ...keys: string[]): item is T
 		current = (current as UnknownObject)[key];
 	}
 	return true;
-}
-
-export function isPlainObject(input: unknown): input is Record<string, unknown> {
-	return typeof input === "object" && input?.constructor === Object;
 }

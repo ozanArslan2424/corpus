@@ -1,3 +1,5 @@
+import { logFatal } from "@/utils/logger";
+
 export function assert<T>(condition: T | null | undefined, message?: string): asserts condition {
 	const conditionName = String(condition);
 	if (!condition) {
@@ -6,6 +8,6 @@ export function assert<T>(condition: T | null | undefined, message?: string): as
 		} else {
 			message = `${conditionName}: ${message}`;
 		}
-		throw new Error(message);
+		logFatal(message);
 	}
 }

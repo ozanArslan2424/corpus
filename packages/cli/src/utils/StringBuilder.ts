@@ -1,3 +1,5 @@
+import { isNumber } from "@/utils/is";
+
 export class StringBuilder {
 	private complete: string = "";
 	private lineCount: number = 0;
@@ -7,7 +9,18 @@ export class StringBuilder {
 		return this;
 	}
 
-	line(s: string = ""): this {
+	line(input: number): (s: string) => this;
+	line(input: string): this;
+	line(input: string | number): this | ((s: string) => this) {
+		return isNumber(input) ? (s: string) => this.push("\t".repeat(input) + s) : this.push(input);
+	}
+
+	get tab(): this {
+		this.push("\t");
+		return this;
+	}
+
+	private push(s: string): this {
 		if (this.complete.length === 0) {
 			this.complete += s;
 		} else {
@@ -93,10 +106,6 @@ export class StringBuilder {
 
 	get isEmpty(): boolean {
 		return this.complete.length === 0;
-	}
-
-	read(): string {
-		return this.complete;
 	}
 
 	toString(): string {

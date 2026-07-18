@@ -1,17 +1,3 @@
-export type Func<Args extends any[] = any[], Return = any> = (...args: Args) => Return;
-
-export function internFunc<T extends Func>(
-	map: Map<string, T>,
-	value: T,
-	...namespace: string[]
-): T {
-	const key = namespace.join("::");
-	const existing = map.get(key);
-	if (existing) return existing;
-	map.set(key, value);
-	return value;
-}
-
 export function normalizeFuncBody(func: Function): {
 	params: string;
 	body: string;

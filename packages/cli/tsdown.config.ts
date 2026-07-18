@@ -1,7 +1,7 @@
 import { defineConfig } from "tsdown";
 
 export default defineConfig({
-	entry: ["./src/index.ts", "./src/config.ts", "./src/generateApiClient/ApiClientGenerator.ts"],
+	entry: ["./src/index.ts", "./src/cli.ts"],
 	outDir: "dist",
 	format: ["esm"],
 	dts: true,
@@ -9,6 +9,6 @@ export default defineConfig({
 	// minify: true,
 	// sourcemap: true,
 	exports: {
-		bin: { corpus: "./src/index.ts" },
+		bin: { corpus: "./src/cli.ts" },
 	},
 });

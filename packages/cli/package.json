@@ -8,10 +8,10 @@
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/ozanArslan2424/corpus.git",
-		"directory": "packages/corpus-cli"
+		"directory": "packages/cli"
 	},
 	"bin": {
-		"corpus": "./dist/index.mjs"
+		"corpus": "./dist/cli.mjs"
 	},
 	"files": [
 		"dist",
@@ -20,8 +20,7 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/index.mjs",
-		"./config": "./dist/config.mjs",
-		"./generateApiClient/ApiClientGenerator": "./dist/generateApiClient/ApiClientGenerator.mjs",
+		"./cli": "./dist/cli.mjs",
 		"./package.json": "./package.json"
 	},
 	"publishConfig": {
@@ -29,23 +28,21 @@
 	},
 	"scripts": {
 		"build": "tsdown",
-		"test:api": "bun run build && bun run ./dist/index.mjs api -s -m ./test/other/startServer.ts -o ./test/other/generated.ts && bun run ./test/other/integration.ts -s",
-		"test:all": "bun test:api"
+		"dev": "NODE_ENV=development bun run ./src/cli.ts",
+		"api": "bun run ./dist/cli.mjs api -m ./test/other/app/startServer.ts -o ./test/other/app/generated.ts",
+		"test:api": "bun api && bun run ./test/other/integration.ts -s",
+		"test:all": "VALI=arktype bun test:api && VALI=zod bun test:api && VALI=yup bun test:api"
 	},
 	"dependencies": {
-		"@clack/prompts": "^1.7.0",
-		"@sodaru/yup-to-json-schema": "^2.0.1",
 		"@standard-schema/spec": "^1.1.0",
-		"json-schema-to-typescript": "^15.0.4",
-		"prettier": "^3.9.5",
-		"ts-morph": "^28.0.0",
+		"oxc-parser": "^0.140.0",
 		"typescript": "^7.0.2"
 	},
 	"devDependencies": {
 		"@ozanarslan/corpus": "workspace:*",
 		"@types/bun": "^1.3.14",
 		"arktype": "^2.2.3",
-		"tsdown": "^0.22.4",
+		"tsdown": "^0.22.9",
 		"yup": "^1.7.1",
 		"zod": "^4.4.3"
 	}

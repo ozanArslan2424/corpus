@@ -1,8 +1,6 @@
-import type { Func } from "./functions";
-
-export function compile<F extends Func>(
+export function compile<F extends (...args: any[]) => any>(
 	fns: Array<F | undefined>,
-): Func<Parameters<F>, Bun.MaybePromise<Awaited<ReturnType<F>> | void>> {
+): (...args: Parameters<F>) => Bun.MaybePromise<Awaited<ReturnType<F>> | void> {
 	return async (...args) => {
 		for (const fn of fns) {
 			if (!fn) continue;

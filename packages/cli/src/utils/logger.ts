@@ -66,7 +66,7 @@ export function logFatal(...args: any[]): never {
 	if (process.env.NODE_ENV === "test") {
 		throw new Error(JSON.stringify(args));
 	} else {
-		logger.error(...args);
+		console.error(`${col.red}✗${col.reset}`, ...args);
 		process.exit(1);
 	}
 }

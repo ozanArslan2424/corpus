@@ -1,7 +1,8 @@
-import { assert } from "./assert";
+import { assert } from "@/utils/assert";
+import { isString } from "@/utils/is";
+import type { nil, OrString } from "@/utils/types";
 
 // ---- type-level helpers ----
-export type OrString<T> = T | (string & {});
 
 type Separator = " " | "_" | "-" | "/" | ".";
 
@@ -124,6 +125,10 @@ export function strAfterMark(mark: string, input: string): string {
 export function strBeforeMark(mark: string, input: string): string {
 	const index = input.indexOf(mark);
 	return index === -1 ? input : input.slice(0, index);
+}
+
+export function strNotEmpty(input: string | nil): input is string {
+	return isString(input) && input.trim() !== "";
 }
 
 export function strRemoveExt(str: string) {

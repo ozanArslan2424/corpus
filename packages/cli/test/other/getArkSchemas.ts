@@ -20,7 +20,10 @@ export function getArkSchemas() {
 			"zip?": "string",
 		}),
 	});
-	const UserSearch = Pagination.and(type({ "role?": Role, "status?": Status }));
+	const UserSearch = type.or(
+		Pagination.and(type({ "role?": Role, "status?": Status })),
+		"undefined",
+	);
 
 	const User = type({
 		id: "number",

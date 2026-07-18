@@ -20,7 +20,9 @@ export function getZodSchemas() {
 			zip: z.string().optional(),
 		}),
 	});
-	const UserSearch = Pagination.and(z.object({ role: Role.optional(), status: Status.optional() }));
+	const UserSearch = Pagination.and(
+		z.object({ role: Role.optional(), status: Status.optional() }),
+	).optional();
 
 	const User = z
 		.object({
