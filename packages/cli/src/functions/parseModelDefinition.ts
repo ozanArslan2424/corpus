@@ -1,4 +1,4 @@
-import type { Importable } from "@/classes/Importable";
+import { Importable } from "@/classes/Importable";
 import { INTERFACE_MODEL_PATTERN, MODEL_PATTERN, MODEL_TYPE_PATTERN } from "@/constants";
 
 export function parseModelDefinition(model: Importable) {
