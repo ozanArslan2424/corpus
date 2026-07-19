@@ -53,8 +53,6 @@ export abstract class ModuleAbstract implements ModuleInterface {
 	}
 
 	async run() {
-		logger.info(`Running: ${this.passedKey}`);
-
 		const shutdown = async (code: number, err?: unknown) => {
 			await this.stop();
 			if (err) logger.error(String(err));
@@ -67,6 +65,8 @@ export abstract class ModuleAbstract implements ModuleInterface {
 		process.once("unhandledRejection", (err) => void shutdown(1, err));
 
 		this.parseFlags();
+
+		logger.info(`Running: ${this.passedKey}`);
 
 		if (this.config.silent) setLogger(logger.noop);
 
@@ -93,6 +93,7 @@ export abstract class ModuleAbstract implements ModuleInterface {
 		const { values, positionals } = parseArgs({
 			args: process.argv.slice(3),
 			options: {
+				help: { type: "boolean", short: "h" },
 				main: { type: "string", short: "m" },
 				silent: { type: "boolean", short: "s", default: false },
 				name: { type: "string", short: "n" },
@@ -101,6 +102,10 @@ export abstract class ModuleAbstract implements ModuleInterface {
 			},
 			allowPositionals: true,
 		});
+
+		if (values.help) {
+			this.printHelp(0);
+		}
 
 		this.flags.name = values.name ?? positionals[0] ?? null;
 		this.flags.empty = values.empty;

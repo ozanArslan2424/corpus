@@ -27,7 +27,7 @@ export class AddServiceModule extends ModuleAbstract {
 			"  --empty             Generate a bare model with no default CRUD shape.",
 			"",
 			"Note: this only generates the service file. Without a matching model,",
-			"the stubbed methods will be untyped and just throw.",
+			"the stubbed methods will be untyped.",
 		];
 	}
 

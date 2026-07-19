@@ -2,7 +2,7 @@ import { spawnSync } from "child_process";
 import fs from "fs";
 import path from "path";
 
-import { GEN_FUNC, LISTEN_PATTERN } from "@/constants";
+import { EXE_NAME, GEN_FUNC, LISTEN_PATTERN } from "@/constants";
 import { findEnclosingFunctionName } from "@/utils/functions";
 import { logFatal, logger } from "@/utils/logger";
 import { ModuleAbstract } from "@/utils/ModuleAbstract";
@@ -12,7 +12,16 @@ import { StringBuilder } from "@/utils/StringBuilder";
 export class ApiClientModule extends ModuleAbstract {
 	override keys = ["api"];
 	override get help(): string[] {
-		return [];
+		return [
+			"Codegen for all routes",
+			"Generates types and model interfaces for all routes.",
+			"Generates an api client with methods for all routes. (unless disabled in config)",
+			"",
+			`Usage: ${EXE_NAME} ${this.keys.join("|")}`,
+			"",
+			"Note: Your entry file must call `.listen()` either at the top level",
+			"or inside a single function.",
+		];
 	}
 
 	override main(): void | Promise<void> {

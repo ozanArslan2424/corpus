@@ -1,5 +1,11 @@
 # @ozanarslan/corpus-cli
 
+## 0.6.5
+
+### Patch Changes
+
+- update README.md
+
 ## 0.6.4
 
 ### Patch Changes
