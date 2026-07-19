@@ -138,9 +138,7 @@ export class AddControllerModule extends ModuleAbstract {
 				.join(", ");
 
 			const generics = noValLib
-				? `<${ORDER.filter((k) => k in val && !this.isNeverSchema(val[k]!))
-						.map((acc) => `\n\t\t${modelTypeName}["${key}"]["${acc}"]`)
-						.join(",")}\n\t>`
+				? `<${ORDER.map((acc) => `\n\t\t${modelTypeName}["${key}"]["${acc}"]`).join(",")}\n\t>`
 				: "";
 			const address = this.resolveAddress(key, val);
 			const baseArgs = `${quote(address)}, (c) => this.service.${key}(${callArgs})`;
