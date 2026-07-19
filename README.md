@@ -4,10 +4,10 @@ This repository contains the source for the Corpus ecosystem.
 
 ## Packages
 
-| Package                                           | Version                                                     | Description        |
-| ------------------------------------------------- | ----------------------------------------------------------- | ------------------ |
-| [`@ozanarslan/corpus`](./packages/corpus)         | ![npm](https://img.shields.io/npm/v/@ozanarslan/corpus)     | Core framework     |
-| [`@ozanarslan/corpus-cli`](./packages/corpus-cli) | ![npm](https://img.shields.io/npm/v/@ozanarslan/corpus-cli) | CLI code generator |
+| Package                                    | Version                                                     | Description        |
+| ------------------------------------------ | ----------------------------------------------------------- | ------------------ |
+| [`@ozanarslan/corpus`](./packages/corpus)  | ![npm](https://img.shields.io/npm/v/@ozanarslan/corpus)     | Core framework     |
+| [`@ozanarslan/corpus-cli`](./packages/cli) | ![npm](https://img.shields.io/npm/v/@ozanarslan/corpus-cli) | CLI code generator |
 
 ## What is Corpus?
 
