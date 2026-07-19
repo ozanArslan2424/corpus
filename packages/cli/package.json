@@ -1,7 +1,7 @@
 {
 	"$schema": "https://www.schemastore.org/package.json",
 	"name": "@ozanarslan/corpus-cli",
-	"version": "0.6.0",
+	"version": "0.6.1",
 	"description": "CLI for @ozanarslan/corpus",
 	"license": "MIT",
 	"author": "Ozan Arslan <ozanarslanwork@gmail.com>",

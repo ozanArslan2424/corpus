@@ -9,28 +9,28 @@ RESET='\033[0m'
 STEP=0
 
 next() {
-  STEP=$((STEP + 1))
+    STEP=$((STEP + 1))
 }
 
 pause() {
-  echo ""
-  echo -e "${YELLOW}$1${RESET}"
-  echo -e "Press any key to continue, or Ctrl+C to abort..."
-  read -rsk 1
-  echo ""
-  next
+    echo ""
+    echo -e "${YELLOW}$1${RESET}"
+    echo -e "Press any key to continue, or Ctrl+C to abort..."
+    read -rsk 1
+    echo ""
+    next
 }
 
 echo -e "${GREEN}=== Corpus Release Script ===${RESET}"
 
 # Login
 if pnpm whoami &>/dev/null; then
-  echo -e "${GREEN}Step ${STEP}: Already logged in as $(pnpm whoami), skipping...${RESET}"
-  next
+    echo -e "${GREEN}Step ${STEP}: Already logged in as $(pnpm whoami), skipping...${RESET}"
+    next
 else
-  echo -e "${GREEN}Step ${STEP}: Running pnpm login...${RESET}"
-  pnpm login
-  pause "Step ${STEP} complete. Ready to backup?"
+    echo -e "${GREEN}Step ${STEP}: Running pnpm login...${RESET}"
+    pnpm login
+    pause "Step ${STEP} complete. Ready to backup?"
 fi
 
 # Clean dist and node_modules from all packages (with backup)
@@ -40,13 +40,13 @@ mkdir -p "$BACKUP_DIR"
 echo "  Backup folder: $BACKUP_DIR"
 
 backup_and_remove() {
-  local src="$1"
-  local label="$2"
-  if [[ -d "$src" ]]; then
-    local dest="$BACKUP_DIR/$label"
-    echo "  Backing up $src -> $dest"
-    mv "$src" "$dest"
-  fi
+    local src="$1"
+    local label="$2"
+    if [[ -d "$src" ]]; then
+        local dest="$BACKUP_DIR/$label"
+        echo "  Backing up $src -> $dest"
+        mv "$src" "$dest"
+    fi
 }
 
 # Root node_modules
@@ -54,10 +54,10 @@ backup_and_remove "node_modules" "root__node_modules"
 
 # Package node_modules and dist
 for dir in packages/*/; do
-  local_name="${dir%/}"         # strip trailing slash
-  local_name="${local_name##*/}" # strip leading path
-  backup_and_remove "$dir/dist" "${local_name}__dist"
-  backup_and_remove "$dir/node_modules" "${local_name}__node_modules"
+    local_name="${dir%/}"          # strip trailing slash
+    local_name="${local_name##*/}" # strip leading path
+    backup_and_remove "$dir/dist" "${local_name}__dist"
+    backup_and_remove "$dir/node_modules" "${local_name}__node_modules"
 done
 
 echo "Done. To rollback, restore manually from $BACKUP_DIR/"
@@ -109,8 +109,8 @@ pnpm run fm
 echo -n "  Commit message: "
 read -r COMMIT_MSG
 if [[ -z "$COMMIT_MSG" ]]; then
-  echo -e "${RED}Commit message cannot be empty. Aborting.${RESET}"
-  exit 1
+    echo -e "${RED}Commit message cannot be empty. Aborting.${RESET}"
+    exit 1
 fi
 git add .
 git commit -m "$COMMIT_MSG"

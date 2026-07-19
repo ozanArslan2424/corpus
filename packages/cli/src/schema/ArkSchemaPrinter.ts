@@ -89,6 +89,13 @@ export class ArkSchemaPrinter extends SchemaPrinterAbstract {
 		return -1;
 	}
 
+	/** Rewrite an arktype index-signature key like "[string]" into "[key: string]". */
+	private rewriteIndexKey(rawKey: string): string {
+		const m = /^\[(.+)\]$/.exec(rawKey);
+		if (!m) return rawKey;
+		return `[key: ${this.strip(m[1]!)}]`;
+	}
+
 	/** If `p` is a bracketed group, strip each of its comma-separated members. */
 	private rewriteGroup(p: string): string {
 		const closeIdx = this.findMatchingClose(p);
@@ -104,8 +111,11 @@ export class ArkSchemaPrinter extends SchemaPrinterAbstract {
 			.map((member) => {
 				const idx = this.topLevelColon(member);
 				if (idx === -1) return this.strip(member);
+				const rawKey = member.slice(0, idx).trim();
+				const isIndexKey = /^\[.+\]$/.test(rawKey);
 				// preserve the key (and its `?`), strip only the value side
-				return `${member.slice(0, idx + 1)} ${this.strip(member.slice(idx + 1).trim())}`;
+				const keyOut = isIndexKey ? this.rewriteIndexKey(rawKey) : member.slice(0, idx + 1);
+				return `${keyOut}${isIndexKey ? ":" : ""} ${this.strip(member.slice(idx + 1).trim())}`;
 			});
 		const arrayDepth = suffix.length / 2;
 		if (members.length === 0) {

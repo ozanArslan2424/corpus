@@ -4,7 +4,7 @@ import path from "path";
 
 import { GEN_FUNC, LISTEN_PATTERN } from "@/constants";
 import { findEnclosingFunctionName } from "@/utils/functions";
-import { logFatal } from "@/utils/logger";
+import { logFatal, logger } from "@/utils/logger";
 import { ModuleAbstract } from "@/utils/ModuleAbstract";
 import { resolveCwdPath } from "@/utils/paths";
 import { StringBuilder } from "@/utils/StringBuilder";
@@ -30,7 +30,7 @@ export class ApiClientModule extends ModuleAbstract {
 			b.line(`import { $registry } from "${this.config.pkgPath}";`);
 			b.line(`import { ${GEN_FUNC} } from "${generatorImport}";`);
 
-			this.logger.step(`Reading main file at ${mainPath}`);
+			logger.step(`Reading main file at ${mainPath}`);
 			let mainFileContents = fs.readFileSync(mainPath, "utf-8");
 			const match = LISTEN_PATTERN.exec(mainFileContents);
 			if (!match) {
@@ -43,7 +43,7 @@ export class ApiClientModule extends ModuleAbstract {
 			const funcName = findEnclosingFunctionName(mainFileContents, match.index);
 
 			if (funcName) {
-				this.logger.step(`Making sure ${funcName} is called.`);
+				logger.step(`Making sure ${funcName} is called.`);
 				const callSite = new RegExp(`^\\s*(?:void|await)?\\s*${funcName}\\s*\\(\\s*\\);?.*$`, "gm");
 				mainFileContents = mainFileContents.replace(callSite, "");
 				mainFileContents += `\n\nawait ${funcName}();\n`;
@@ -56,11 +56,11 @@ export class ApiClientModule extends ModuleAbstract {
 
 			b.line(mainFileContents);
 
-			this.logger.step(`Writing temp file at ${tempPath}`);
+			logger.step(`Writing temp file at ${tempPath}`);
 			const content = b.toString();
 			fs.writeFileSync(tempPath, content, "utf-8");
 
-			this.logger.step(`Running generator...`);
+			logger.step(`Running generator...`);
 			const result = spawnSync("bun", ["run", tempPath], {
 				stdio: "inherit",
 				env: process.env,
@@ -69,12 +69,12 @@ export class ApiClientModule extends ModuleAbstract {
 				logFatal(`bun exited with status ${result.status}`);
 			}
 
-			this.logger.success(`Generator completed successfully`);
+			logger.success(`Generator completed successfully`);
 		} catch (err) {
-			this.logger.error(String(err));
+			logger.error(String(err));
 			process.exit(1);
 		} finally {
-			this.logger.step(`Deleting temp file at ${tempPath}`);
+			logger.step(`Deleting temp file at ${tempPath}`);
 			fs.unlinkSync(tempPath);
 		}
 	}

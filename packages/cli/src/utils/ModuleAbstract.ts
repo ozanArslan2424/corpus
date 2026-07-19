@@ -6,7 +6,7 @@ import { parseArgs } from "util";
 import type { Config } from "@/config/Config";
 import { getConfig } from "@/config/getConfig";
 import { isUndefined } from "@/utils/is";
-import { type Logger, logger } from "@/utils/logger";
+import { logger, setLogger } from "@/utils/logger";
 import { resolveCwdPath } from "@/utils/paths";
 import type { IDPattern } from "@/utils/types";
 
@@ -37,7 +37,6 @@ export abstract class ModuleAbstract implements ModuleInterface {
 	}
 
 	protected config: Config;
-	protected logger: Logger = logger;
 	protected flags: Flags = {
 		name: null,
 		empty: false,
@@ -54,11 +53,11 @@ export abstract class ModuleAbstract implements ModuleInterface {
 	}
 
 	async run() {
-		this.logger.info(`Running: ${this.passedKey}`);
+		logger.info(`Running: ${this.passedKey}`);
 
 		const shutdown = async (code: number, err?: unknown) => {
 			await this.stop();
-			if (err) this.logger.error(String(err));
+			if (err) logger.error(String(err));
 			process.exit(code);
 		};
 
@@ -68,17 +67,19 @@ export abstract class ModuleAbstract implements ModuleInterface {
 		process.once("unhandledRejection", (err) => void shutdown(1, err));
 
 		this.parseFlags();
-		if (this.config.silent) this.logger = logger.noop;
+
+		if (this.config.silent) setLogger(logger.noop);
+
 		await this.main();
 	}
 
 	private stopped = false;
 	async stop() {
-		this.logger.info(`Stopping: ${this.passedKey}`);
+		logger.info(`Stopping: ${this.passedKey}`);
 
 		if (this.stopped) return;
 		this.stopped = true;
-		for (const msg of this.messages) this.logger.warn(msg);
+		for (const msg of this.messages) logger.warn(msg);
 	}
 
 	protected printHelp(exitCode: number): never {
@@ -138,12 +139,12 @@ export abstract class ModuleAbstract implements ModuleInterface {
 		const cleanPath = absPath.replace(process.cwd(), "");
 
 		if (exists) {
-			this.logger.warn(`NOT WRITTEN: File exists at ${cleanPath}.`);
+			logger.warn(`NOT WRITTEN: File exists at ${cleanPath}.`);
 			return;
 		}
 
 		fs.mkdirSync(path.dirname(absPath), { recursive: true });
 		fs.writeFileSync(absPath, content);
-		this.logger.info(`Writing file: ${cleanPath}`);
+		logger.info(`Writing file: ${cleanPath}`);
 	}
 }

@@ -26,8 +26,8 @@ function baseConfig(overrides: Partial<Config> = {}): Config {
 	return defineConfig({
 		silent: true,
 		casing: "pascal",
-		main: "../other/app/startServer.ts",
-		output: "../other/app/generated.ts",
+		main: "../app/main.ts",
+		output: "../app/CorpusApi.ts",
 		...overrides,
 	});
 }
@@ -40,12 +40,12 @@ beforeEach(() => {
 describe("pascalName / camelName", () => {
 	test("pascalName converts resourceName to PascalCase", () => {
 		const importable = new Importable("user-thing", "service");
-		expect(importable.pascalName).toBe("UserThing");
+		expect(importable.pascalName).toBe("UserThingService");
 	});
 
 	test("camelName converts resourceName to camelCase", () => {
 		const importable = new Importable("user-thing", "service");
-		expect(importable.camelName).toBe("userThing");
+		expect(importable.camelName).toBe("userThingService");
 	});
 });
 
@@ -133,7 +133,7 @@ describe("relPathFrom", () => {
 	});
 
 	test("uses the alias from tsconfig when its target path includes the target dir", () => {
-		mockTsConfig = { compilerOptions: { paths: { "@/*": ["../other/app/*"] } } };
+		mockTsConfig = { compilerOptions: { paths: { "@/*": ["../app/*"] } } };
 		const importable = new Importable("user-thing", "service");
 		const inFile = path.join(path.dirname(importable.filePath), "..", "index.ts");
 		const rel = importable.importFrom(inFile);
