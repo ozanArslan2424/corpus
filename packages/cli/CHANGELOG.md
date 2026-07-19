@@ -1,5 +1,11 @@
 # @ozanarslan/corpus-cli
 
+## 0.6.4
+
+### Patch Changes
+
+- CLI AddControllerModule bugfixes
+
 ## 0.6.3
 
 ### Patch Changes

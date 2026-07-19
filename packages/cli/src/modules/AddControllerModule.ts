@@ -2,7 +2,6 @@ import fs from "fs";
 
 import { Importable } from "@/classes/Importable";
 import { MainFileUpdater } from "@/classes/MainFileUpdater";
-import type { DefaultMethodsConfig } from "@/config/Config";
 import { EXE_NAME, NAME_FLAG_HELP, NEVER_SCHEMAS } from "@/constants";
 import { parseModelDefinition } from "@/functions/parseModelDefinition";
 import { assert } from "@/utils/assert";
@@ -140,7 +139,7 @@ export class AddControllerModule extends ModuleAbstract {
 			const generics = noValLib
 				? `<${ORDER.map((acc) => `\n\t\t${modelTypeName}["${key}"]["${acc}"]`).join(",")}\n\t>`
 				: "";
-			const address = this.resolveAddress(key, val);
+			const address = this.resolveAddress(val);
 			const baseArgs = `${quote(address)}, (c) => this.service.${key}(${callArgs})`;
 			const validatorArg = noValLib ? "" : `, ${modelName}.${key}`;
 
@@ -155,20 +154,13 @@ export class AddControllerModule extends ModuleAbstract {
 
 	private isNeverSchema = (schema: string) => NEVER_SCHEMAS.has(schema.trim());
 
-	private resolveAddress(key: string, val: Record<string, string>) {
-		const ms = this.config.defaultMethods;
-
-		if (key in ms && !isNil(ms[key as keyof DefaultMethodsConfig])) {
-			// if the key is in the default methods, just use that
-			// consumer can manually update it if wrong
-			return ms[key as keyof DefaultMethodsConfig].address;
-		}
-
+	private resolveAddress(model: Record<string, string>) {
 		let method = "GET";
 		let endpoint = "/";
 
-		const hasBody = "body" in val && isString(val.body) && !this.isNeverSchema(val.body);
-		const hasParams = "params" in val && isString(val.params) && !this.isNeverSchema(val.params);
+		const hasBody = "body" in model && isString(model.body) && !this.isNeverSchema(model.body);
+		const hasParams =
+			"params" in model && isString(model.params) && !this.isNeverSchema(model.params);
 
 		if (hasBody && hasParams) {
 			// body AND params is most likely PUT
@@ -181,11 +173,11 @@ export class AddControllerModule extends ModuleAbstract {
 			method = "DELETE";
 		}
 
-		if (hasParams && isString(val.params)) {
+		if (hasParams && isString(model.params)) {
 			// this is an arktype/zod/yup schema or an interface property
 			// the keys should be extracted from it to construct an address
 			// example output: "GET /:id/:param"
-			const keys = this.extractParamKeys(val.params);
+			const keys = this.extractParamKeys(model.params);
 			if (keys.length > 0) {
 				endpoint = "/" + keys.map((k) => `:${k}`).join("/");
 			}
