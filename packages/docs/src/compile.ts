@@ -9,15 +9,14 @@ import * as marked from "marked";
 
 import type { RouteFile } from "@/types";
 
+const BASE_URL = "https://corpus-docs.fly.dev";
+const FILES_DIR = path.join(import.meta.dir, "files");
+
 function getTemplate() {
 	const segments: Array<string> = [process.cwd()];
 	if (!X.Config.isProd) segments.push("src");
 	segments.push("template.html");
 	return fs.readFileSync(path.join(...segments), "utf8");
-}
-
-function getFilesDir() {
-	return path.join(import.meta.dir, "files");
 }
 
 function getParent(filesDir: string, parentPath: string, name: string): string | null {
@@ -201,13 +200,10 @@ function getHeadersCounted(input: string) {
 	});
 }
 
-async function getOutFilesMap(
-	template: string,
-	head: string,
-	sidebar: string,
-	routeFiles: Array<RouteFile>,
-): Promise<Map<string, string>> {
-	const outFilesMap = new Map<string, string>();
+async function compileRouteFiles(map: Map<string, string>, routeFiles: Array<RouteFile>) {
+	const template = getTemplate();
+	const sidebar = getSidebar(routeFiles);
+	const head = getHead(routeFiles);
 
 	for (const routeFile of routeFiles) {
 		if (routeFile.ext === ".css" || routeFile.ext === ".js" || routeFile.ext === ".ts") {
@@ -216,7 +212,7 @@ async function getOutFilesMap(
 				loader: routeFile.ext.replace(".", "") as never,
 				minify: true,
 			});
-			outFilesMap.set(routeFile.outPath, transformed.code);
+			map.set(routeFile.outPath, transformed.code);
 		} else {
 			const rawContent = fs.readFileSync(routeFile.fpath, "utf8");
 			const content =
@@ -236,16 +232,127 @@ async function getOutFilesMap(
 				removeStyleLinkTypeAttributes: true,
 				useShortDoctype: true,
 			});
-			outFilesMap.set(routeFile.outPath, result);
+			map.set(routeFile.outPath, result);
+		}
+	}
+}
+
+function compareRank(a: RouteFile, b: RouteFile) {
+	function rank(rf: RouteFile) {
+		const n = rf.name.toLowerCase();
+		if (n === "home") return 0;
+		if (n === "quick start") return 1;
+		if (n === "types") return 3;
+		return 2;
+	}
+	const diff = rank(a) - rank(b);
+	return diff !== 0 ? diff : a.name.localeCompare(b.name);
+}
+
+// depth-first order matching the sidebar, but unlike the sidebar this never drops pages:
+// any file whose parent doesn't match a root's name (enums/*, Parser/*, etc.) still
+// gets included, grouped by folder, appended after the nav-matched roots+children.
+function getOrderedMdFiles(routeFiles: Array<RouteFile>): Array<RouteFile> {
+	const mdFiles = routeFiles.filter((rf) => rf.ext === ".md");
+	const roots = mdFiles.filter((rf) => rf.parent === null).sort(compareRank);
+	const rootNames = new Set(roots.map((rf) => rf.name));
+
+	const ordered: Array<RouteFile> = [];
+	const seen = new Set<RouteFile>();
+
+	for (const root of roots) {
+		ordered.push(root);
+		seen.add(root);
+		const children = mdFiles.filter((c) => c.parent === root.name).sort(compareRank);
+		for (const child of children) {
+			ordered.push(child);
+			seen.add(child);
 		}
 	}
 
-	return outFilesMap;
+	const orphans = mdFiles.filter((rf) => !seen.has(rf) && !rootNames.has(rf.parent ?? ""));
+	const byParent = new Map<string, Array<RouteFile>>();
+	for (const rf of orphans) {
+		const key = rf.parent ?? "";
+		if (!byParent.has(key)) byParent.set(key, []);
+		byParent.get(key)!.push(rf);
+	}
+	for (const key of Array.from(byParent.keys()).sort()) {
+		ordered.push(...byParent.get(key)!.sort((a, b) => a.name.localeCompare(b.name)));
+	}
+
+	return ordered;
 }
 
-async function getRouteFiles(filesDir: string, outdir: string): Promise<Array<RouteFile>> {
+function toMdPath(addr: string): string {
+	return addr.replace(/\.html$/, ".md");
+}
+
+function getRobotsTxt(): string {
+	return `User-agent: *\nAllow: /\n\nSitemap: ${BASE_URL}/sitemap.xml\n`;
+}
+
+function getSitemapLoc(rf: RouteFile): string {
+	return rf.addr === "/index.html" ? `${BASE_URL}/` : `${BASE_URL}${rf.addr}`;
+}
+
+function getSitemapXml(routeFiles: Array<RouteFile>): string {
+	const htmlFiles = routeFiles.filter((rf) => rf.outExt === ".html");
+	const urls = htmlFiles
+		.map((rf) => `\t<url>\n\t\t<loc>${getSitemapLoc(rf)}</loc>\n\t</url>`)
+		.join("\n");
+	return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
+}
+
+function getLlmsTxt(routeFiles: Array<RouteFile>): string {
+	const ordered = getOrderedMdFiles(routeFiles);
+	const lines: Array<string> = [];
+
+	lines.push("# @ozanarslan/corpus");
+	lines.push("");
+	lines.push(
+		"> Lightweight zero-dependency TypeScript framework for Bun. No decorators, no DI container, no abstractions hiding what's really happening — just routes, handlers, and code that reads like code.",
+	);
+	lines.push("");
+	lines.push("## Docs");
+	for (const rf of ordered) {
+		const label = rf.parent ? `${rf.parent}: ${rf.name}` : rf.name;
+		lines.push(`- [${label}](${BASE_URL}${toMdPath(rf.addr)})`);
+	}
+	lines.push("");
+	lines.push("## Optional");
+	lines.push(`- [Full text](${BASE_URL}/llms-full.txt): every doc page concatenated into one file`);
+
+	return `${lines.join("\n")}\n`;
+}
+
+function getLlmsFullTxt(routeFiles: Array<RouteFile>): string {
+	const ordered = getOrderedMdFiles(routeFiles);
+	const parts = ordered.map((rf) => {
+		const raw = fs.readFileSync(rf.fpath, "utf8");
+		const heading = rf.parent ? `# ${rf.parent}: ${rf.name}` : `# ${rf.name}`;
+		return `${heading}\n\n${raw.trim()}`;
+	});
+	return `${parts.join("\n\n---\n\n")}\n`;
+}
+
+function compileMetaFiles(map: Map<string, string>, outdir: string, routeFiles: Array<RouteFile>) {
+	map.set(path.join(outdir, "robots.txt"), getRobotsTxt());
+	map.set(path.join(outdir, "sitemap.xml"), getSitemapXml(routeFiles));
+	map.set(path.join(outdir, "llms.txt"), getLlmsTxt(routeFiles));
+	map.set(path.join(outdir, "llms-full.txt"), getLlmsFullTxt(routeFiles));
+
+	// raw markdown copies, served alongside the compiled .html so llms.txt links resolve
+	for (const rf of routeFiles.filter((r) => r.ext === ".md")) {
+		const raw = fs.readFileSync(rf.fpath, "utf8");
+		const mdOutPath = toMdPath(rf.outPath);
+		map.set(mdOutPath, raw);
+	}
+}
+
+async function getRouteFiles(outdir: string): Promise<Array<RouteFile>> {
 	const routeFiles: Array<RouteFile> = [];
-	const entries = fs.readdirSync(filesDir, { withFileTypes: true, recursive: true });
+	const entries = fs.readdirSync(FILES_DIR, { withFileTypes: true, recursive: true });
 
 	const SPECIAL_NAME_MAP: Record<string, string> = {
 		index: "Home",
@@ -257,7 +364,7 @@ async function getRouteFiles(filesDir: string, outdir: string): Promise<Array<Ro
 		if (!entry.isFile()) continue;
 		if (entry.name.startsWith(".")) continue;
 		const parsed = path.parse(entry.name);
-		const parent = getParent(filesDir, entry.parentPath, parsed.name);
+		const parent = getParent(FILES_DIR, entry.parentPath, parsed.name);
 		const outExt = getOutExt(parsed.ext);
 		const fpath = getFPath(entry.parentPath, parsed.name, parsed.ext);
 		const outPath = getOutPath(outdir, parent, parsed.name, outExt);
@@ -272,18 +379,16 @@ async function getRouteFiles(filesDir: string, outdir: string): Promise<Array<Ro
 
 export async function compileNoWrite(outdir: string) {
 	initMarked();
-	const filesDir = getFilesDir();
-	const template = getTemplate();
-	const routeFiles = await getRouteFiles(filesDir, outdir);
-	const sidebar = getSidebar(routeFiles);
-	const head = getHead(routeFiles);
-	const outFilesMap = await getOutFilesMap(template, head, sidebar, routeFiles);
-	return { outFilesMap, routeFiles };
+	const routeFiles = await getRouteFiles(outdir);
+	const map = new Map<string, string>();
+	await compileRouteFiles(map, routeFiles);
+	compileMetaFiles(map, outdir, routeFiles);
+	return { map, routeFiles };
 }
 
 export async function compile(outdir: string): Promise<void> {
-	const { outFilesMap } = await compileNoWrite(outdir);
-	for (const [outPath, html] of outFilesMap.entries()) {
+	const { map } = await compileNoWrite(outdir);
+	for (const [outPath, html] of map.entries()) {
 		fs.mkdirSync(path.dirname(outPath), { recursive: true });
 		fs.writeFileSync(outPath, html);
 	}

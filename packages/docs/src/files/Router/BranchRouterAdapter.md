@@ -4,7 +4,7 @@
 
 The core branch-matching algorithm comes from [@medley/router](https://github.com/medleyjs/router) by [Nathan Woltman](https://github.com/nwoltman), converted to TypeScript and adapted to this package's conventions.
 
-Replace it through the [Registry](/Registry.html) if you want different matching behavior. For an example, see [DIY: MemoiristAdapter](/Router/DIY:%20MemoiristAdapter.html).
+Replace it through the [Registry](/Registry.html) if you want different matching behavior. For an example, see [DIY: MemoiristAdapter](/Router/DIY%20MemoiristAdapter.html).
 
 <section class="table-of-contents">
 

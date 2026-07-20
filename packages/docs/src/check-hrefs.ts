@@ -1,6 +1,12 @@
+/**
+ * This file is directly run to check the integrity of
+ * anchor elements in the compiled html files.
+ */
+
 import fs from "fs";
 import os from "os";
 import path from "path";
+import { encode } from "punycode";
 
 import { compileNoWrite } from "@/compile";
 import type { RouteFile } from "@/types";
@@ -39,7 +45,7 @@ function getNormalizedHref(href: string): string | null {
 	// relative hrefs are not resolvable without a base, flag them instead
 	if (!withoutQuery.startsWith("/")) return withoutQuery;
 
-	return path.posix.normalize(withoutQuery);
+	return decodeURIComponent(path.posix.normalize(withoutQuery));
 }
 
 function checkHrefs(
@@ -77,7 +83,11 @@ function checkHrefs(
 	return broken;
 }
 
-const outdir = fs.mkdtempSync(path.join(os.tmpdir(), "corpus-"));
-const { routeFiles, outFilesMap } = await compileNoWrite(outdir);
-const broken = checkHrefs(outFilesMap, routeFiles, outdir);
-console.log(broken);
+async function main() {
+	const outdir = fs.mkdtempSync(path.join(os.tmpdir(), "corpus-"));
+	const { routeFiles, map } = await compileNoWrite(outdir);
+	const broken = checkHrefs(map, routeFiles, outdir);
+	console.log(broken);
+}
+
+await main();

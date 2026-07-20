@@ -114,7 +114,7 @@ import { C } from "@ozanarslan/corpus";
 
 export class LoggerMiddleware extends C.Middleware {
 	override handler: C.MiddlewareHandler = async (c) => {
-		console.log(`[${new Date().toISOString()}] ${c.method} ${c.path}`);
+		console.log(`[${new Date().toISOString()}] ${c.req.method} ${c.url.pathname}`);
 	};
 }
 
