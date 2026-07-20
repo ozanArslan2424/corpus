@@ -1,6 +1,6 @@
 # URLParamsParser
 
-`URLParamsParser` is the default `ObjectParserInterface<Record<string, string>>` implementation in the registry and extends [ObjectParserAbstract](/object-parser-abstract.html). It converts the raw URL parameters matched by the router (`:id`, `:slug`, ...) into a plain object with decoded and coerced values. Its output is `c.params` in route handlers.
+`URLParamsParser` is the default `ObjectParserInterface<Record<string, string>>` implementation in the registry and extends [ObjectParserAbstract](/Parser/ObjectParserAbstract.html). It converts the raw URL parameters matched by the router (`:id`, `:slug`, ...) into a plain object with decoded and coerced values. Its output is `c.params` in route handlers.
 
 <section class="table-of-contents">
 
@@ -22,7 +22,7 @@ You normally don't call it directly. For a route `GET /users/:id/posts/:slug` an
 }
 ```
 
-Replace it with your own implementation through the [Registry](/registry.html).
+Replace it with your own implementation through the [Registry](/Registry.html).
 
 ## Behavior
 
@@ -35,4 +35,4 @@ Parameters are flat: keys come from the route definition, so there is no bracket
 | `hello`         | `"hello"` (string)       |
 | `hello%20world` | `"hello world"` (string) |
 
-Note the coercion consequence: `/users/5` gives `c.params.id` as a number while `/users/abc` gives a string. If a param must always be one type, validate it with the `params` schema in the [route model](/model.html).
+Note the coercion consequence: `/users/5` gives `c.params.id` as a number while `/users/abc` gives a string. If a param must always be one type, validate it with the `params` schema in the [route model](/Parser/Model.html).

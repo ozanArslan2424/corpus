@@ -1,8 +1,8 @@
 # ObjectParserAbstract
 
-`ObjectParserAbstract<T>` is the base class for parsers that turn a key-value input (like `FormData` or `URLSearchParams`) into a plain object. It implements `ObjectParserInterface<T>` and provides the shared helpers for key parsing, value coercion, and safe object creation. [FormDataParser](/form-data-parser.html), [SearchParamsParser](/search-params-parser.html), and [URLParamsParser](/url-params-parser.html) all extend it.
+`ObjectParserAbstract<T>` is the base class for parsers that turn a key-value input (like `FormData` or `URLSearchParams`) into a plain object. It implements `ObjectParserInterface<T>` and provides the shared helpers for key parsing, value coercion, and safe object creation. [FormDataParser](/Parser/FormDataParser.html), [SearchParamsParser](/Parser/SearchParamsParser.html), and [URLParamsParser](/Parser/URLParamsParser.html) all extend it.
 
-Extend it when writing a custom parser to replace one of the defaults through the [Registry](/registry.html), or to parse a new input shape with the same key and value semantics.
+Extend it when writing a custom parser to replace one of the defaults through the [Registry](/Registry.html), or to parse a new input shape with the same key and value semantics.
 
 <section class="table-of-contents">
 

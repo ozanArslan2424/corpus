@@ -24,7 +24,7 @@ import { X } from "@ozanarslan/corpus";
 new X.RateLimiter();
 ```
 
-Automatically classifies requests by trust level: authenticated users (JWT), IP addresses, or browser fingerprints. See [XRateLimiter](/xratelimiter.html) for details.
+Automatically classifies requests by trust level: authenticated users (JWT), IP addresses, or browser fingerprints. See [XRateLimiter](/XRateLimiter.html) for details.
 
 ## X.File
 
@@ -41,7 +41,7 @@ if (await file.exists()) {
 }
 ```
 
-See [XFile](/xfile.html) for streaming and full API.
+See [XFile](/XFile.html) for streaming and full API.
 
 ## X.Config
 
@@ -58,7 +58,7 @@ if (X.Config.isProd) {
 }
 ```
 
-See [XConfig](/xconfig.html) for the full API including `has`, `set`, and environment checks.
+See [XConfig](/XConfig.html) for the full API including `has`, `set`, and environment checks.
 
 ## X.InferModel
 

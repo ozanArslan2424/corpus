@@ -87,7 +87,7 @@ Each served file gets a `Cache-Control` header from one of three categories:
 | `assetsDir` | Files inside the assets directory (`/assets/`) | `{ public: true, maxAge: 31536000, immutable: true }` | Bundler output is content-hashed (`index-HASH.js`), safe to cache forever. |
 | `fallback`  | Everything else (favicon, robots.txt, etc.)    | `{ public: true, noCache: true }`                     | Root files usually aren't hashed, so the browser should revalidate.        |
 
-The assets directory name is `"assets"` by default and can be changed via the protected `assetsDir` property. See [CacheControlDirective](/cache-control-directive.html) for the directive fields.
+The assets directory name is `"assets"` by default and can be changed via the protected `assetsDir` property. See [CacheControlDirective](/Headers/CacheControlDirective.html) for the directive fields.
 
 ## Constructor Parameters
 

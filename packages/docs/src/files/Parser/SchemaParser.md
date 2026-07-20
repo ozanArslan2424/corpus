@@ -1,6 +1,6 @@
 # SchemaParser
 
-`SchemaParser` is the default `SchemaParserInterface` implementation in the registry. It runs the validators from a [route model](/model.html) against parsed request data (body, search params, URL params) and the response, returning the typed value on success and throwing a `422` `Exception` with a readable message on failure.
+`SchemaParser` is the default `SchemaParserInterface` implementation in the registry. It runs the validators from a [route model](/Parser/Model.html) against parsed request data (body, search params, URL params) and the response, returning the typed value on success and throwing a `422` `Exception` with a readable message on failure.
 
 Validators follow the standard schema shape: a function that returns `{ value }` on success or `{ issues }` on failure, so any standard schema library (zod, valibot, arktype, ...) works.
 
@@ -16,7 +16,7 @@ Validators follow the standard schema shape: a function that returns `{ value }`
 
 ## Usage
 
-You normally don't call it directly; it runs in the request lifecycle for every schema present in a route's model. Replace it with your own `SchemaParserInterface` implementation through the [Registry](/registry.html) to change validation or error formatting behavior globally.
+You normally don't call it directly; it runs in the request lifecycle for every schema present in a route's model. Replace it with your own `SchemaParserInterface` implementation through the [Registry](/Registry.html) to change validation or error formatting behavior globally.
 
 When no validator is provided, the data passes through unchanged (typed by cast, not checked).
 

@@ -1,20 +1,20 @@
 import fs from "fs";
 import path from "path";
 
+import { X } from "@ozanarslan/corpus";
 import * as esbuild from "esbuild";
 import hljs from "highlight.js";
 import terser from "html-minifier-terser";
 import * as marked from "marked";
 
-type RouteFile = {
-	outPath: string;
-	name: string;
-	addr: string;
-	parent: string | null;
-	outExt: string;
-	ext: string;
-	fpath: string;
-};
+import type { RouteFile } from "@/types";
+
+function getTemplate() {
+	const segments: Array<string> = [process.cwd()];
+	if (!X.Config.isProd) segments.push("src");
+	segments.push("template.html");
+	return fs.readFileSync(path.join(...segments), "utf8");
+}
 
 function getFilesDir() {
 	return path.join(import.meta.dir, "files");
@@ -98,33 +98,6 @@ function initMarked() {
 	marked.marked.use({ renderer });
 }
 
-async function getRouteFiles(filesDir: string, outdir: string): Promise<Array<RouteFile>> {
-	const routeFiles: Array<RouteFile> = [];
-	const entries = fs.readdirSync(filesDir, { withFileTypes: true, recursive: true });
-
-	const SPECIAL_NAME_MAP: Record<string, string> = {
-		index: "Home",
-		C: "C Modules Introduction",
-		X: "X Modules Introduction",
-	};
-
-	for (const entry of entries) {
-		if (!entry.isFile()) continue;
-		if (entry.name.startsWith(".")) continue;
-		const parsed = path.parse(entry.name);
-		const parent = getParent(filesDir, entry.parentPath, parsed.name);
-		const outExt = getOutExt(parsed.ext);
-		const fpath = getFPath(entry.parentPath, parsed.name, parsed.ext);
-		const outPath = getOutPath(outdir, parent, parsed.name, outExt);
-		const addr = getAddr(parent, parsed.name, outExt);
-		const name = SPECIAL_NAME_MAP[parsed.name] ?? decodeURIComponent(parsed.name);
-		const ext = parsed.ext;
-		routeFiles.push({ name, ext, addr, parent, fpath, outPath, outExt });
-	}
-
-	return routeFiles;
-}
-
 function getHead(routeFiles: Array<RouteFile>): string {
 	return routeFiles
 		.filter((rf) => rf.outExt === ".css" || rf.outExt === ".js")
@@ -158,10 +131,6 @@ function getSidebar(routeFiles: Array<RouteFile>) {
 		return `<li>${link}<ul>${sub}</ul></li>`;
 	});
 	return `<ul>${items.join("\n")}</ul>`;
-}
-
-function getTemplate() {
-	return fs.readFileSync(path.join(process.cwd(), "src", "template.html"), "utf8");
 }
 
 function getHydrated(input: string, variables: Record<string, string>) {
@@ -274,12 +243,34 @@ async function getOutFilesMap(
 	return outFilesMap;
 }
 
-function writeOutFile(outPath: string, html: string) {
-	fs.mkdirSync(path.dirname(outPath), { recursive: true });
-	fs.writeFileSync(outPath, html);
+async function getRouteFiles(filesDir: string, outdir: string): Promise<Array<RouteFile>> {
+	const routeFiles: Array<RouteFile> = [];
+	const entries = fs.readdirSync(filesDir, { withFileTypes: true, recursive: true });
+
+	const SPECIAL_NAME_MAP: Record<string, string> = {
+		index: "Home",
+		C: "C Modules Introduction",
+		X: "X Modules Introduction",
+	};
+
+	for (const entry of entries) {
+		if (!entry.isFile()) continue;
+		if (entry.name.startsWith(".")) continue;
+		const parsed = path.parse(entry.name);
+		const parent = getParent(filesDir, entry.parentPath, parsed.name);
+		const outExt = getOutExt(parsed.ext);
+		const fpath = getFPath(entry.parentPath, parsed.name, parsed.ext);
+		const outPath = getOutPath(outdir, parent, parsed.name, outExt);
+		const addr = getAddr(parent, parsed.name, outExt);
+		const name = SPECIAL_NAME_MAP[parsed.name] ?? decodeURIComponent(parsed.name);
+		const ext = parsed.ext;
+		routeFiles.push({ name, ext, addr, parent, fpath, outPath, outExt });
+	}
+
+	return routeFiles;
 }
 
-export async function compile(outdir: string): Promise<void> {
+export async function compileNoWrite(outdir: string) {
 	initMarked();
 	const filesDir = getFilesDir();
 	const template = getTemplate();
@@ -287,7 +278,13 @@ export async function compile(outdir: string): Promise<void> {
 	const sidebar = getSidebar(routeFiles);
 	const head = getHead(routeFiles);
 	const outFilesMap = await getOutFilesMap(template, head, sidebar, routeFiles);
+	return { outFilesMap, routeFiles };
+}
+
+export async function compile(outdir: string): Promise<void> {
+	const { outFilesMap } = await compileNoWrite(outdir);
 	for (const [outPath, html] of outFilesMap.entries()) {
-		writeOutFile(outPath, html);
+		fs.mkdirSync(path.dirname(outPath), { recursive: true });
+		fs.writeFileSync(outPath, html);
 	}
 }

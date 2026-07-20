@@ -128,6 +128,6 @@ Middleware can validate requests, add data to the context, or return early with 
 
 ## Next Steps
 
-- Check out the [Introduction](/intro.html) for the recommended project structure
-- Read about [Server](/server.html) configuration options
+- Check out the [Introduction](/C.html) for the recommended project structure
+- Read about [Server](/Server.html) configuration options
 - Explore the rest of the modules at your own pace.

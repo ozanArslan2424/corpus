@@ -51,7 +51,7 @@ new C.StaticRoute("/report", {
 
 ### Using other HTTP methods
 
-Static routes default to `GET`, but the address accepts any method via the `"VERB /path"` string form or the object form, same as [Route](/route.html).
+Static routes default to `GET`, but the address accepts any method via the `"VERB /path"` string form or the object form, same as [Route](/Route.html).
 
 ```ts
 import { C } from "@ozanarslan/corpus";
@@ -118,7 +118,7 @@ class MyRoute extends C.StaticRouteAbstract {
 
 `RouteAddress<E>`
 
-The route address. A plain path string defaults to `GET`. Other methods can be set with the `"VERB /path"` string form or the object form, same as [Route](/route.html).
+The route address. A plain path string defaults to `GET`. Other methods can be set with the `"VERB /path"` string form or the object form, same as [Route](/Route.html).
 
 ### definition
 
@@ -161,7 +161,7 @@ Optional custom handler to intercept file content before sending. Receives the c
 
 `RouteModel<B, S, P, StaticRouteRes>`
 
-Optional validation model. The response type is fixed to `StaticRouteRes` (`Res | string`). See [Model](/model.html). You can pass generics if you don't want to bother with validation but still typecast your data: `StaticRoute<B, S, P, E>`
+Optional validation model. The response type is fixed to `StaticRouteRes` (`Res | string`). See [Model](/Parser/Model.html). You can pass generics if you don't want to bother with validation but still typecast your data: `StaticRoute<B, S, P, E>`
 
 ```ts
 // type Schema is any standard schema library validator.

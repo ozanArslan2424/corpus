@@ -1,6 +1,6 @@
 # Cors
 
-The Cors class provides a simple outbound middleware for setting CORS (Cross-Origin Resource Sharing) headers on responses. It automatically registers to the global registry on instantiation. Can be swapped out, see [Registry Customization](/registry.html).
+The Cors class provides a simple outbound middleware for setting CORS (Cross-Origin Resource Sharing) headers on responses. It automatically registers to the global registry on instantiation. Can be swapped out, see [Registry Customization](/Registry.html).
 
 See [MDN: Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) for detailed CORS concepts.
 

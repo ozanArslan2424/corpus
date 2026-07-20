@@ -7,9 +7,9 @@ import { X } from "@ozanarslan/corpus";
 import { compile } from "@/compile";
 import { serve } from "@/serve";
 
-const outdir = X.Config.isDev
-	? fs.mkdtempSync(path.join(os.tmpdir(), "corpus-"))
-	: path.join(import.meta.dir, "public");
+const outdir = X.Config.isProd
+	? path.join(import.meta.dir, "public")
+	: fs.mkdtempSync(path.join(os.tmpdir(), "corpus-"));
 
 await compile(outdir);
 

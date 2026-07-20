@@ -1,6 +1,6 @@
 # CacheControlDirective
 
-`CacheControlDirective` describes a `Cache-Control` header as a plain object and serializes it to the header string. It is used by [StaticRoute](/route-static.html) and [BundleRoute](/route-bundle.html) for their `cache` options, and can be used directly on any `Headers` instance.
+`CacheControlDirective` describes a `Cache-Control` header as a plain object and serializes it to the header string. It is used by [StaticRoute](/Route/StaticRoute.html) and [BundleRoute](/Route/BundleRoute.html) for their `cache` options, and can be used directly on any `Headers` instance.
 
 The class doubles as the type: plain object literals satisfy it, so instantiation with `new` is never required. Anywhere a `CacheControlDirective` is expected, `{ public: true, maxAge: 3600 }` works as-is.
 

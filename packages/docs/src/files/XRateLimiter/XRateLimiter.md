@@ -86,7 +86,7 @@ new X.RateLimiter({
 
 ### Custom
 
-You probably want to use Redis for multi-instance deployments. Example adapter code can be found at [XRateLimiter DIY](/xratelimiter/diy/redis.html).
+You probably want to use Redis for multi-instance deployments. Example adapter code can be found at [XRateLimiter DIY](/XRateLimiter/DIY:%20Redis.html).
 
 ```ts
 class CustomStore implements X.RateLimitStoreInterface {

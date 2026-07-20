@@ -4,7 +4,7 @@ The `Registry` class is NOT part of the public Corpus API. It is the global cont
 
 The registry instance can be accessed through `$registry`. Note that `$registry` itself cannot be reassigned — only its fields can be swapped.
 
-Each [Route](/route.html), [StaticRoute](/route-static.html), [WebSocketRoute](/route-websocket.html), [Controller](/controller.html), and [Middleware](/middleware.html) object registers itself into the global registry at construction time. This means any field you intend to replace must be swapped _before_ those objects are constructed, otherwise registrations will land on the old instance. Making all replacements at the top of your app would be a safe bet.
+Each [Route](/Route.html), [StaticRoute](/Route/StaticRoute.html), [WebSocketRoute](/Route/WebSocketRoute.html), [Controller](/Controller.html), and [Middleware](/Middleware.html) object registers itself into the global registry at construction time. This means any field you intend to replace must be swapped _before_ those objects are constructed, otherwise registrations will land on the old instance. Making all replacements at the top of your app would be a safe bet.
 
 All interfaces can be imported by name, they are not namespaced to C or X.
 
@@ -32,7 +32,7 @@ Each of the following fields can be reassigned with a custom implementation that
 
 ### adapter
 
-Implements `RouterAdapterInterface`. When the adapter is set, the default router is reset using the new adapter. See the [Router docs](/router/index.html) for details.
+Implements `RouterAdapterInterface`. When the adapter is set, the default router is reset using the new adapter. See the [Router docs](/Router.html) for details.
 
 ### middlewares
 
@@ -70,7 +70,7 @@ Readonly. Holds the documentation map used by the CLI tool.
 
 ### router
 
-Technically assignable but it isn't recommended. Implements `RouterInterface`. See the [Router docs](/router/index.html).
+Technically assignable but it isn't recommended. Implements `RouterInterface`. See the [Router docs](/Router.html).
 
 ### prefix
 

@@ -91,7 +91,7 @@ new C.Route("/profile", (c) => {
 });
 ```
 
-See [Extensibility](/intro.html#extensibility) for other extendable interfaces.
+See [Extensibility](/C.html#extensibility) for other extendable interfaces.
 
 ## Constructor Parameters
 

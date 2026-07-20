@@ -130,7 +130,7 @@ The route handler function. Receives the request context with typed access to bo
 
 `RouteModel<B, S, P, R>`
 
-Optional validation model for the request body, search params, URL params, and response. When provided, the context properties are typed and validated automatically. See [Model](/model.html). You can pass generics if you don't want to bother with validation but still typecast your data: `Route<B, S, P, R, E extends string>`
+Optional validation model for the request body, search params, URL params, and response. When provided, the context properties are typed and validated automatically. See [Model](/Parser/Model.html). You can pass generics if you don't want to bother with validation but still typecast your data: `Route<B, S, P, R, E extends string>`
 
 ```ts
 // type Schema is any standard schema library validator.

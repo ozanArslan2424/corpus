@@ -19,7 +19,7 @@ The same instance handles both directions: `parse` accepts a `Req`, a `Res`, or 
 
 ## Usage
 
-You normally don't call the body parser directly. It runs as part of the request lifecycle and its result is what you receive as `c.body` in route handlers. Reference it when you want to understand what `c.body` will contain for a given `Content-Type`, or when replacing it with your own `BodyParserInterface` implementation through the [Registry](/registry.html).
+You normally don't call the body parser directly. It runs as part of the request lifecycle and its result is what you receive as `c.body` in route handlers. Reference it when you want to understand what `c.body` will contain for a given `Content-Type`, or when replacing it with your own `BodyParserInterface` implementation through the [Registry](/Registry.html).
 
 ## Content Type Resolution
 
@@ -56,7 +56,7 @@ For requests, only `POST`, `PUT`, `PATCH`, and `DELETE` bodies are parsed. Any o
 | `binary`, `pdf`, `image`, `audio`, `video` | The raw `ReadableStream<Uint8Array>`, or an empty object if the body is null |
 | `unknown`                                  | Read as text; if it parses as JSON, the parsed value, otherwise the string   |
 
-Structured results (`form-urlencoded`, `form-data`) go through the registered [SearchParamsParser](/search-params-parser.html) and [FormDataParser](/form-data-parser.html), so their value coercion rules apply.
+Structured results (`form-urlencoded`, `form-data`) go through the registered [SearchParamsParser](/Parser/SearchParamsParser.html) and [FormDataParser](/Parser/FormDataParser.html), so their value coercion rules apply.
 
 ### Charset handling
 
@@ -80,13 +80,13 @@ The limit applies to every parsed type, including `multipart/form-data`. Stream 
 
 `ObjectParserInterface<FormData>`
 
-The parser that converts `FormData` into a plain object. The registry provides [FormDataParser](/form-data-parser.html) by default.
+The parser that converts `FormData` into a plain object. The registry provides [FormDataParser](/Parser/FormDataParser.html) by default.
 
 ### searchParamsParser
 
 `ObjectParserInterface<URLSearchParams>`
 
-The parser that converts `URLSearchParams` into a plain object. The registry provides [SearchParamsParser](/search-params-parser.html) by default.
+The parser that converts `URLSearchParams` into a plain object. The registry provides [SearchParamsParser](/Parser/SearchParamsParser.html) by default.
 
 ## Methods
 

@@ -171,7 +171,7 @@ Stream a file from disk. Uses `Content-Type` from file extension. Defaults to `a
 return await C.Res.streamFile("assets/video.mp4", "inline");
 ```
 
-Throws [Exception](/exception.html) with 404 if file not found.
+Throws [Exception](/Exception.html) with 404 if file not found.
 
 ### file
 
@@ -183,7 +183,7 @@ Read entire file into memory as string. Sets `Content-Length` header.
 return await C.Res.file("assets/doc.txt");
 ```
 
-Throws [Exception](/exception.html) with 404 if file not found.
+Throws [Exception](/Exception.html) with 404 if file not found.
 
 ## Body Serialization
 

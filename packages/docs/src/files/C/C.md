@@ -70,7 +70,7 @@ export class ItemModel {
 
 ### Context (c)
 
-Handlers receive a [Context](/context.html) object with request data, body, params, and a data object for storing request-scoped values.
+Handlers receive a [Context](/Context.html) object with request data, body, params, and a data object for storing request-scoped values.
 
 ```ts
 create = this.route(
@@ -147,7 +147,7 @@ declare module "@ozanarslan/corpus" {
 
 ## Next Steps
 
-Ready to build? Check out [Quick Start](/quick-start.html) for a working example, or dive into [Server](/server.html) to understand configuration.
+Ready to build? Check out [Quick Start](/Quick%20Start.html) for a working example, or dive into [Server](/Server.html) to understand configuration.
 
 ## What is a Func?
 

@@ -32,11 +32,11 @@ A pre-resolved URL instance derived from the request's `info`. Avoids repeated `
 
 ### `headers`
 
-Overrides the native `headers` property with a [CHeaders](/headers.html) instance. If `init.headers` is provided, it is used directly. Otherwise, headers are inherited from the `info` argument if it is a Request or Req.
+See [Headers](/Headers.html).
 
 ### `cookies`
 
-A [Cookies](/cookies.html) instance (cookie jar) populated by parsing the `Cookie` request header from a native Request or using the init. Each `name=value` pair in the header is extracted and added to the jar on construction.
+A [Cookies](/Cookies.html) instance (cookie jar) populated by parsing the `Cookie` request header from a native Request or using the init. Each `name=value` pair in the header is extracted and added to the jar on construction.
 
 ### `isPreflight`
 

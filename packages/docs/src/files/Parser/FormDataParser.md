@@ -1,6 +1,6 @@
 # FormDataParser
 
-`FormDataParser` is the default `ObjectParserInterface<FormData>` implementation in the registry and extends [ObjectParserAbstract](/object-parser-abstract.html). It converts multipart form data into a nested plain object with coerced values. [BodyParser](/body-parser.html) runs it for `multipart/form-data` request bodies, so its output is what arrives as `c.body` for form submissions.
+`FormDataParser` is the default `ObjectParserInterface<FormData>` implementation in the registry and extends [ObjectParserAbstract](/Parser/ObjectParserAbstract.html). It converts multipart form data into a nested plain object with coerced values. [BodyParser](/Parser/BodyParser.html) runs it for `multipart/form-data` request bodies, so its output is what arrives as `c.body` for form submissions.
 
 <section class="table-of-contents">
 
@@ -36,7 +36,7 @@ avatar       = (File)
 }
 ```
 
-Replace it with your own implementation through the [Registry](/registry.html).
+Replace it with your own implementation through the [Registry](/Registry.html).
 
 ## Key Notation
 

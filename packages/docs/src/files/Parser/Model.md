@@ -1,6 +1,6 @@
 # Model
 
-The Model system provides type-safe request/response validation through the [Standard Schema](https://github.com/standard-schema) specification. Define schemas for body, search params, URL params, and response data — the parsed results are typed and available on the context.
+The Model system provides type-safe request/response validation through the [Standard Schema](https://github.com/standard-schema/standard-schema) specification. Define schemas for body, search params, URL params, and response data — the parsed results are typed and available on the context.
 
 <section class="table-of-contents">
 
@@ -45,7 +45,7 @@ new C.Route(
 );
 ```
 
-See [Standard Schema](https://github.com/standard-schema) for supported validation libraries (Zod, Valibot, ArkType, etc.).
+See [Standard Schema](https://github.com/standard-schema/standard-schema) for supported validation libraries (Zod, Valibot, ArkType, etc.).
 
 ## Schema
 

@@ -1,6 +1,6 @@
 # Middleware
 
-The Middleware class registers inbound or outbound middleware into the global router. Inbound middleware runs before route handlers; outbound middleware runs after. Both variants receive the request context and can return a [Res](/res.html) to short-circuit the request, or void to continue.
+The Middleware class registers inbound or outbound middleware into the global router. Inbound middleware runs before route handlers; outbound middleware runs after. Both variants receive the request context and can return a [Res](/Res.html) to short-circuit the request, or void to continue.
 
 <section class="table-of-contents">
 

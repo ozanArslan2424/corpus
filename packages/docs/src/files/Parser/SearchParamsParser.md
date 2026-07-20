@@ -1,6 +1,6 @@
 # SearchParamsParser
 
-`SearchParamsParser` is the default `ObjectParserInterface<URLSearchParams>` implementation in the registry and extends [ObjectParserAbstract](/object-parser-abstract.html). It converts query strings into a nested plain object with coerced values. It runs in two places: query string parsing (its output is `c.search` in route handlers) and `application/x-www-form-urlencoded` request bodies via [BodyParser](/body-parser.html).
+`SearchParamsParser` is the default `ObjectParserInterface<URLSearchParams>` implementation in the registry and extends [ObjectParserAbstract](/Parser/ObjectParserAbstract.html). It converts query strings into a nested plain object with coerced values. It runs in two places: query string parsing (its output is `c.search` in route handlers) and `application/x-www-form-urlencoded` request bodies via [BodyParser](/Parser/BodyParser.html).
 
 <section class="table-of-contents">
 
@@ -32,7 +32,7 @@ You normally don't call it directly. Given this query string:
 }
 ```
 
-Replace it with your own implementation through the [Registry](/registry.html).
+Replace it with your own implementation through the [Registry](/Registry.html).
 
 ## Key Notation
 
