@@ -72,11 +72,16 @@
 			document.addEventListener("DOMContentLoaded", () => {
 				const searchLinks = Array.from(document.querySelectorAll("aside nav a"))
 					.filter((a) => a.getAttribute("href") !== "#" && !a.hasAttribute("aria-disabled"))
-					.map((a) => ({
-						label: a.textContent.trim(),
-						href: a.getAttribute("href"),
-						group: a.closest("nav").querySelector("h3").textContent.trim(),
-					}));
+					.map((a) => {
+						const li = a.closest("li");
+						const parentLi = li?.parentElement?.closest("li");
+						const parentLink = parentLi?.querySelector(":scope > a");
+						return {
+							label: a.textContent.trim(),
+							href: a.getAttribute("href"),
+							group: parentLink ? parentLink.textContent.trim() : "",
+						};
+					});
 
 				const trigger = document.getElementById("topbar-search");
 				const input = document.getElementById("search-dialog-input");
@@ -85,10 +90,10 @@
 
 				function renderResults(links) {
 					results.innerHTML = links
-						.map(
-							(l) =>
-								`<li><a href="${l.href}"><span>${l.label}</span><span class="search-result-group">${l.group}</span></a></li>`,
-						)
+						.map((l) => {
+							const group = l.group ? `<span class="search-result-group">${l.group}</span>` : "";
+							return `<li><a href="${l.href}"><span>${l.label}</span>${group}</a></li>`;
+						})
 						.join("");
 				}
 
