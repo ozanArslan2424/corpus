@@ -1,24 +1,39 @@
-import { logFatal, logger } from "@/utils/logger";
+import { C } from "@ozanarslan/corpus";
+import Elysia from "elysia";
+import express from "express";
 
-import { BranchRouterAdapter } from "../_modules";
-import { RouterBenchmark } from "../utils/RouterBenchmark";
-import { MemoiristAdapter } from "./MemoiristAdapter";
+import { logFatal } from "@/utils/logger";
 
-function main() {
-	const adapters = [new MemoiristAdapter(), new BranchRouterAdapter()];
-	const results: string[] = [];
-	for (const adapter of adapters) {
-		const bench = new RouterBenchmark(adapter);
-		bench.setup();
-		results.push(bench.run());
+const argv = process.argv.slice(2);
+const first = argv[0];
+
+console.log(first);
+
+process.on("SIGINT", () => process.exit(0));
+process.on("SIGTERM", () => process.exit(0));
+
+switch (first) {
+	case "elysia": {
+		const server = new Elysia();
+		server.get("/", () => ({ hello: "world" }));
+		server.listen(3000);
+		break;
 	}
 
-	logger.success(["Finished", ...results].join("\n\n"));
-}
+	case "corpus": {
+		const server = new C.Server();
+		new C.Route("/", () => ({ hello: "world" }));
+		server.listen(3000);
+		break;
+	}
 
-// Run the benchmark
-try {
-	main();
-} catch (err) {
-	logFatal("Benchmark failed:", err);
+	case "express": {
+		const server = express();
+		server.get("/", (_, res) => res.send({ hello: "world" }));
+		server.listen(3000);
+		break;
+	}
+
+	default:
+		logFatal("corpus or elysia or express");
 }

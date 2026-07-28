@@ -9,7 +9,7 @@ import {
 import { $registry } from "@/registry";
 import type { CorsInterface } from "@/Registry/types";
 import { Res } from "@/Res/Res";
-import type { RequestHandler } from "@/Server/types";
+import type { ContextHandler } from "@/types";
 import { isSomeArray } from "@/utils/arrays";
 import { boolToString } from "@/utils/booleans";
 
@@ -22,14 +22,14 @@ export class Cors implements CorsInterface {
 		this.register();
 	}
 
-	register() {
+	register(): void {
 		$registry.cors = this;
 	}
 
 	variant: MiddlewareVariant = MiddlewareVariant.outbound;
 	useOn: MiddlewareUseOn = "*";
 	handler: MiddlewareHandler = (c) => {
-		this.applyHeaders(c.res, c.headers.get("origin") ?? "");
+		this.applyHeaders(c.res, c.req.headers.get("origin") ?? "");
 	};
 
 	/** Applies CORS headers to a Headers object given the request origin. */
@@ -77,9 +77,9 @@ export class Cors implements CorsInterface {
 	}
 
 	/** Preflight handler for OPTIONS requests. */
-	handlePreflight: RequestHandler = (req) => {
+	handlePreflight: ContextHandler = (c) => {
 		const res = new Res(undefined, { status: Status.NO_CONTENT });
-		this.applyHeaders(res, req.headers.get("origin") ?? "", true);
+		this.applyHeaders(res, c.req.headers.get("origin") ?? "", true);
 		return res;
 	};
 }

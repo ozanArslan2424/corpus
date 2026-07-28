@@ -1,5 +1,3 @@
-export type CookiesInit = CookieOptions | CookieOptions[];
-
 export type CookieOptions = {
 	name: string;
 	value: string;
@@ -14,3 +12,5 @@ export type CookieOptions = {
 	partitioned?: boolean;
 	maxAge?: number;
 };
+
+export type CookiesInit = CookieOptions | CookieOptions[];

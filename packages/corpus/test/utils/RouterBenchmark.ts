@@ -3,7 +3,7 @@ import { $registryTesting, TC, type RouterAdapterInterface } from "../_modules";
 export class RouterBenchmark {
 	private readonly router: TC.Router;
 	private readonly routes: TC.Route<any, any, any, any, any>[] = [];
-	private requests: Array<{ request: TC.Req; expectedId: string }> = [];
+	private requests: Array<{ request: Request; expectedId: string }> = [];
 
 	private readonly usedStaticPaths = new Set<string>();
 	private readonly usedDynamicShapes = new Set<string>(); // "GET:/static/*/static" - no param names, includes method
@@ -111,7 +111,7 @@ export class RouterBenchmark {
 		for (const route of this.routes) {
 			let url = route.endpoint.replace(/:([^/]+)/g, () => this.rand(8));
 			this.requests.push({
-				request: new TC.Req(`http://localhost:4000${url}`, {
+				request: new Request(`http://localhost:4000${url}`, {
 					method: route.method,
 				}),
 				expectedId: route.id,

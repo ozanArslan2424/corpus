@@ -49,16 +49,19 @@
 		"test:http:src": "bun --conditions=corpus-src run test/other/http-simulation.ts",
 		"test:ws": "bun run test/other/ws-simulation.ts",
 		"test:ws:src": "bun --conditions=corpus-src run test/other/ws-simulation.ts",
-		"test:benchmark": "bun run test/other/benchmark.ts",
-		"test:benchmark:src": "bun --conditions=corpus-src run test/other/benchmark.ts",
+		"test:benchmark": "bun run test/other/adapter-benchmark.ts",
+		"test:benchmark:src": "bun --conditions=corpus-src run test/other/adapter-benchmark.ts",
 		"test:all": "bun test --only-failures && bun run test:http -s && bun run test:ws -s && bun run test:benchmark",
 		"test:all:src": "bun --conditions=corpus-src test --only-failures && bun run test:http:src -s && bun run test:ws:src -s && bun run test:benchmark:src"
 	},
 	"devDependencies": {
 		"@standard-schema/spec": "^1.1.0",
 		"@types/bun": "^1.3.14",
+		"@types/express": "^5.0.6",
 		"arktype": "^2.2.3",
 		"bun-plugin-dts": "^0.4.0",
+		"elysia": "^1.4.29",
+		"express": "^5.2.1",
 		"memoirist": "^1.1.0",
 		"zod": "^4.4.3"
 	},

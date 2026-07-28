@@ -1,11 +1,13 @@
 import { Cookies } from "@/Cookies/Cookies";
+import { ContentDispositionDirective } from "@/Directives/ContentDispositionDirective";
 import { DefaultStatusTexts } from "@/enums/DefaultStatusTexts";
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
-import type { ResBody, ResInit, SseSource, NdjsonSource } from "@/Res/types";
-import { isNil } from "@/utils/nil";
+import type { ResInit, SseSource, NdjsonSource } from "@/Res/types";
+import { isNil, isUndefined } from "@/utils/is";
 import { isPrimitive } from "@/utils/primitives";
+import type { nil } from "@/utils/types";
 import { XFile } from "@/XFile/XFile";
 
 /**
@@ -36,113 +38,124 @@ import { XFile } from "@/XFile/XFile";
 
 export class Res<R = unknown> {
 	constructor(
-		public data?: ResBody<R>,
+		public body?: BodyInit | R | nil,
 		protected readonly init?: ResInit | Res,
 	) {
-		this.cookies = this.resolveCookies();
-		this.headers = this.resolveHeaders();
-		this.body = this.resolveBody();
-		this.status = this.resolveStatus();
-		this.statusText = Res.getDefaultStatusText(this.status);
+		if (init?.status) this.status = init.status;
+		if (init?.statusText) this.statusText = init.statusText;
 	}
-
-	body: BodyInit;
-	headers: Headers;
-	status: Status;
-	statusText: string;
-	cookies: Cookies;
 
 	get response(): Response {
-		const setCookieHeaders = this.cookies.toSetCookieHeaders();
-
-		if (setCookieHeaders.length > 0) {
-			for (const header of setCookieHeaders) {
-				this.headers.append(HeaderKey.SetCookie, header);
-			}
-		}
-
-		return new Response(this.body, {
+		const [body, contentType] = this.resolve();
+		const response = new Response(body, {
 			status: this.status,
 			statusText: this.statusText,
-			headers: this.headers,
+			headers: this._headers,
 		});
+
+		if (!isUndefined(contentType) && !response.headers.has(HeaderKey.ContentType)) {
+			response.headers.set(HeaderKey.ContentType, contentType);
+		}
+
+		const setCookieHeaders = this._cookies?.toSetCookieHeaders();
+		if (!isUndefined(setCookieHeaders) && setCookieHeaders.length > 0) {
+			response.headers.append(HeaderKey.SetCookie, setCookieHeaders);
+		}
+
+		this.headers = response.headers;
+		return response;
+
+		// // Fast path: no materialized cookies/headers, and init carries no
+		// // headers/cookies. init.status / init.statusText are fine here.
+		// if (
+		// 	isUndefined(this._cookies) &&
+		// 	isUndefined(this._headers) &&
+		// 	isUndefined(this.init?.headers) &&
+		// 	isUndefined(this.init?.cookies)
+		// ) {
+		// 	return new Response(body, {
+		// 		headers: isUndefined(contentType) ? undefined : { [HeaderKey.ContentType]: contentType },
+		// 	});
+		// }
+		//
+		// // Slow path
+		//
+		// return new Response(body, {
+		// 	status: this.status,
+		// 	statusText: this.statusText,
+		// 	headers: this._headers,
+		// });
 	}
 
-	private resolveCookies(): Cookies {
-		return new Cookies(this.init?.cookies);
+	// Single pass: body + content-type together, no double instanceof walk.
+	private resolve(): [BodyInit | nil, string | undefined] {
+		const b = this.body;
+		if (isNil(b)) return [b, undefined];
+		if (isPrimitive(b)) return [String(b), "text/plain"];
+		if (typeof b === "object") {
+			if (b instanceof ArrayBuffer) return [b, "application/octet-stream"];
+			if (b instanceof Blob) return [b, b.type || undefined];
+			if (b instanceof FormData) return [b, "multipart/form-data"];
+			if (b instanceof URLSearchParams) return [b, "application/x-www-form-urlencoded"];
+			if (b instanceof ReadableStream) return [b, undefined];
+			if (b instanceof Date) return [b.toISOString(), "text/plain"];
+			// plain object or array
+			return [JSON.stringify(b), "application/json"];
+		}
+		return [String(b), undefined];
 	}
 
-	private resolveHeaders(): Headers {
-		return new Headers(this.init?.headers);
+	private _statusText: string | undefined;
+	public get statusText(): string {
+		if (isUndefined(this._statusText)) {
+			this._statusText =
+				DefaultStatusTexts[this._status ?? this.init?.status ?? Status.OK] ?? "Unknown";
+		}
+		return this._statusText;
+	}
+	public set statusText(value: string) {
+		this._statusText = value;
 	}
 
-	private resolveStatus(): Status {
-		if (this.init?.status) return this.init.status;
-		if (this.headers.has(HeaderKey.Location)) {
-			return Status.FOUND;
+	private _status: Status | undefined;
+	public get status(): Status {
+		if (!isUndefined(this._status)) return this._status;
+
+		if (this.init?.status) {
+			this._status = this.init.status;
+			return this._status;
 		}
-		return Status.OK;
+
+		if (this._headers?.has(HeaderKey.Location)) {
+			this._status = Status.FOUND;
+			return this._status;
+		}
+
+		this._status = Status.OK;
+		return this._status;
+	}
+	public set status(value: Status) {
+		this._status = value;
 	}
 
-	private setContentType(value: string): void {
-		if (
-			!this.headers.has(HeaderKey.ContentType) ||
-			this.headers.get(HeaderKey.ContentType) === "text/plain"
-		) {
-			this.headers.set(HeaderKey.ContentType, value);
-		}
+	private _headers: Headers | undefined;
+	public get headers(): Headers {
+		if (!isUndefined(this._headers)) return this._headers;
+		this._headers = new Headers(this.init?.headers);
+		return this._headers;
+	}
+	public set headers(value: Headers) {
+		this._headers = value;
 	}
 
-	// order important here
-	private resolveBody(): BodyInit {
-		if (isNil(this.data)) {
-			this.setContentType("text/plain");
-			return "";
-		}
-
-		if (isPrimitive(this.data)) {
-			this.setContentType("text/plain");
-			return String(this.data);
-		}
-
-		if (this.data instanceof ArrayBuffer) {
-			this.setContentType("application/octet-stream");
-			return this.data;
-		}
-
-		if (this.data instanceof Blob) {
-			if (this.data.type) this.setContentType(this.data.type);
-			return this.data;
-		}
-
-		if (this.data instanceof FormData) {
-			this.setContentType("multipart/form-data");
-			return this.data;
-		}
-
-		if (this.data instanceof URLSearchParams) {
-			this.setContentType("application/x-www-form-urlencoded");
-			return this.data;
-		}
-
-		if (this.data instanceof ReadableStream) {
-			return this.data;
-		}
-
-		if (this.data instanceof Date) {
-			this.setContentType("text/plain");
-			return this.data.toISOString();
-		}
-
-		if (Array.isArray(this.data) || typeof this.data === "object") {
-			this.setContentType("application/json");
-			return JSON.stringify(this.data);
-		}
-
-		// Handle other objects (custom classes, etc.)
-		this.setContentType("text/plain");
-		// oxlint-disable-next-line typescript/no-base-to-string
-		return String(this.data);
+	private _cookies: Cookies | undefined;
+	public get cookies(): Cookies {
+		if (!isUndefined(this._cookies)) return this._cookies;
+		this._cookies = new Cookies(this.init?.cookies);
+		return this._cookies;
+	}
+	public set cookies(value: Cookies) {
+		this._cookies = value;
 	}
 
 	static redirect(url: string | URL, init?: ResInit): Res {
@@ -185,11 +198,9 @@ export class Res<R = unknown> {
 			});
 		});
 		const res = new Res(stream, { ...init, status: Status.OK });
-		res.headers.setMany({
-			[HeaderKey.ContentType]: "text/event-stream",
-			[HeaderKey.CacheControl]: "no-cache",
-			[HeaderKey.Connection]: "keep-alive",
-		});
+		res.headers.set(HeaderKey.ContentType, "text/event-stream");
+		res.headers.set(HeaderKey.CacheControl, "no-cache");
+		res.headers.set(HeaderKey.Connection, "keep-alive");
 		return res;
 	}
 
@@ -202,10 +213,8 @@ export class Res<R = unknown> {
 			});
 		});
 		const res = new Res(stream, { ...init, status: Status.OK });
-		res.headers.setMany({
-			[HeaderKey.ContentType]: "application/x-ndjson",
-			[HeaderKey.CacheControl]: "no-cache",
-		});
+		res.headers.set(HeaderKey.ContentType, "application/x-ndjson");
+		res.headers.set(HeaderKey.CacheControl, "no-cache");
 		return res;
 	}
 
@@ -240,10 +249,14 @@ export class Res<R = unknown> {
 		const file = await this.resolveFile(fileOrPath, init);
 		const stream = await file.stream();
 		const res = new Res(stream, { ...init, status: Status.OK });
-		res.headers.setMany({
-			[HeaderKey.ContentType]: file.mimeType,
-			[HeaderKey.ContentDisposition]: `${disposition}; filename="${file.fullname}"`,
-		});
+		res.headers.set(HeaderKey.ContentType, file.mimeType);
+		res.headers.set(
+			HeaderKey.ContentDisposition,
+			ContentDispositionDirective.createHeaderString({
+				type: disposition,
+				filename: file.fullname,
+			}),
+		);
 		return res;
 	}
 
@@ -251,15 +264,9 @@ export class Res<R = unknown> {
 		const file = await this.resolveFile(fileOrPath, init);
 		const content = await file.text();
 		const res = new Res(content, init);
-		res.headers.setMany({
-			[HeaderKey.ContentType]: file.mimeType,
-			[HeaderKey.ContentLength]: content.length.toString(),
-		});
+		res.headers.set(HeaderKey.ContentType, file.mimeType);
+		res.headers.set(HeaderKey.ContentLength, content.length.toString());
 		return res;
-	}
-
-	static getDefaultStatusText(status: number): string {
-		return DefaultStatusTexts[status] ?? "Unknown";
 	}
 
 	private static createStream(

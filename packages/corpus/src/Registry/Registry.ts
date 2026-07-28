@@ -46,83 +46,23 @@ export class Registry implements RegistryInterface {
 		this.router = new Router(value);
 	}
 
-	private _cors!: CorsInterface | null;
-	public get cors(): CorsInterface | null {
-		return this._cors;
-	}
-	public set cors(value: CorsInterface | null) {
-		this._cors = value;
-	}
+	cors!: CorsInterface | null;
 
-	private _prefix!: string;
-	public get prefix(): string {
-		return this._prefix;
-	}
-	public set prefix(value: string) {
-		this._prefix = value;
-	}
+	prefix!: string;
 
-	private _middlewares!: MiddlewareRouterInterface;
-	public get middlewares(): MiddlewareRouterInterface {
-		return this._middlewares;
-	}
-	public set middlewares(value: MiddlewareRouterInterface) {
-		this._middlewares = value;
-	}
+	middlewares!: MiddlewareRouterInterface;
 
-	private _urlParamsParser!: ObjectParserInterface<Record<string, string>>;
-	public get urlParamsParser(): ObjectParserInterface<Record<string, string>> {
-		return this._urlParamsParser;
-	}
-	public set urlParamsParser(value: ObjectParserInterface<Record<string, string>>) {
-		this._urlParamsParser = value;
-	}
+	urlParamsParser!: ObjectParserInterface<Record<string, string>>;
 
-	private _searchParamsParser!: ObjectParserInterface<URLSearchParams>;
-	public get searchParamsParser(): ObjectParserInterface<URLSearchParams> {
-		return this._searchParamsParser;
-	}
-	public set searchParamsParser(value: ObjectParserInterface<URLSearchParams>) {
-		this._searchParamsParser = value;
-	}
+	searchParamsParser!: ObjectParserInterface<URLSearchParams>;
 
-	private _formDataParser!: ObjectParserInterface<FormData>;
-	public get formDataParser(): ObjectParserInterface<FormData> {
-		return this._formDataParser;
-	}
-	public set formDataParser(value: ObjectParserInterface<FormData>) {
-		this._formDataParser = value;
-	}
+	formDataParser!: ObjectParserInterface<FormData>;
 
-	private _bodyParser!: BodyParserInterface;
-	public get bodyParser(): BodyParserInterface {
-		return this._bodyParser;
-	}
-	public set bodyParser(value: BodyParserInterface) {
-		this._bodyParser = value;
-	}
+	bodyParser!: BodyParserInterface;
 
-	private _schemaParser!: SchemaParserInterface;
-	public get schemaParser(): SchemaParserInterface {
-		return this._schemaParser;
-	}
-	public set schemaParser(value: SchemaParserInterface) {
-		this._schemaParser = value;
-	}
+	schemaParser!: SchemaParserInterface;
 
-	private _router!: RouterInterface;
-	public get router(): RouterInterface {
-		return this._router;
-	}
-	public set router(value: RouterInterface) {
-		this._router = value;
-	}
+	router!: RouterInterface;
 
-	private _docs!: Map<string, RegistryDocEntry>;
-	public get docs(): Map<string, RegistryDocEntry> {
-		return this._docs;
-	}
-	private set docs(value: Map<string, RegistryDocEntry>) {
-		this._docs = value;
-	}
+	docs!: Map<string, RegistryDocEntry>;
 }

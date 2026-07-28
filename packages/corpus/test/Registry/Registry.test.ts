@@ -71,8 +71,8 @@ describe("Registry - swapped fields are honored by the server", () => {
 				addCalls.push(data.id);
 				capturedData = data;
 			},
-			find: (r: TC.Req) => {
-				findCalls.push(r.urlObject.pathname);
+			find: (_method: TC.Method, pathname: string) => {
+				findCalls.push(pathname);
 				if (!capturedData) return null;
 				return { route: capturedData, params: {} } as RouterReturn;
 			},
@@ -177,25 +177,33 @@ describe("Registry - swapped fields are honored by the server", () => {
 			add: (data) => {
 				capturedData = data;
 			},
-			find: (r: TC.Req) => {
-				findCalls.push(r.urlObject.pathname);
+			find: (_method: TC.Method, pathname: string) => {
+				findCalls.push(pathname);
 				if (!capturedData) return null;
-				if (r.urlObject.pathname !== capturedData.endpoint) return null;
-				return { route: capturedData, params: {} } as RouterReturn;
+				if (pathname !== capturedData.endpoint) return null;
+				return { route: capturedData, params: {} };
 			},
 			list: () => (capturedData ? [capturedData] : []),
 		};
 
+		// same method and route stops at the router cache layer
+		// hence the different paths
 		new TC.Route("/persist", (c) => {
+			c.data = "ok";
+		});
+		new TC.Route("/persist2", (c) => {
+			c.data = "ok";
+		});
+		new TC.Route("/persist3", (c) => {
 			c.data = "ok";
 		});
 
 		const s = createTestServer();
 		await s.handle(req("/persist"));
-		await s.handle(req("/persist"));
-		await s.handle(req("/persist"));
+		await s.handle(req("/persist2"));
+		await s.handle(req("/persist3"));
 
-		expect(findCalls).toEqual(["/persist", "/persist", "/persist"]);
+		expect(findCalls).toEqual(["/persist", "/persist2", "/persist3"]);
 	});
 
 	it("reset() restores defaults after a swap", () => {

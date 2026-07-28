@@ -1,3 +1,4 @@
+import type { OrString } from "@/utils/strings";
 import type { ValueOf } from "@/utils/ValueOf";
 
 /** Commonly used HTTP verbs. */
@@ -23,4 +24,4 @@ export const Method = {
 	TRACE: "TRACE",
 } as const;
 
-export type Method = ValueOf<typeof Method>;
+export type Method = OrString<ValueOf<typeof Method>>;

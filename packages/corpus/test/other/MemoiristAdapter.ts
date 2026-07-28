@@ -26,10 +26,7 @@ export class MemoiristAdapter implements RouterAdapterInterface {
 	readonly __brand: string = "MemoiristAdapter";
 	private readonly router = new Memoirist<RouterData>();
 
-	find(req: TC.Req): RouterReturn | null {
-		const method = req.method;
-		const pathname = req.urlObject.pathname;
-
+	find(method: TC.Method, pathname: string): RouterReturn | null {
 		const result = this.router.find(method, pathname);
 		if (!result) return null;
 		const route = result.store;

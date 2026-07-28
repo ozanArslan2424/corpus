@@ -1,8 +1,6 @@
-import type { Context } from "@/Context/Context";
 import { Method } from "@/enums/Method";
 import { $registry } from "@/registry";
-import type { RouteModel, RouteVariant } from "@/Route/types";
-import type { Func } from "@/utils/functions";
+import type { ContextHandler, RouteModel, RouteVariant } from "@/Route/types";
 
 export abstract class BaseRoute<
 	B = unknown,
@@ -15,7 +13,7 @@ export abstract class BaseRoute<
 		return `${this.method.toUpperCase()} ${this.endpoint}`;
 	}
 
-	abstract handler: Func<[context: Context<B, S, P, R>], Bun.MaybePromise<R>>;
+	abstract handler: ContextHandler<B, S, P, R>;
 
 	abstract endpoint: E;
 

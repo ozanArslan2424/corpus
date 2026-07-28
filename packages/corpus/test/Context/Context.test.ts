@@ -13,7 +13,7 @@ const s = createTestServer();
 describe("C.Context", () => {
 	it("HAS CORRECT SHAPE", async () => {
 		new TC.Route("/ctx-shape", (c) => {
-			expect(c.req).toBeInstanceOf(TC.Req);
+			expect(c.req).toBeInstanceOf(Request);
 			expect(c.url).toBeInstanceOf(URL);
 			expect(c.headers).toBeInstanceOf(Headers);
 			expect(c.cookies).toBeInstanceOf(TC.Cookies);
@@ -29,7 +29,7 @@ describe("C.Context", () => {
 	});
 
 	it("APPENDS CORRECT PARSED DATA", async () => {
-		const r = new TC.Req("http://localhost:3000/hello/randomID?a=b", {
+		const r = new Request("http://localhost:3000/hello/randomID?a=b", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({ hello: "world" }),
@@ -51,7 +51,7 @@ describe("C.Context", () => {
 		expect(c.search).toBeEmptyObject();
 		expect(c.params).toBeEmptyObject();
 
-		await TC.Context.appendParsedData(c, fakeRouterReturn);
+		await c.parseData(fakeRouterReturn);
 
 		expect(c.body).toEqual({ hello: "world" });
 		expect(c.params).toEqual(fakeRouterReturn.params);

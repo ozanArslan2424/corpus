@@ -12,7 +12,7 @@ import {
 import { $registry } from "@/registry";
 import { RouteVariant } from "@/Route/types";
 import { logFatal } from "@/utils/logger";
-import { objGetValues } from "@/utils/objects";
+import { objGetEntries, objGetValues } from "@/utils/objects";
 import { strIsDefined } from "@/utils/strings";
 import type { RateLimitConfig } from "@/XRateLimiter/RateLimitConfig";
 import { RateLimiterFileStore } from "@/XRateLimiter/RateLimiterFileStore";
@@ -31,17 +31,21 @@ export class XRateLimiter extends MiddlewareAbstract {
 	}
 
 	override variant: MiddlewareVariant = MiddlewareVariant.inbound;
+
 	override get useOn(): MiddlewareUseOn {
 		return $registry.router
 			.list()
 			.filter((r) => r.variant !== RouteVariant.bundle)
 			.map((r) => r.id);
 	}
+
 	override handler: MiddlewareHandler = async (c) => {
-		const result = await this.getResult(c.headers);
-		c.res.headers.mergeWith(result.headers);
-		const exposedHeaders = objGetValues(this.config.headerNames);
-		c.res.headers.append(HeaderKey.AccessControlExposeHeaders, exposedHeaders);
+		const result = await this.getResult(c.req.headers);
+
+		for (const [key, value] of objGetEntries(result.headersObject)) {
+			if (Array.isArray(value)) c.res.headers.append(key, value);
+			else c.res.headers.set(key, value);
+		}
 
 		if (!result.success) {
 			throw new Exception("Too many requests", Status.TOO_MANY_REQUESTS, c.res);
@@ -55,7 +59,7 @@ export class XRateLimiter extends MiddlewareAbstract {
 
 	async getResult(headers: Headers): Promise<{
 		success: boolean;
-		headers: Headers;
+		headersObject: Record<string, string | Array<string>>;
 	}> {
 		await this.maybeCleanStore();
 
@@ -80,24 +84,24 @@ export class XRateLimiter extends MiddlewareAbstract {
 
 		const keys = this.config.headerNames;
 
-		const responseHeaders = new Headers();
-		responseHeaders.setMany({
+		const headersObject = {
 			[keys.limit]: max.toString(),
 			[keys.remaining]: remaining.toString(),
 			[keys.reset]: resetUnix.toString(),
-		});
+			[HeaderKey.AccessControlExposeHeaders]: objGetValues(keys),
+		};
 
 		// Add Retry-After header if rate limited
 		if (!allowed) {
 			const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
-			responseHeaders.set(keys.retryAfter, retryAfter.toString());
+			headersObject[keys.retryAfter] = retryAfter.toString();
 		}
 
 		if (allowed) {
-			return { headers: responseHeaders, success: true };
+			return { headersObject, success: true };
 		}
 
-		return { headers: responseHeaders, success: false };
+		return { headersObject, success: false };
 	}
 
 	private getId(headers: Headers): string {

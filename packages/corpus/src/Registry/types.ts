@@ -1,10 +1,9 @@
+import type { Method } from "@/enums/Method";
 import type { Middleware } from "@/Middleware/Middleware";
-import type { Req } from "@/Req/Req";
 import type { Res } from "@/Res/Res";
 import type { BaseRoute } from "@/Route/BaseRoute";
-import type { RouteModel } from "@/Route/types";
+import type { ContextHandler, RouteModel } from "@/Route/types";
 import type { RouterReturn, RouterData, MiddlewareRouterReturn } from "@/Router/types";
-import type { RequestHandler } from "@/Server/types";
 import type { Func } from "@/utils/functions";
 import type { SchemaValidator } from "@/utils/Schema";
 
@@ -32,20 +31,20 @@ export type RegistryDocEntry = {
 
 export interface RouterAdapterInterface {
 	readonly __brand: string;
-	find(req: Req): RouterReturn | null;
+	find(method: Method, pathname: string): RouterReturn | null;
 	add(data: RouterData): void;
 	list: Func<[], Array<RouterData>> | undefined;
 }
 
 export interface RouterInterface {
 	add(route: BaseRoute<any, any, any, any>): void;
-	find(req: Req): RouterReturn | null;
+	find(req: Request): RouterReturn | null;
 	list(): Array<RouterData>;
 }
 
 export interface CorsInterface extends Middleware {
 	/** Preflight handler for OPTIONS requests. */
-	handlePreflight: RequestHandler;
+	handlePreflight: ContextHandler;
 }
 
 export interface MiddlewareRouterInterface {
@@ -59,7 +58,7 @@ export interface ObjectParserInterface<T> {
 
 export interface BodyParserInterface {
 	parse(
-		r: Req | Res | Response,
+		r: Request | Res | Response,
 		maxRequestBodySize?: number,
 	): Promise<Record<string, unknown> | Array<unknown> | string | ReadableStream<Uint8Array>>;
 }

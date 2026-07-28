@@ -1,7 +1,8 @@
 import path from "path";
 
-import { CacheControlDirective } from "@/CacheControlDirective/CacheControlDirective";
 import type { Context } from "@/Context/Context";
+import { CacheControlDirective } from "@/Directives/CacheControlDirective";
+import { ContentDispositionDirective } from "@/Directives/ContentDispositionDirective";
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Method } from "@/enums/Method";
 import { Status } from "@/enums/Status";
@@ -114,31 +115,34 @@ export abstract class BundleRouteAbstract<
 			return this.onFileNotFound(subPath);
 		}
 
-		let res: Res;
-
-		if (file.extension === "html") {
-			res = await Res.file(file);
-		} else {
-			res = await Res.streamFile(file, "inline");
-		}
+		let cacheHeader = "";
 
 		if (file.fullname === idx) {
-			res.headers.set(
-				HeaderKey.CacheControl,
-				CacheControlDirective.createHeaderString(this.cache.indexHtml),
-			);
+			cacheHeader = CacheControlDirective.createHeaderString(this.cache.indexHtml);
 		} else if (file.path.includes(`/${this.assetsDir}/`)) {
-			res.headers.set(
-				HeaderKey.CacheControl,
-				CacheControlDirective.createHeaderString(this.cache.assetsDir),
-			);
+			cacheHeader = CacheControlDirective.createHeaderString(this.cache.assetsDir);
 		} else if (this.cache.fallback) {
-			res.headers.set(
-				HeaderKey.CacheControl,
-				CacheControlDirective.createHeaderString(this.cache.fallback),
-			);
+			cacheHeader = CacheControlDirective.createHeaderString(this.cache.fallback);
 		}
 
-		return res;
+		if (file.extension !== "html") {
+			const stream = await file.stream();
+			c.res.headers.set(HeaderKey.ContentType, file.mimeType);
+			c.res.headers.set(HeaderKey.CacheControl, cacheHeader);
+			c.res.headers.set(
+				HeaderKey.ContentDisposition,
+				ContentDispositionDirective.createHeaderString({
+					type: "inline",
+					filename: file.fullname,
+				}),
+			);
+			return stream;
+		}
+
+		const content = await file.text();
+		c.res.headers.set(HeaderKey.ContentType, file.mimeType);
+		c.res.headers.set(HeaderKey.ContentLength, content.length.toString());
+		c.res.headers.set(HeaderKey.CacheControl, cacheHeader);
+		return content;
 	};
 }

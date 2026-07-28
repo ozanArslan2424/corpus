@@ -18,6 +18,6 @@ export type RouterReturn = {
 };
 
 export type MiddlewareRouterReturn = {
-	inbound: MiddlewareHandler;
-	outbound: MiddlewareHandler;
+	inbound?: MiddlewareHandler;
+	outbound?: MiddlewareHandler;
 };

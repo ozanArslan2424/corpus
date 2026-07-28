@@ -132,7 +132,7 @@ type StaticRouteDefinition =
 	| string
 	| {
 			filePath: string;
-			disposition?: "attachment" | "inline";
+			disposition?: ContentDispositionDirective["type"];
 			cache?: CacheControlDirective;
 	  };
 ```

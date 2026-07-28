@@ -2,7 +2,7 @@ import type { Context } from "@/Context/Context";
 import type { Method } from "@/enums/Method";
 import { resolveRouteAddress } from "@/Route/resolveRouteAddress";
 import { RouteAbstract } from "@/Route/RouteAbstract";
-import type { RouteAddress, RouteModel } from "@/Route/types";
+import type { ContextHandler, RouteAddress, RouteModel } from "@/Route/types";
 import type { Func } from "@/utils/functions";
 
 /**
@@ -37,7 +37,7 @@ export class Route<
 > extends RouteAbstract<B, S, P, R, E> {
 	constructor(
 		address: RouteAddress<E>,
-		callback: Func<[context: Context<B, S, P, R>], Bun.MaybePromise<R>>,
+		callback: ContextHandler<B, S, P, R>,
 		model?: RouteModel<B, S, P, R>,
 	) {
 		super();

@@ -8,20 +8,17 @@ import type { CookieOptions, CookiesInit } from "@/Cookies/types";
 export class Cookies {
 	constructor(init?: CookiesInit | Cookies) {
 		if (init instanceof Cookies) {
-			for (const name of init.keys()) {
-				const value = init.get(name) ?? "";
-				this.set({ name, value });
-			}
+			this.map = init.map;
 		} else if (Array.isArray(init)) {
 			for (const opts of init) {
 				this.set(opts);
 			}
-		} else if (init && "name" in init && "value" in init) {
+		} else if (init) {
 			this.set(init);
 		}
 	}
 
-	protected map = new Bun.CookieMap();
+	map = new Bun.CookieMap();
 
 	/**
 	 * Serializes the collection to an array of `Set-Cookie` header strings.

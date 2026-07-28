@@ -1,3 +1,7 @@
+export type Primitive = string | number | boolean | bigint;
+
+export type nil = null | undefined;
+
 export type ValueOf<T> = T[keyof T];
 
 export type Prettify<T> = { [K in keyof T]: T[K] } & {};

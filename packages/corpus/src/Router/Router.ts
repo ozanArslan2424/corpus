@@ -1,6 +1,5 @@
 import { $registry } from "@/registry";
 import type { RouterInterface, RouterAdapterInterface } from "@/Registry/types";
-import type { Req } from "@/Req/Req";
 import type { BaseRoute } from "@/Route/BaseRoute";
 import { RouteVariant } from "@/Route/types";
 import type { RouterReturn } from "@/Router/types";
@@ -16,7 +15,7 @@ import { strRemoveWhitespace } from "@/utils/strings";
 export class Router implements RouterInterface {
 	constructor(private readonly adapter: RouterAdapterInterface) {}
 
-	private readonly cache = new WeakMap<Req, RouterReturn>();
+	private readonly cache = new WeakMap<Request, RouterReturn>();
 	private readonly funcMap = new Map<string, Func>();
 
 	add(route: BaseRoute<any, any, any, any>): void {
@@ -30,10 +29,26 @@ export class Router implements RouterInterface {
 		});
 	}
 
-	find(req: Req): RouterReturn | null {
-		const match = this.cache.get(req) ?? this.adapter.find(req);
+	find(req: Request): RouterReturn | null {
+		const identifier = req;
+		const method = req.method;
+
+		const url = req.url;
+		// Skip scheme + host: find the first "/" after "://"
+		const start = url.indexOf("/", url.indexOf("://") + 3);
+		let pathname: string;
+		if (start === -1) {
+			pathname = "/";
+		} else {
+			let end = url.indexOf("?", start);
+			if (end === -1) end = url.indexOf("#", start);
+			pathname = end === -1 ? url.slice(start) : url.slice(start, end);
+			if (pathname === "") pathname = "/";
+		}
+
+		const match = this.cache.get(identifier) ?? this.adapter.find(method, pathname);
 		if (!match) return null;
-		this.cache.set(req, match);
+		this.cache.set(identifier, match);
 		return match;
 	}
 

@@ -1,4 +1,4 @@
-export * from "./CacheControlDirective/CacheControlDirective";
+export * from "./Directives/CacheControlDirective";
 
 export * from "./Context/Context";
 
@@ -16,8 +16,6 @@ export * from "./Cors/Cors";
 
 export * from "./Middleware/MiddlewareAbstract";
 export * from "./Middleware/Middleware";
-
-export * from "./Req/Req";
 
 export * from "./Res/Res";
 

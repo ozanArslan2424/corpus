@@ -103,7 +103,7 @@ beforeEach(() => {
 	new TC.Middleware({
 		useOn: [inboundCookies],
 		handler: (c) => {
-			(c.data as any).sessionId = c.req.cookies.get("session-id") ?? null;
+			(c.data as any).sessionId = c.cookies.get("session-id") ?? null;
 		},
 	});
 });

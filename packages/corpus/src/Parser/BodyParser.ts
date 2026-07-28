@@ -3,7 +3,6 @@ import { Method } from "@/enums/Method";
 import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
 import type { BodyParserInterface, ObjectParserInterface } from "@/Registry/types";
-import type { Req } from "@/Req/Req";
 import type { Res } from "@/Res/Res";
 import { arrIncludes } from "@/utils/arrays";
 
@@ -14,10 +13,6 @@ type NormalizedContentType =
 	| "text"
 	| "xml"
 	| "binary"
-	| "pdf"
-	| "image"
-	| "audio"
-	| "video"
 	| "unknown";
 
 export class BodyParser implements BodyParserInterface {
@@ -28,7 +23,7 @@ export class BodyParser implements BodyParserInterface {
 
 	/** This can be used for both request and response bodies */
 	async parse(
-		r: Req | Res | Response,
+		r: Request | Res | Response,
 		maxRequestBodySize?: number,
 	): Promise<Record<string, unknown> | Array<unknown> | string | ReadableStream<Uint8Array>> {
 		let input = this.toWebRequestResponse(r);
@@ -36,8 +31,12 @@ export class BodyParser implements BodyParserInterface {
 
 		if (this.isMethodWithoutBody(input)) return empty;
 
+		if (input instanceof Request) {
+			input = input.clone();
+		}
+
 		const contentType = this.getContentTypeDisco(input);
-		const isStreamType = this.getIsStreamType(contentType);
+		const isStreamType = contentType === "binary";
 
 		if (maxRequestBodySize !== undefined && !isStreamType) {
 			input = await this.withCappedBody(input, maxRequestBodySize);
@@ -55,10 +54,6 @@ export class BodyParser implements BodyParserInterface {
 				case "xml":
 					return await this.getTextBody(input);
 				case "binary":
-				case "pdf":
-				case "image":
-				case "audio":
-				case "video":
 					return this.getBinaryBody(input) ?? empty;
 				case "unknown":
 					return await this.getUnknownBody(input);
@@ -102,18 +97,8 @@ export class BodyParser implements BodyParserInterface {
 		return new Response(Buffer.concat(chunks), { headers: input.headers });
 	}
 
-	private toWebRequestResponse(r: Req | Res | Response): Request | Response {
+	private toWebRequestResponse(r: Request | Res | Response): Request | Response {
 		return r instanceof Request ? r : r instanceof Response ? r : r.response;
-	}
-
-	private getIsStreamType(contentType: NormalizedContentType): boolean {
-		return (
-			contentType === "binary" ||
-			contentType === "pdf" ||
-			contentType === "image" ||
-			contentType === "audio" ||
-			contentType === "video"
-		);
 	}
 
 	private getContentTypeDisco(input: Request | Response): NormalizedContentType {
@@ -134,13 +119,13 @@ export class BodyParser implements BodyParserInterface {
 		} else if (contentTypeHeader.includes("application/octet-stream")) {
 			return "binary";
 		} else if (contentTypeHeader.includes("application/pdf")) {
-			return "pdf";
+			return "binary";
 		} else if (contentTypeHeader.includes("image/")) {
-			return "image";
+			return "binary";
 		} else if (contentTypeHeader.includes("audio/")) {
-			return "audio";
+			return "binary";
 		} else if (contentTypeHeader.includes("video/")) {
-			return "video";
+			return "binary";
 		}
 
 		return "unknown";
@@ -148,13 +133,7 @@ export class BodyParser implements BodyParserInterface {
 
 	private isMethodWithoutBody(input: Request | Response): boolean {
 		if (!("method" in input) || typeof input.method !== "string") return false;
-
-		return !arrIncludes(input.method.toUpperCase(), [
-			Method.POST,
-			Method.PUT,
-			Method.PATCH,
-			Method.DELETE,
-		]);
+		return arrIncludes(input.method.toUpperCase(), [Method.GET, Method.HEAD]);
 	}
 
 	private getJsonBody(

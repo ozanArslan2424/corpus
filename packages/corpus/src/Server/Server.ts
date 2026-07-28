@@ -1,16 +1,18 @@
 import { Context } from "@/Context/Context";
+import { HeaderKey } from "@/enums/HeaderKey";
+import { Method } from "@/enums/Method";
 import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
 import { $registry } from "@/registry";
-import { Req } from "@/Req/Req";
 import { Res } from "@/Res/Res";
-import { RouteVariant } from "@/Route/types";
-import type { WebSocketRoute } from "@/Route/WebSocketRoute";
+import { RouteVariant, type ContextHandler } from "@/Route/types";
+import { WebSocketRoute } from "@/Route/WebSocketRoute";
 import type { RouterData } from "@/Router/types";
-import type { ErrorHandler, RequestHandler, ServerApp, ServerOptions } from "@/Server/types";
+import type { ErrorHandler, ServerApp, ServerOptions } from "@/Server/types";
 import type { Func } from "@/utils/functions";
 import { logger, logFatal } from "@/utils/logger";
 import type { OrString } from "@/utils/strings";
+import type { nil } from "@/utils/types";
 import { XConfig } from "@/XConfig/XConfig";
 
 /**
@@ -52,13 +54,14 @@ export class Server {
 		if (XConfig.nodeEnv !== "test") process.exit(0);
 	}
 
-	async handle(request: Request): Promise<Response> {
-		const req = new Req(request);
-		const res = await this.handleRequest(req, () => null);
-		if (!res) {
+	async handle(request: Request, server?: ServerApp | nil): Promise<Response> {
+		try {
+			const res = await this.handleRequest(request, server);
+			if (!res) logFatal("WebSocket requests cannot be handled with this method.");
+			return res.response;
+		} catch {
 			logFatal("WebSocket requests cannot be handled with this method.");
 		}
-		return res.response;
 	}
 
 	private createApp(
@@ -71,14 +74,7 @@ export class Server {
 			idleTimeout: this.opts?.idleTimeout,
 			tls: this.opts?.tls,
 			fetch: async (request, server) => {
-				const req = new Req(request);
-				const res = await this.handleRequest(req, (wsRoute) => {
-					const upgraded = server.upgrade(request, { data: wsRoute });
-					if (!upgraded) {
-						throw new Exception("Upgrade failed", Status.UPGRADE_REQUIRED);
-					}
-					return null;
-				});
+				const res = await this.handleRequest(request, server);
 				return res?.response;
 			},
 			websocket: {
@@ -95,63 +91,65 @@ export class Server {
 		});
 	}
 
-	// gmw: global middlewares
-	// gmwir: global middlewares inbound result
-	// gmwor: global middlewares outbound result
-	// lmw: local middlewares
-	// lmwir: local middlewares inbound result
-	// lmwor: local middlewares outbound result
-	protected async handleRequest(
-		req: Req,
-		onUpgrade: Func<[WebSocketRoute], null>,
-	): Promise<Res | null> {
-		const ctx = new Context(req);
+	protected async handleRequest(req: Request, server: ServerApp | nil): Promise<Res | null> {
+		const c = new Context(req);
 
-		try {
-			if (ctx.req.isPreflight) {
-				ctx.res = await this.handlePreflight(ctx.req);
-			} else {
+		if (this.isPreflight(req.method, req.headers)) {
+			const result = await this.handlePreflight(c);
+			if (result instanceof Res) c.res = result;
+			else c.res.body = result;
+		} else {
+			try {
+				const match = $registry.router.find(req);
+
+				// gmw: global middlewares
 				const gmw = $registry.middlewares.find("*");
-
-				const gmwir = await gmw.inbound(ctx);
+				// gmwir: global middlewares inbound result
+				const gmwir = await gmw.inbound?.(c);
 				if (gmwir instanceof Res) return gmwir;
 
-				const match = $registry.router.find(ctx.req);
-
 				if (!match) {
-					ctx.res = await this.handleNotFound(ctx.req);
+					const result = await this.handleNotFound(c);
+					if (result instanceof Res) c.res = result;
+					else c.res.body = result;
 				} else {
+					// lmw: local middlewares
 					const lmw = $registry.middlewares.find(match.route.id);
-
-					const lmwir = await lmw.inbound(ctx);
+					// lmwir: local middlewares inbound result
+					const lmwir = await lmw.inbound?.(c);
 					if (lmwir instanceof Res) return lmwir;
 
-					await Context.appendParsedData(ctx, match);
+					await c.parseData(match);
+					const result = await match.route.handler(c);
 
-					const routeResult = await match.route.handler(ctx);
-
-					if (match.route.variant === RouteVariant.websocket && ctx.req.isWebsocket) {
-						return onUpgrade(routeResult);
-					} else if (routeResult instanceof Res) {
-						ctx.res = routeResult;
-					} else {
-						ctx.res = new Res(routeResult, ctx.res);
+					if (this.isWebsocket(match.route.variant, req.headers)) {
+						const upgraded = server?.upgrade(req, { data: result });
+						if (!upgraded) throw new Exception("Upgrade failed", Status.UPGRADE_REQUIRED);
+						console.log("returning null");
+						return null;
 					}
 
-					const lmwor = await lmw.outbound(ctx);
+					if (result instanceof Res) c.res = result;
+					else c.res.body = result;
+
+					// lmwor: local middlewares outbound result
+					const lmwor = await lmw.outbound?.(c);
 					if (lmwor instanceof Res) return lmwor;
 				}
 
-				const gmwor = await gmw.outbound(ctx);
+				// gmwor: global middlewares outbound result
+				const gmwor = await gmw.outbound?.(c);
 				if (gmwor instanceof Res) return gmwor;
+			} catch (err) {
+				const result = await this.handleError(err as Error, c);
+				if (result instanceof Res) c.res = result;
+				else c.res.body = result;
 			}
-		} catch (err) {
-			ctx.res = await this.handleError(err as Error, ctx);
 		}
 
-		await $registry.cors?.handler(ctx);
+		await $registry.cors?.handler(c);
 
-		return ctx.res;
+		return c.res;
 	}
 
 	protected handleBeforeListen: Func<[], Bun.MaybePromise<void>> | undefined;
@@ -193,29 +191,43 @@ export class Server {
 		);
 	};
 
-	protected handleNotFound: RequestHandler = (req) => this.defaultNotFoundHandler(req);
+	protected handleNotFound: ContextHandler = (c) => this.defaultNotFoundHandler(c);
 	/**
 	 *
 	 * Default not found handler response will have a status of 404 and json:
 	 *
 	 * ```typescript
-	 * { error: true, message: `${req.method} on ${req.url} does not exist.` }
+	 * { error: true, message: `${c.req.method} on ${c.req.url} does not exist.` }
 	 * ```
 	 */
-	setOnNotFound(handler: RequestHandler): void {
+	setOnNotFound(handler: ContextHandler): void {
 		this.handleNotFound = handler;
 	}
-	defaultNotFoundHandler: RequestHandler = (req) => {
+	defaultNotFoundHandler: ContextHandler = (c) => {
 		return new Res(
-			{ error: true, message: `${req.method} on ${req.url} does not exist.` },
+			{ error: true, message: `${c.req.method} on ${c.req.url} does not exist.` },
 			{ status: Status.NOT_FOUND },
 		);
 	};
 
-	protected handlePreflight: RequestHandler = async (req) => {
+	protected handlePreflight: ContextHandler = async (c) => {
 		if ($registry.cors === null) {
 			return new Res(undefined, { status: Status.NO_CONTENT });
 		}
-		return $registry.cors.handlePreflight(req);
+		return $registry.cors.handlePreflight(c);
 	};
+
+	private isPreflight(method: string, headers: Headers): boolean {
+		return (
+			method.toUpperCase() === Method.OPTIONS && headers.has(HeaderKey.AccessControlRequestMethod)
+		);
+	}
+
+	private isWebsocket(variant: RouteVariant, headers: Headers): boolean {
+		return (
+			variant === RouteVariant.websocket &&
+			headers.get(HeaderKey.Connection)?.toLowerCase() === "upgrade" &&
+			headers.get(HeaderKey.Upgrade)?.toLowerCase() === "websocket"
+		);
+	}
 }

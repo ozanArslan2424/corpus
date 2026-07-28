@@ -1,5 +1,6 @@
 import { Status } from "@/enums/Status";
 import { Res } from "@/Res/Res";
+import { isNumber, isObject } from "@/utils/is";
 
 export class Exception extends Error {
 	constructor(
@@ -11,7 +12,9 @@ export class Exception extends Error {
 	}
 
 	get response(): Res {
-		if (this.data instanceof Res) {
+		if (isObject(this.data) && "status" in this.data && isNumber(this.data.status)) {
+			this.status = this.data.status;
+		} else if (this.data instanceof Res) {
 			this.data.status = this.status;
 			return this.data;
 		}

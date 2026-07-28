@@ -1,9 +1,11 @@
-import type { Cookies } from "@/Cookies/Cookies";
+import { Cookies } from "@/Cookies/Cookies";
+import { HeaderKey } from "@/enums/HeaderKey";
 import { $registry } from "@/registry";
-import { Req } from "@/Req/Req";
 import { Res } from "@/Res/Res";
 import type { RouterReturn } from "@/Router/types";
 import type { ContextDataInterface } from "@/types";
+import { isEmpty } from "@/utils/is";
+import { strSplit } from "@/utils/strings";
 
 /**
  * The context object used in Route "callback" parameter.
@@ -26,53 +28,74 @@ import type { ContextDataInterface } from "@/types";
  * */
 
 export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
-	constructor(req: Req, res?: Res<R>) {
-		this.req = req;
-		this.url = req.urlObject;
-		this.headers = req.headers;
-		this.cookies = req.cookies;
-		this.res = res ?? new Res<R>();
+	constructor(public readonly req: Request) {}
+
+	private _res: Res<R> | null = null;
+	get res(): Res<R> {
+		if (!this._res) this._res = new Res();
+		return this._res;
+	}
+	set res(res: Res<R>) {
+		this._res = res;
 	}
 
-	req: Req;
-	res: Res<R>;
-	url: URL;
-	headers: Headers;
-	cookies: Cookies;
+	private _url: URL | null = null;
+	get url(): URL {
+		if (!this._url) this._url = new URL(this.req.url);
+		if (!this._url.pathname) this._url.pathname += "/";
+		return this._url;
+	}
+
+	get headers(): Headers {
+		return this.req.headers;
+	}
+
+	private _cookies: Cookies | null = null;
+	public get cookies(): Cookies {
+		if (this._cookies) return this._cookies;
+
+		this._cookies = new Cookies();
+
+		const cookieHeader = this.req.headers.get(HeaderKey.Cookie);
+
+		if (cookieHeader) {
+			const pairs = strSplit(";", cookieHeader);
+
+			for (const pair of pairs) {
+				const eq = pair.indexOf("=");
+				if (eq <= 0) continue;
+				const name = pair.slice(0, eq).trim();
+				const value = pair.slice(eq + 1).trim();
+				if (!name || !value) continue;
+				this._cookies.set({ name, value });
+			}
+		}
+
+		return this._cookies;
+	}
+
+	data: ContextDataInterface = Object.create(null);
 	body: B = Object.create(null);
 	search: S = Object.create(null);
 	params: P = Object.create(null);
-	data: ContextDataInterface = Object.create(null);
 
-	static async appendParsedData<B = unknown, S = unknown, P = unknown, R = unknown>(
-		ctx: Context<B, S, P, R>,
-		match: RouterReturn,
-	) {
-		// Clone the request before the body parser consumes the stream, so the
-		// consumer can still call c.req.formData()/json()/text() without hitting
-		// the "body already consumed" error.
-		const clone = new Req(ctx.req.clone());
+	async parseData(match: RouterReturn) {
+		const v = match.route.validators;
 
-		const body = await $registry.bodyParser.parse(ctx.req);
-		const search = $registry.searchParamsParser.parse(ctx.url.searchParams);
-		const params = $registry.urlParamsParser.parse(match.params);
+		const body = await $registry.bodyParser.parse(this.req);
+		this.body = await $registry.schemaParser.parse("body", body, v?.body);
 
-		if (body instanceof ReadableStream) {
-			ctx.body = body as B;
-		} else {
-			ctx.body = await $registry.schemaParser.parse("body", body, match.route.validators?.body);
+		const qIndex = this.req.url.indexOf("?");
+		if (qIndex !== -1) {
+			const search = $registry.searchParamsParser.parse(
+				new URLSearchParams(this.req.url.slice(qIndex + 1)),
+			);
+			this.search = await $registry.schemaParser.parse("search", search, v?.search);
 		}
-		ctx.search = await $registry.schemaParser.parse(
-			"search",
-			search,
-			match.route.validators?.search,
-		);
-		ctx.params = await $registry.schemaParser.parse(
-			"params",
-			params,
-			match.route.validators?.params,
-		);
 
-		ctx.req = clone;
+		if (!isEmpty(match.params)) {
+			const params = $registry.urlParamsParser.parse(match.params);
+			this.params = await $registry.schemaParser.parse("params", params, v?.params);
+		}
 	}
 }

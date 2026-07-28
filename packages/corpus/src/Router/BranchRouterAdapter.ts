@@ -1,6 +1,5 @@
 import type { Method } from "@/enums/Method";
 import type { RouterAdapterInterface } from "@/Registry/types";
-import type { Req } from "@/Req/Req";
 import type { RouterData, RouterReturn } from "@/Router/types";
 import type { Func } from "@/utils/functions";
 
@@ -60,10 +59,7 @@ export class BranchRouterAdapter implements RouterAdapterInterface {
 	private readonly _root: Branch = this.createBranch(this.SLASH, null);
 	private readonly storeFactory: Func<[], Store> = () => new Map();
 
-	public find(req: Req): RouterReturn | null {
-		const method = req.method.toUpperCase() as Method;
-		const pathname = req.urlObject.pathname;
-
+	public find(method: Method, pathname: string): RouterReturn | null {
 		const result = this.findResult(pathname, pathname.length, this._root, 0);
 		if (!result) return null;
 

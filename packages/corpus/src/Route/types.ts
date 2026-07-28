@@ -1,10 +1,17 @@
-import type { CacheControlDirective } from "@/CacheControlDirective/CacheControlDirective";
+import type { Context } from "@/Context/Context";
+import type { CacheControlDirective } from "@/Directives/CacheControlDirective";
+import type { ContentDispositionDirective } from "@/Directives/ContentDispositionDirective";
 import type { Method } from "@/enums/Method";
 import type { Res } from "@/Res/Res";
 import type { ServerWebSocket } from "@/Server/types";
 import type { Func } from "@/utils/functions";
 import type { Schema } from "@/utils/Schema";
 import type { ValueOf } from "@/utils/ValueOf";
+
+export type ContextHandler<B = unknown, S = unknown, P = unknown, R = unknown> = Func<
+	[context: Context<B, S, P, R>],
+	Bun.MaybePromise<R>
+>;
 
 export const RouteVariant = {
 	static: "static",
@@ -42,7 +49,7 @@ export type BundleRouteCacheConfig = {
 	fallback?: CacheControlDirective;
 };
 
-export type StaticRouteRes = Res | string;
+export type StaticRouteRes = ReadableStream<Uint8Array> | string | Res;
 
 export type WebSocketOnOpen = Func<[ws: ServerWebSocket], Bun.MaybePromise<void>>;
 export type WebSocketOnClose = Func<
@@ -65,6 +72,6 @@ export type StaticRouteDefinition =
 	| string
 	| {
 			filePath: string;
-			disposition?: "attachment" | "inline";
+			disposition?: ContentDispositionDirective["type"];
 			cache?: CacheControlDirective;
 	  };
