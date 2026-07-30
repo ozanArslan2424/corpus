@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-import { $registry, C, X } from "@ozanarslan/corpus";
+import { C, X } from "@ozanarslan/corpus";
 
 function getMaxAge(addr: string) {
 	// CSS/JS: unhashed but low-churn, safe to cache for an hour between deploys

@@ -1,5 +1,11 @@
 # @ozanarslan/corpus-cli
 
+## 0.6.6
+
+### Patch Changes
+
+- Bugfixes: Res
+
 ## 0.6.5
 
 ### Patch Changes

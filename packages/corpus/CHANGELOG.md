@@ -1,5 +1,11 @@
 # @ozanarslan/corpus
 
+## 0.6.2
+
+### Patch Changes
+
+- Bugfixes: Res
+
 ## 0.6.1
 
 ### Patch Changes

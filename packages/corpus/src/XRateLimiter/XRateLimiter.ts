@@ -43,8 +43,13 @@ export class XRateLimiter extends MiddlewareAbstract {
 		const result = await this.getResult(c.req.headers);
 
 		for (const [key, value] of objGetEntries(result.headersObject)) {
-			if (Array.isArray(value)) c.res.headers.append(key, value);
-			else c.res.headers.set(key, value);
+			if (Array.isArray(value)) {
+				for (const header of value) {
+					c.res.headers.append(key, header);
+				}
+			} else {
+				c.res.headers.set(key, value);
+			}
 		}
 
 		if (!result.success) {

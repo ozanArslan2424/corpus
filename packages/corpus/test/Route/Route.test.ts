@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 
-import { $registryTesting, TC, type Func } from "../_modules";
+import { $registryTesting, TC } from "../_modules";
 import { createTestServer } from "../utils/createTestServer";
 import { req } from "../utils/req";
 
@@ -103,8 +103,7 @@ describe("C.Route", () => {
 
 			override endpoint: string = path;
 			override method: TC.Method = TC.Method.GET;
-			override handler: Func<[context: TC.Context<unknown, unknown, unknown, unknown>], unknown> =
-				() => "extended";
+			override handler = () => "extended";
 		}
 
 		new MyRoute();

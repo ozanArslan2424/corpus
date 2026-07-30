@@ -1,7 +1,7 @@
-import { C } from "@ozanarslan/corpus";
 import Elysia from "elysia";
 import express from "express";
 
+import { C } from "@/index";
 import { logFatal } from "@/utils/logger";
 
 const argv = process.argv.slice(2);

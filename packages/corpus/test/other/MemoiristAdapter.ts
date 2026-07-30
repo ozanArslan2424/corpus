@@ -35,7 +35,9 @@ export class MemoiristAdapter implements RouterAdapterInterface {
 	}
 
 	list: (() => Array<RouterData>) | undefined = () => {
-		return this.router.history.map((v) => v[2]);
+		return Object.values(this.router.root)
+			.map((node) => node.store)
+			.filter((store) => store !== null);
 	};
 
 	add(data: RouterData): void {

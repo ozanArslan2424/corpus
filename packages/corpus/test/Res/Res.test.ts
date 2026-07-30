@@ -157,6 +157,46 @@ describe("C.Res", () => {
 			expect(cleaned).toBe(true);
 		});
 
+		it("sse async - stream emits correct chunks", async () => {
+			const res = TC.Res.sse(async (send) => {
+				send({ event: "ping", data: { time: 1 } });
+				send({ id: "2", event: "pong", data: { time: 2 } });
+			});
+
+			const text = await res.response.text();
+			expect(text).toContain("event: ping\n");
+			expect(text).toContain('data: {"time":1}\n\n');
+			expect(text).toContain("id: 2\n");
+			expect(text).toContain("event: pong\n");
+			expect(text).toContain('data: {"time":2}\n\n');
+		});
+
+		it("sse async - retry field is included when set", async () => {
+			const res = TC.Res.sse(
+				async (send) => {
+					send({ data: "ok" });
+				},
+				undefined,
+				3000,
+			);
+
+			const text = await res.response.text();
+			expect(text).toContain("retry: 3000\n");
+		});
+
+		it("sse async - cleanup is called on cancel", async () => {
+			let cleaned = false;
+			const res = TC.Res.sse(async () => {
+				return () => {
+					cleaned = true;
+				};
+			});
+
+			const reader = res.response.body!.getReader();
+			await reader.cancel();
+			expect(cleaned).toBe(true);
+		});
+
 		it("ndjson - returns stream with correct headers", () => {
 			const res = TC.Res.ndjson((send) => {
 				send({ id: 1 });
@@ -188,6 +228,47 @@ describe("C.Res", () => {
 		it("ndjson - cleanup is called on cancel", async () => {
 			let cleaned = false;
 			const res = TC.Res.ndjson(() => {
+				return () => {
+					cleaned = true;
+				};
+			});
+
+			const reader = res.response.body!.getReader();
+			await reader.cancel();
+			expect(cleaned).toBe(true);
+		});
+
+		it("ndjson async  - returns stream with correct headers", () => {
+			const res = TC.Res.ndjson(async (send) => {
+				send({ id: 1 });
+			});
+			const response = res.response;
+
+			expect(res.status).toBe(TC.Status.OK);
+			expect(res.body).toBeInstanceOf(ReadableStream);
+			expect(res.headers.get(ctHeader)).toBe("application/x-ndjson");
+			expect(response.headers.get(ctHeader)).toBe("application/x-ndjson");
+		});
+
+		it("ndjson async  - stream emits correct chunks", async () => {
+			const res = TC.Res.ndjson(async (send) => {
+				send({ id: 1, name: "alice" });
+				send({ id: 2, name: "bob" });
+			});
+
+			const text = await res.response.text();
+			const lines = text.trim().split("\n");
+			expect(lines).toHaveLength(2);
+			expect(lines[0]).toBeDefined();
+			expect(lines[1]).toBeDefined();
+
+			expect(JSON.parse(lines[0]!)).toEqual({ id: 1, name: "alice" });
+			expect(JSON.parse(lines[1]!)).toEqual({ id: 2, name: "bob" });
+		});
+
+		it("ndjson async  - cleanup is called on cancel", async () => {
+			let cleaned = false;
+			const res = TC.Res.ndjson(async () => {
 				return () => {
 					cleaned = true;
 				};

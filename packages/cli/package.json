@@ -1,7 +1,7 @@
 {
 	"$schema": "https://www.schemastore.org/package.json",
 	"name": "@ozanarslan/corpus-cli",
-	"version": "0.6.5",
+	"version": "0.6.6",
 	"description": "CLI for @ozanarslan/corpus",
 	"license": "MIT",
 	"author": "Ozan Arslan <ozanarslanwork@gmail.com>",
@@ -35,8 +35,7 @@
 	},
 	"dependencies": {
 		"@standard-schema/spec": "^1.1.0",
-		"oxc-parser": "^0.140.0",
-		"typescript": "^7.0.2"
+		"oxc-parser": "^0.140.0"
 	},
 	"devDependencies": {
 		"@ozanarslan/corpus": "workspace:*",

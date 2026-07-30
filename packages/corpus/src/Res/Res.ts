@@ -59,32 +59,13 @@ export class Res<R = unknown> {
 
 		const setCookieHeaders = this._cookies?.toSetCookieHeaders();
 		if (!isUndefined(setCookieHeaders) && setCookieHeaders.length > 0) {
-			response.headers.append(HeaderKey.SetCookie, setCookieHeaders);
+			for (const setCookieHeader of setCookieHeaders) {
+				response.headers.append(HeaderKey.SetCookie, setCookieHeader);
+			}
 		}
 
 		this.headers = response.headers;
 		return response;
-
-		// // Fast path: no materialized cookies/headers, and init carries no
-		// // headers/cookies. init.status / init.statusText are fine here.
-		// if (
-		// 	isUndefined(this._cookies) &&
-		// 	isUndefined(this._headers) &&
-		// 	isUndefined(this.init?.headers) &&
-		// 	isUndefined(this.init?.cookies)
-		// ) {
-		// 	return new Response(body, {
-		// 		headers: isUndefined(contentType) ? undefined : { [HeaderKey.ContentType]: contentType },
-		// 	});
-		// }
-		//
-		// // Slow path
-		//
-		// return new Response(body, {
-		// 	status: this.status,
-		// 	statusText: this.statusText,
-		// 	headers: this._headers,
-		// });
 	}
 
 	// Single pass: body + content-type together, no double instanceof walk.
@@ -184,9 +165,39 @@ export class Res<R = unknown> {
 		return this.redirect(url, { ...init, status: Status.SEE_OTHER });
 	}
 
+	private static createStream(
+		execute: (
+			controller: ReadableStreamDefaultController,
+			isCancelled: () => boolean,
+		) => Bun.MaybePromise<(() => void) | void>,
+	): ReadableStream {
+		let cancelled = false;
+		let cleanupPromise: Promise<(() => void) | void> | undefined;
+		return new ReadableStream({
+			start(controller) {
+				cleanupPromise = (async () => {
+					try {
+						const cleanup = await execute(controller, () => cancelled);
+						if (typeof cleanup !== "function") {
+							controller.close();
+						}
+						return cleanup;
+					} catch (err) {
+						controller.error(err);
+					}
+				})();
+			},
+			async cancel() {
+				cancelled = true;
+				const cleanup = await cleanupPromise;
+				cleanup?.();
+			},
+		});
+	}
+
 	static sse(source: SseSource, init?: Omit<ResInit, "status">, retry?: number): Res {
 		const encoder = new TextEncoder();
-		const stream = Res.createStream((controller, isCancelled) => {
+		const stream = this.createStream((controller, isCancelled) => {
 			return source((event) => {
 				if (isCancelled()) return;
 				let chunk = "";
@@ -206,7 +217,7 @@ export class Res<R = unknown> {
 
 	static ndjson(source: NdjsonSource, init?: Omit<ResInit, "status">): Res {
 		const encoder = new TextEncoder();
-		const stream = Res.createStream((controller, isCancelled) => {
+		const stream = this.createStream((controller, isCancelled) => {
 			return source((item) => {
 				if (isCancelled()) return;
 				controller.enqueue(encoder.encode(`${JSON.stringify(item)}\n`));
@@ -267,32 +278,5 @@ export class Res<R = unknown> {
 		res.headers.set(HeaderKey.ContentType, file.mimeType);
 		res.headers.set(HeaderKey.ContentLength, content.length.toString());
 		return res;
-	}
-
-	private static createStream(
-		execute: (
-			controller: ReadableStreamDefaultController,
-			isCancelled: () => boolean,
-		) => (() => void) | void,
-	): ReadableStream {
-		let cancelled = false;
-		let cleanup: (() => void) | void;
-
-		return new ReadableStream({
-			start(controller) {
-				try {
-					cleanup = execute(controller, () => cancelled);
-					if (typeof cleanup !== "function") {
-						controller.close();
-					}
-				} catch (err) {
-					controller.error(err);
-				}
-			},
-			cancel() {
-				cancelled = true;
-				cleanup?.();
-			},
-		});
 	}
 }
