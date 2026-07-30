@@ -1,5 +1,11 @@
 # @ozanarslan/corpus
 
+## 0.6.3
+
+### Patch Changes
+
+- Bugfixes: Static routes
+
 ## 0.6.2
 
 ### Patch Changes

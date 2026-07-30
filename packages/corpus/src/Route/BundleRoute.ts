@@ -1,6 +1,6 @@
 import { BundleRouteAbstract } from "@/Route/BundleRouteAbstract";
 import type { BundleRouteCacheConfig } from "@/Route/types";
-import { isNil } from "@/utils/nil";
+import { isNil } from "@/utils/is";
 
 export class BundleRoute<
 	B = unknown,

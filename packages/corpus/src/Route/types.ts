@@ -15,6 +15,7 @@ export type ContextHandler<B = unknown, S = unknown, P = unknown, R = unknown> =
 
 export const RouteVariant = {
 	static: "static",
+	file: "file",
 	dynamic: "dynamic",
 	websocket: "websocket",
 	bundle: "bundle",
@@ -67,11 +68,8 @@ export type WebSocketRouteCallbacks = {
 	onMessage: WebSocketOnMessage;
 };
 
-export type StaticRouteDefinition =
-	// just the file path, doesn't stream
-	| string
-	| {
-			filePath: string;
-			disposition?: ContentDispositionDirective["type"];
-			cache?: CacheControlDirective;
-	  };
+export type FileRouteDefinition = {
+	filePath: string;
+	disposition?: ContentDispositionDirective["disposition"];
+	cache?: CacheControlDirective;
+};

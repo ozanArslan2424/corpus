@@ -1,14 +1,8 @@
 import type { Context } from "@/Context/Context";
 import { resolveRouteAddress } from "@/Route/resolveRouteAddress";
 import { StaticRouteAbstract } from "@/Route/StaticRouteAbstract";
-import type {
-	RouteAddress,
-	RouteModel,
-	StaticRouteDefinition,
-	StaticRouteRes,
-} from "@/Route/types";
+import type { RouteAddress, RouteModel, StaticRouteRes } from "@/Route/types";
 import type { Func } from "@/utils/functions";
-import { isNil } from "@/utils/nil";
 
 /**
  * Defines a route that serves a static file. Accepts a path and a {@link StaticRouteDefinition}
@@ -41,7 +35,7 @@ export class StaticRoute<
 > extends StaticRouteAbstract<B, S, P, E> {
 	constructor(
 		address: RouteAddress<E>,
-		definition: StaticRouteDefinition,
+		filePath: string,
 		callback?: Func<
 			[context: Context<B, S, P, StaticRouteRes>, content: string],
 			Bun.MaybePromise<StaticRouteRes>
@@ -52,17 +46,9 @@ export class StaticRoute<
 		const resolved = resolveRouteAddress(address);
 		this.endpoint = resolved.path;
 		this.method = resolved.method;
-		this.callback = callback;
 		this.model = model;
-
-		if (typeof definition === "string") {
-			this.filePath = definition;
-		} else {
-			this.filePath = definition.filePath;
-			if (!isNil(definition.disposition)) this.disposition = definition.disposition;
-			if (!isNil(definition.cache)) this.cache = definition.cache;
-		}
-
+		if (callback) this.callback = callback;
+		this.filePath = filePath;
 		this.register();
 	}
 

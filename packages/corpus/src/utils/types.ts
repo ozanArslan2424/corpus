@@ -2,6 +2,12 @@ export type Primitive = string | number | boolean | bigint;
 
 export type nil = null | undefined;
 
+export type Nullable<T> = T | null;
+
+export type Optional<T> = T | undefined;
+
+export type Maybe<T> = T | nil;
+
 export type ValueOf<T> = T[keyof T];
 
 export type Prettify<T> = { [K in keyof T]: T[K] } & {};

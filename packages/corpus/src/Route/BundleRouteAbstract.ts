@@ -132,7 +132,7 @@ export abstract class BundleRouteAbstract<
 			c.res.headers.set(
 				HeaderKey.ContentDisposition,
 				ContentDispositionDirective.createHeaderString({
-					type: "inline",
+					disposition: "inline",
 					filename: file.fullname,
 				}),
 			);

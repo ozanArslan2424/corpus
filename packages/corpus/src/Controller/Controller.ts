@@ -1,4 +1,5 @@
 import type { MiddlewareHandler } from "@/Middleware/types";
+import { FileRoute } from "@/Route/FileRoute";
 import { resolveRouteAddress } from "@/Route/resolveRouteAddress";
 import { Route } from "@/Route/Route";
 import { StaticRoute } from "@/Route/StaticRoute";
@@ -58,19 +59,19 @@ export abstract class Controller {
 	}
 
 	/**
-	 * Registers a static file route under this controller. Behaves identically to {@link StaticRoute}
+	 * Registers a static route under this controller. Behaves identically to {@link StaticRoute}
 	 * but automatically prepends the controller prefix.
 	 */
 	protected staticRoute<B = unknown, S = unknown, P = unknown, E extends string = string>(
 		...args: ConstructorParameters<typeof StaticRoute<B, S, P, E>>
 	): StaticRoute<B, S, P, E> {
-		const [address, definition, callback, model] = args;
+		const [address, filePath, callback, model] = args;
 		const resolved = resolveRouteAddress(address);
 		const method = resolved.method;
 		const path = joinPathSegments<E>(this.prefix, resolved.path);
 		const route = new StaticRoute<B, S, P, E>(
 			{ method, path },
-			definition,
+			filePath,
 			callback === undefined
 				? undefined
 				: async (ctx, content) => {
@@ -79,6 +80,22 @@ export abstract class Controller {
 					},
 			model,
 		);
+		this.routeIds.add(route.id);
+		return route;
+	}
+
+	/**
+	 * Registers a file route under this controller. Behaves identically to {@link FileRoute}
+	 * but automatically prepends the controller prefix.
+	 */
+	protected fileRoute<E extends string = string>(
+		...args: ConstructorParameters<typeof FileRoute<E>>
+	): FileRoute<E> {
+		const [address, definition] = args;
+		const resolved = resolveRouteAddress(address);
+		const method = resolved.method;
+		const path = joinPathSegments<E>(this.prefix, resolved.path);
+		const route = new FileRoute<E>({ method, path }, definition);
 		this.routeIds.add(route.id);
 		return route;
 	}

@@ -264,7 +264,7 @@ export class Res<R = unknown> {
 		res.headers.set(
 			HeaderKey.ContentDisposition,
 			ContentDispositionDirective.createHeaderString({
-				type: disposition,
+				disposition: disposition,
 				filename: file.fullname,
 			}),
 		);
