@@ -1,6 +1,13 @@
 import { logger } from "@/utils/logger";
+import type { nil } from "@/utils/types";
 
-import { $registryTesting, TC, type RouterInterface, type ServerOptions } from "../_modules";
+import {
+	$registryTesting,
+	TC,
+	type RouterInterface,
+	type ServerApp,
+	type ServerOptions,
+} from "../_modules";
 
 export function createTestServer(
 	opts?: ServerOptions & { withLogging?: boolean; router?: RouterInterface },
@@ -13,7 +20,15 @@ export function createTestServer(
 		$registryTesting.router = router;
 	}
 
-	const s = new TC.Server(serverOpts);
+	class Server extends TC.Server {
+		compiled = false;
+		override handle(request: Request, server?: ServerApp | nil): Promise<Response> {
+			this.precompile();
+			return super.handle(request, server);
+		}
+	}
+
+	const s = new Server(serverOpts);
 
 	if (withLogging === true) {
 		s.setOnError((err, c) => {

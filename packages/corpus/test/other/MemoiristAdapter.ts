@@ -26,7 +26,8 @@ export class MemoiristAdapter implements RouterInterface {
 	readonly __brand: string = "MemoiristAdapter";
 	private readonly router = new Memoirist<RouterData>();
 
-	find(method: TC.Method, pathname: string): RouterReturn | null {
+	find(method: TC.Method, url: string | URL): RouterReturn | null {
+		const pathname = this.getPathname(url);
 		const result = this.router.find(method, pathname);
 		if (!result) return null;
 		const route = result.store;
@@ -42,5 +43,28 @@ export class MemoiristAdapter implements RouterInterface {
 
 	add(data: RouterData): void {
 		this.router.add(data.method, data.endpoint, data);
+	}
+
+	private getPathname(url: string | URL) {
+		if (url instanceof URL) {
+			return url.pathname;
+		}
+
+		// Skip scheme + host: find the first "/" after "://"
+		const schemeEnd = url.indexOf("://");
+		const start = url.indexOf("/", schemeEnd === -1 ? 0 : schemeEnd + 3);
+		let pathname: string;
+		if (start === -1) {
+			pathname = "/";
+		} else {
+			let end = url.length;
+			const q = url.indexOf("?", start);
+			if (q !== -1) end = q;
+			const h = url.indexOf("#", start);
+			if (h !== -1 && h < end) end = h;
+			pathname = url.slice(start, end);
+			if (pathname === "") pathname = "/";
+		}
+		return pathname;
 	}
 }

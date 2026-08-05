@@ -1,9 +1,9 @@
-import type { MiddlewareHandler } from "@/Middleware/types";
 import { FileRoute } from "@/Route/FileRoute";
 import { resolveRouteAddress } from "@/Route/resolveRouteAddress";
 import { Route } from "@/Route/Route";
 import { StaticRoute } from "@/Route/StaticRoute";
 import { WebSocketRoute } from "@/Route/WebSocketRoute";
+import type { ContextHandler } from "@/types";
 import { joinPathSegments } from "@/utils/joinPathSegments";
 
 /**
@@ -33,7 +33,7 @@ export abstract class Controller {
 	readonly routeIds: Set<string> = new Set<string>();
 
 	abstract prefix?: string;
-	beforeEach?: MiddlewareHandler;
+	beforeEach?: ContextHandler;
 
 	/**
 	 * Registers a dynamic route under this controller. Behaves identically to {@link Route}

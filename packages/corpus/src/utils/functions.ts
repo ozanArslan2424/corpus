@@ -1,5 +1,7 @@
 export type Func<Args extends any[] = any[], Return = any> = (...args: Args) => Return;
 
+export const noop = () => {};
+
 export function internFunc<T extends Func>(
 	map: Map<string, T>,
 	value: T,

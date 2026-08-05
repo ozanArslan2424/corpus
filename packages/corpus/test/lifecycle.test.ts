@@ -58,9 +58,9 @@ beforeEach(() => {
 	// ── 3a) outbound — append response headers ────────────────────────────────
 	// Simulates a CORS or cache-control interceptor running after the handler.
 	new TC.Middleware({
-		variant: "outbound",
 		useOn: [outboundHeaders],
-		handler: (c) => {
+		handler: async (c, next) => {
+			await next();
 			c.res.headers.set("x-powered-by", "corpus");
 			c.res.headers.set("cache-control", "no-store");
 		},
@@ -69,9 +69,9 @@ beforeEach(() => {
 	// ── 3b) outbound — set cookies ────────────────────────────────────────────
 	// Simulates a session middleware that stamps a cookie on every response.
 	new TC.Middleware({
-		variant: "outbound",
 		useOn: [outboundCookies],
-		handler: (c) => {
+		handler: async (c, next) => {
+			await next();
 			c.res.cookies.set({
 				name: "session",
 				value: "abc123",

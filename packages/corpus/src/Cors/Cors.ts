@@ -1,11 +1,7 @@
 import type { CorsOptions } from "@/Cors/types";
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Status } from "@/enums/Status";
-import {
-	MiddlewareVariant,
-	type MiddlewareUseOn,
-	type MiddlewareHandler,
-} from "@/Middleware/types";
+import type { MiddlewareUseOn, MiddlewareHandler } from "@/Middleware/types";
 import { $registry } from "@/registry";
 import type { CorsInterface } from "@/Registry/types";
 import { Res } from "@/Res/Res";
@@ -26,9 +22,9 @@ export class Cors implements CorsInterface {
 		$registry.register("cors", this);
 	}
 
-	variant: MiddlewareVariant = MiddlewareVariant.outbound;
 	useOn: MiddlewareUseOn = "*";
-	handler: MiddlewareHandler = (c) => {
+	handler: MiddlewareHandler = async (c, next) => {
+		await next();
 		this.applyHeaders(c.res, c.req.headers.get("origin") ?? "");
 	};
 

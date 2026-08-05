@@ -4,11 +4,7 @@ import { HeaderKey } from "@/enums/HeaderKey";
 import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
 import { MiddlewareAbstract } from "@/Middleware/MiddlewareAbstract";
-import {
-	MiddlewareVariant,
-	type MiddlewareUseOn,
-	type MiddlewareHandler,
-} from "@/Middleware/types";
+import type { MiddlewareUseOn, MiddlewareHandler } from "@/Middleware/types";
 import { $registry } from "@/registry";
 import { RouteVariant } from "@/Route/types";
 import { logFatal } from "@/utils/logger";
@@ -30,8 +26,6 @@ export class XRateLimiter extends MiddlewareAbstract {
 		this.register();
 	}
 
-	override variant: MiddlewareVariant = MiddlewareVariant.inbound;
-
 	override get useOn(): MiddlewareUseOn {
 		return $registry.router
 			.list()
@@ -39,7 +33,7 @@ export class XRateLimiter extends MiddlewareAbstract {
 			.map((r) => r.id);
 	}
 
-	override handler: MiddlewareHandler = async (c) => {
+	override handler: MiddlewareHandler = async (c, next) => {
 		const result = await this.getResult(c.req.headers);
 
 		for (const [key, value] of objGetEntries(result.headersObject)) {
@@ -55,6 +49,8 @@ export class XRateLimiter extends MiddlewareAbstract {
 		if (!result.success) {
 			throw new Exception("Too many requests", Status.TOO_MANY_REQUESTS, c.res);
 		}
+
+		await next();
 	};
 
 	private readonly config: RateLimitConfig;

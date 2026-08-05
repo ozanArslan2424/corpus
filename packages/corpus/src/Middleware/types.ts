@@ -3,19 +3,13 @@ import type { Controller } from "@/Controller/Controller";
 import type { Res } from "@/Res/Res";
 import type { BaseRoute } from "@/Route/BaseRoute";
 import type { Func } from "@/utils/functions";
-import type { ValueOf } from "@/utils/ValueOf";
 
-export const MiddlewareVariant = {
-	inbound: "inbound",
-	outbound: "outbound",
-} as const;
-
-export type MiddlewareVariant = ValueOf<typeof MiddlewareVariant>;
-
-export type MiddlewareHandler = Func<[context: Context], Bun.MaybePromise<void | Res>>;
+export type MiddlewareHandler = Func<
+	[context: Context, next: Func<[], Bun.MaybePromise<Res | void>>],
+	Bun.MaybePromise<Res | void>
+>;
 
 export type MiddlewareOptions = {
-	variant?: MiddlewareVariant;
 	useOn?: MiddlewareUseOn;
 	handler: MiddlewareHandler;
 };

@@ -1,8 +1,9 @@
 import type { Method } from "@/enums/Method";
 import type { Middleware } from "@/Middleware/Middleware";
+import type { MiddlewareHandler } from "@/Middleware/types";
 import type { Res } from "@/Res/Res";
 import type { ContextHandler, RouteModel } from "@/Route/types";
-import type { RouterReturn, RouterData, MiddlewareRouterReturn } from "@/Router/types";
+import type { RouterReturn, RouterData } from "@/Router/types";
 import type { SchemaValidator } from "@/utils/Schema";
 
 export interface RegistryInterface {
@@ -40,7 +41,7 @@ export interface CorsInterface extends Middleware {
 
 export interface MiddlewareRouterInterface {
 	add(middleware: Middleware): void;
-	find(routeId: string): MiddlewareRouterReturn;
+	find(routeId: string): MiddlewareHandler[];
 }
 
 export interface ObjectParserInterface<T> {

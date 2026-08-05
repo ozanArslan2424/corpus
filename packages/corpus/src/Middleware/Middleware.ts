@@ -13,7 +13,6 @@ export class Middleware extends MiddlewareAbstract {
 	constructor(opts: MiddlewareOptions) {
 		super();
 
-		if (!isNil(opts.variant)) this.variant = opts.variant;
 		if (!isNil(opts.useOn)) this.useOn = opts.useOn;
 		this.handler = opts.handler;
 

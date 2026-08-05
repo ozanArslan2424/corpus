@@ -24,20 +24,23 @@ describe("C.Middleware - find() correctness & matching", () => {
 
 		new TC.Middleware({
 			useOn: [r],
-			handler: () => {
+			handler: async (_, next) => {
 				order.push("a");
+				await next();
 			},
 		});
 		new TC.Middleware({
 			useOn: [r],
-			handler: () => {
+			handler: async (_, next) => {
 				order.push("b");
+				await next();
 			},
 		});
 		new TC.Middleware({
 			useOn: [r],
-			handler: () => {
+			handler: async (_, next) => {
 				order.push("c");
+				await next();
 			},
 		});
 
@@ -55,21 +58,21 @@ describe("C.Middleware - find() correctness & matching", () => {
 
 		new TC.Middleware({
 			useOn: [r],
-			variant: "outbound",
-			handler: () => {
+			handler: async (_, next) => {
+				await next();
 				order.push("o1");
 			},
 		});
 		new TC.Middleware({
 			useOn: [r],
-			variant: "outbound",
-			handler: () => {
+			handler: async (_, next) => {
+				await next();
 				order.push("o2");
 			},
 		});
 
 		await s.handle(req("/order-out"));
-		expect(order).toEqual(["handler", "o1", "o2"]);
+		expect(order).toEqual(["handler", "o2", "o1"]);
 	});
 
 	it("FULL PIPELINE ORDER - global inbound, local inbound, handler, local outbound, global outbound", async () => {
@@ -87,8 +90,8 @@ describe("C.Middleware - find() correctness & matching", () => {
 		});
 		new TC.Middleware({
 			useOn: "*",
-			variant: "outbound",
-			handler: () => {
+			handler: async (_, next) => {
+				await next();
 				order.push("g-out");
 			},
 		});
@@ -100,8 +103,8 @@ describe("C.Middleware - find() correctness & matching", () => {
 		});
 		new TC.Middleware({
 			useOn: [r],
-			variant: "outbound",
-			handler: () => {
+			handler: async (_, next) => {
+				await next();
 				order.push("l-out");
 			},
 		});
@@ -260,15 +263,15 @@ describe("C.Middleware - find() correctness & matching", () => {
 
 		new TC.Middleware({
 			useOn: [r],
-			variant: "inbound",
-			handler: () => {
+			handler: async (_, next) => {
 				order.push("inbound");
+				await next();
 			},
 		});
 		new TC.Middleware({
 			useOn: [r],
-			variant: "outbound",
-			handler: () => {
+			handler: async (_, next) => {
+				await next();
 				order.push("outbound");
 			},
 		});
@@ -392,8 +395,8 @@ describe("C.Middleware - find() correctness & matching", () => {
 
 		new TC.Middleware({
 			useOn: [r],
-			variant: "outbound",
-			handler: (c) => {
+			handler: async (c, next) => {
+				await next();
 				c.res = new TC.Res({ replaced: true }, { status: 201 });
 			},
 		});

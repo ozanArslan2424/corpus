@@ -140,7 +140,6 @@ describe("C.Server", () => {
 		const s = createTestServer();
 		const order: string[] = [];
 		new TC.Middleware({
-			variant: "inbound",
 			useOn: "*",
 			handler: () => {
 				order.push("gmw-in");
@@ -158,9 +157,9 @@ describe("C.Server", () => {
 		const s = createTestServer();
 		const order: string[] = [];
 		new TC.Middleware({
-			variant: "outbound",
 			useOn: "*",
-			handler: () => {
+			handler: async (_, next) => {
+				await next();
 				order.push("gmw-out");
 			},
 		});
@@ -176,7 +175,6 @@ describe("C.Server", () => {
 		const s = createTestServer();
 		let handlerCalled = false;
 		new TC.Middleware({
-			variant: "inbound",
 			useOn: "*",
 			handler: () => new TC.Res({ blocked: true }, { status: 401 }),
 		});
@@ -192,9 +190,11 @@ describe("C.Server", () => {
 	it("GLOBAL MIDDLEWARE - OUTBOUND RES OVERRIDES HANDLER RESULT", async () => {
 		const s = createTestServer();
 		new TC.Middleware({
-			variant: "outbound",
 			useOn: "*",
-			handler: () => new TC.Res({ overridden: true }, { status: 418 }),
+			handler: async (_, next) => {
+				await next();
+				return new TC.Res({ overridden: true }, { status: 418 });
+			},
 		});
 		new TC.Route("/srv-gmw-override", () => "original");
 		const res = await s.handle(req("/srv-gmw-override"));
@@ -215,7 +215,6 @@ describe("C.Server", () => {
 		});
 		new TC.Middleware({
 			useOn: r,
-			variant: "inbound",
 			handler: () => {
 				order.push("lmw-in");
 			},
@@ -228,7 +227,6 @@ describe("C.Server", () => {
 		const s = createTestServer();
 		let lmwCalled = false;
 		new TC.Middleware({
-			variant: "inbound",
 			useOn: ["GET /srv-lmw-only"],
 			handler: () => {
 				lmwCalled = true;
@@ -243,16 +241,15 @@ describe("C.Server", () => {
 		const s = createTestServer();
 		const order: string[] = [];
 		new TC.Middleware({
-			variant: "inbound",
 			useOn: "*",
 			handler: () => {
 				order.push("gmw-in");
 			},
 		});
 		new TC.Middleware({
-			variant: "outbound",
 			useOn: "*",
-			handler: () => {
+			handler: async (_, next) => {
+				await next();
 				order.push("gmw-out");
 			},
 		});
@@ -263,16 +260,15 @@ describe("C.Server", () => {
 		});
 
 		new TC.Middleware({
-			variant: "inbound",
 			useOn: r,
 			handler: () => {
 				order.push("lmw-in");
 			},
 		});
 		new TC.Middleware({
-			variant: "outbound",
 			useOn: r,
-			handler: () => {
+			handler: async (_, next) => {
+				await next();
 				order.push("lmw-out");
 			},
 		});
@@ -341,7 +337,6 @@ describe("C.Server", () => {
 		const s = createTestServer();
 		new TC.Middleware({
 			useOn: "*",
-			variant: "inbound",
 			handler: () => {
 				throw new Error("middleware boom");
 			},
