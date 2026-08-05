@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 
 profile() {
-    bun --cpu-prof --cpu-prof-dir=./prof ./test/other/benchmark.ts $1 &
+    NODE_ENV=production bun --cpu-prof --cpu-prof-dir=./prof ./test/other/benchmark.ts $1 &
     PID=$!
     sleep 1
     wrk -t 6 -c 600 -d 10s http://localhost:3000

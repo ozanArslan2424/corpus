@@ -38,15 +38,10 @@
 	"scripts": {
 		"build": "bun run build.ts",
 		"test:serve": "bun run test/other/test-server.ts",
-		"test:serve:src": "bun --conditions=corpus-src run test/other/test-server.ts",
 		"test:http": "bun run test/other/http-simulation.ts",
-		"test:http:src": "bun --conditions=corpus-src run test/other/http-simulation.ts",
 		"test:ws": "bun run test/other/ws-simulation.ts",
-		"test:ws:src": "bun --conditions=corpus-src run test/other/ws-simulation.ts",
 		"test:benchmark": "bun run test/other/adapter-benchmark.ts",
-		"test:benchmark:src": "bun --conditions=corpus-src run test/other/adapter-benchmark.ts",
-		"test:all": "bun test --only-failures && bun run test:http -s && bun run test:ws -s && bun run test:benchmark",
-		"test:all:src": "bun --conditions=corpus-src test --only-failures && bun run test:http:src -s && bun run test:ws:src -s && bun run test:benchmark:src"
+		"test:all": "bun test --only-failures && bun run test:http -s && bun run test:ws -s && bun run test:benchmark"
 	},
 	"devDependencies": {
 		"@standard-schema/spec": "^1.1.0",
