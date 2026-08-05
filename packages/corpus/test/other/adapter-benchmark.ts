@@ -1,11 +1,11 @@
 import { logFatal, logger } from "@/utils/logger";
 
-import { BranchRouterAdapter } from "../_modules";
+import { BranchRouter } from "../_modules";
 import { RouterBenchmark } from "../utils/RouterBenchmark";
 import { MemoiristAdapter } from "./MemoiristAdapter";
 
 function main() {
-	const adapters = [new MemoiristAdapter(), new BranchRouterAdapter()];
+	const adapters = [new MemoiristAdapter(), new BranchRouter()];
 	const results: string[] = [];
 	for (const adapter of adapters) {
 		const bench = new RouterBenchmark(adapter);

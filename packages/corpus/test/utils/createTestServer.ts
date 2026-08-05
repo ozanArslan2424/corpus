@@ -1,16 +1,16 @@
 import { logger } from "@/utils/logger";
 
-import { $registryTesting, TC, type RouterAdapterInterface, type ServerOptions } from "../_modules";
+import { $registryTesting, TC, type RouterInterface, type ServerOptions } from "../_modules";
 
 export function createTestServer(
-	opts?: ServerOptions & { withLogging?: boolean; adapter?: RouterAdapterInterface },
+	opts?: ServerOptions & { withLogging?: boolean; router?: RouterInterface },
 ) {
-	const { withLogging, adapter, ...serverOpts } = opts ?? {
+	const { withLogging, router, ...serverOpts } = opts ?? {
 		withLogging: false,
 	};
 
-	if (adapter) {
-		$registryTesting.adapter = adapter;
+	if (router) {
+		$registryTesting.router = router;
 	}
 
 	const s = new TC.Server(serverOpts);

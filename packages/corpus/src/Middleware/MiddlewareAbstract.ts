@@ -13,6 +13,6 @@ export abstract class MiddlewareAbstract {
 	abstract handler: MiddlewareHandler;
 
 	register(): void {
-		$registry.middlewares.add(this);
+		$registry.register("middleware", this);
 	}
 }

@@ -30,7 +30,6 @@ export * from "./Route/FileRouteAbstract";
 export * from "./Route/WebSocketRoute";
 export * from "./Route/WebSocketRouteAbstract";
 
-export * from "./Router/Router";
-export * from "./Router/BranchRouterAdapter";
+export * from "./Router/BranchRouter";
 
 export * from "./Server/Server";

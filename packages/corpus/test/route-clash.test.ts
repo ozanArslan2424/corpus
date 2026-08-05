@@ -7,7 +7,7 @@ beforeEach(() => $registryTesting.reset());
 
 describe("BranchAdapter - Route Collision Detection", () => {
 	createTestServer({
-		adapter: new TC.BranchRouterAdapter(),
+		router: new TC.BranchRouter(),
 	});
 
 	function makeRoutes(

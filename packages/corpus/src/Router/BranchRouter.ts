@@ -1,5 +1,5 @@
 import type { Method } from "@/enums/Method";
-import type { RouterAdapterInterface } from "@/Registry/types";
+import type { RouterInterface } from "@/Registry/types";
 import type { RouterData, RouterReturn } from "@/Router/types";
 import type { Func } from "@/utils/functions";
 
@@ -37,7 +37,7 @@ type FindResultReturn = {
  * types and variables to fit this package's conventions, and minor adjustments to
  * a handful of methods.
  *
- * BranchRouterAdapter benchmark results: (600 routes)
+ * BranchRouter benchmark results: (600 routes)
  * Setup Time: 1.20
  * Lookups:    60,000
  * Hit rate:   100.00%
@@ -49,8 +49,8 @@ type FindResultReturn = {
  * P99:        0.0006ms
  * RPS:        20426881
  */
-export class BranchRouterAdapter implements RouterAdapterInterface {
-	public readonly __brand: string = "BranchRouterAdapter";
+export class BranchRouter implements RouterInterface {
+	public readonly __brand: string = "BranchRouter";
 	private readonly WILD = "*";
 	private readonly EMPTY = "";
 	private readonly SLASH = "/";
@@ -59,7 +59,8 @@ export class BranchRouterAdapter implements RouterAdapterInterface {
 	private readonly _root: Branch = this.createBranch(this.SLASH, null);
 	private readonly storeFactory: Func<[], Store> = () => new Map();
 
-	public find(method: Method, pathname: string): RouterReturn | null {
+	public find(method: Method, url: string | URL): RouterReturn | null {
+		const pathname = this.getPathname(url);
 		const result = this.findResult(pathname, pathname.length, this._root, 0);
 		if (!result) return null;
 
@@ -75,7 +76,7 @@ export class BranchRouterAdapter implements RouterAdapterInterface {
 		store.set(data.method, data);
 	}
 
-	public list: Func<[], Array<RouterData>> | undefined = () => {
+	public list(): Array<RouterData> {
 		const routes: Array<RouterData> = [];
 
 		const walk = (branch: Branch) => {
@@ -98,7 +99,7 @@ export class BranchRouterAdapter implements RouterAdapterInterface {
 
 		walk(this._root);
 		return routes;
-	};
+	}
 
 	private findResult(
 		url: string,
@@ -354,5 +355,28 @@ export class BranchRouterAdapter implements RouterAdapterInterface {
 			branch: null,
 			wildcardStore: null,
 		};
+	}
+
+	private getPathname(url: string | URL) {
+		if (url instanceof URL) {
+			return url.pathname;
+		}
+
+		// Skip scheme + host: find the first "/" after "://"
+		const schemeEnd = url.indexOf("://");
+		const start = url.indexOf("/", schemeEnd === -1 ? 0 : schemeEnd + 3);
+		let pathname: string;
+		if (start === -1) {
+			pathname = "/";
+		} else {
+			let end = url.length;
+			const q = url.indexOf("?", start);
+			if (q !== -1) end = q;
+			const h = url.indexOf("#", start);
+			if (h !== -1 && h < end) end = h;
+			pathname = url.slice(start, end);
+			if (pathname === "") pathname = "/";
+		}
+		return pathname;
 	}
 }

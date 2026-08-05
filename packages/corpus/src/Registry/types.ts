@@ -1,19 +1,16 @@
 import type { Method } from "@/enums/Method";
 import type { Middleware } from "@/Middleware/Middleware";
 import type { Res } from "@/Res/Res";
-import type { BaseRoute } from "@/Route/BaseRoute";
 import type { ContextHandler, RouteModel } from "@/Route/types";
 import type { RouterReturn, RouterData, MiddlewareRouterReturn } from "@/Router/types";
-import type { Func } from "@/utils/functions";
 import type { SchemaValidator } from "@/utils/Schema";
 
 export interface RegistryInterface {
-	adapter: RouterAdapterInterface;
 	router: RouterInterface;
 	docs: Map<string, RegistryDocEntry>;
 	cors: CorsInterface | null;
 	prefix: string;
-	middlewares: MiddlewareRouterInterface;
+	middlewareRouter: MiddlewareRouterInterface;
 	urlParamsParser: ObjectParserInterface<Record<string, string>>;
 	searchParamsParser: ObjectParserInterface<URLSearchParams>;
 	formDataParser: ObjectParserInterface<FormData>;
@@ -29,16 +26,10 @@ export type RegistryDocEntry = {
 	model: RouteModel<any, any, any, any> | undefined;
 };
 
-export interface RouterAdapterInterface {
-	readonly __brand: string;
-	find(method: Method, pathname: string): RouterReturn | null;
-	add(data: RouterData): void;
-	list: Func<[], Array<RouterData>> | undefined;
-}
-
 export interface RouterInterface {
-	add(route: BaseRoute<any, any, any, any>): void;
-	find(req: Request): RouterReturn | null;
+	readonly __brand: string;
+	find(method: Method, url: string | URL): RouterReturn | null;
+	add(data: RouterData): void;
 	list(): Array<RouterData>;
 }
 

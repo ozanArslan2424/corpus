@@ -1,17 +1,13 @@
-import { $registryTesting, TC, type RouterAdapterInterface } from "../_modules";
+import { TC, type RouterInterface } from "../_modules";
 
 export class RouterBenchmark {
-	private readonly router: TC.Router;
 	private readonly routes: TC.Route<any, any, any, any, any>[] = [];
 	private requests: Array<{ request: Request; expectedId: string }> = [];
 
 	private readonly usedStaticPaths = new Set<string>();
 	private readonly usedDynamicShapes = new Set<string>(); // "GET:/static/*/static" - no param names, includes method
 
-	constructor(private readonly adapter: RouterAdapterInterface) {
-		this.router = new TC.Router(adapter);
-		$registryTesting.router = this.router;
-	}
+	constructor(private readonly router: RouterInterface) {}
 
 	private rand(len = 6): string {
 		return Math.random()
@@ -133,7 +129,7 @@ export class RouterBenchmark {
 		for (let iter = 0; iter < iterations; iter++) {
 			for (const { request, expectedId } of this.requests) {
 				const t0 = performance.now();
-				const result = this.router.find(request);
+				const result = this.router.find(request.method, request.url);
 				times.push(performance.now() - t0);
 				if (result) {
 					hits++;
@@ -151,7 +147,7 @@ export class RouterBenchmark {
 		const rps = (total / (sum / 1000)).toFixed(0);
 
 		return `-------------------------------------------------
-${this.adapter.__brand} results: (${this.router.list().length} routes)
+${this.router.__brand} results: (${this.router.list().length} routes)
 Setup Time: ${this.setupTime}
 Lookups:    ${total.toLocaleString()}
 Hit rate:   ${((hits / total) * 100).toFixed(2)}%

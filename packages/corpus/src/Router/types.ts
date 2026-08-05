@@ -1,6 +1,6 @@
 import type { MiddlewareHandler } from "@/Middleware/types";
 import type { BaseRoute } from "@/Route/BaseRoute";
-import type { RouteConfig } from "@/types";
+import type { RouteConfig } from "@/Route/types";
 import type { SchemaValidator } from "@/utils/Schema";
 
 export type RouterData = Omit<BaseRoute<any, any, any, any>, "model" | "register"> & {

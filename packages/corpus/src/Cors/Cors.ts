@@ -9,7 +9,7 @@ import {
 import { $registry } from "@/registry";
 import type { CorsInterface } from "@/Registry/types";
 import { Res } from "@/Res/Res";
-import type { ContextHandler } from "@/types";
+import type { ContextHandler } from "@/Route/types";
 import { isSomeArray } from "@/utils/arrays";
 import { boolToString } from "@/utils/booleans";
 
@@ -23,7 +23,7 @@ export class Cors implements CorsInterface {
 	}
 
 	register(): void {
-		$registry.cors = this;
+		$registry.register("cors", this);
 	}
 
 	variant: MiddlewareVariant = MiddlewareVariant.outbound;

@@ -7,7 +7,7 @@ import { $registry } from "@/registry";
 import { Res } from "@/Res/Res";
 import { RouteVariant, type ContextHandler } from "@/Route/types";
 import { WebSocketRoute } from "@/Route/WebSocketRoute";
-import type { RouterData } from "@/Router/types";
+import type { RouterData, RouterReturn } from "@/Router/types";
 import type { ErrorHandler, ServerApp, ServerOptions } from "@/Server/types";
 import type { Func } from "@/utils/functions";
 import { logger, logFatal } from "@/utils/logger";
@@ -22,6 +22,7 @@ import { XConfig } from "@/XConfig/XConfig";
 export class Server {
 	constructor(protected readonly opts?: ServerOptions) {}
 
+	private readonly cache = new WeakMap<Request, RouterReturn>();
 	protected app: ServerApp | undefined;
 
 	get routes(): Array<RouterData> {
@@ -91,6 +92,17 @@ export class Server {
 		});
 	}
 
+	protected findMatch(req: Request): RouterReturn | null {
+		const cached = this.cache.get(req);
+		if (cached) return cached;
+
+		const match = $registry.router.find(req.method, req.url);
+		if (!match) return null;
+
+		this.cache.set(req, match);
+		return match;
+	}
+
 	protected async handleRequest(req: Request, server: ServerApp | nil): Promise<Res | null> {
 		const c = new Context(req);
 
@@ -100,34 +112,35 @@ export class Server {
 			else c.res.body = result;
 		} else {
 			try {
-				const match = $registry.router.find(req);
+				if (this.isWebsocket(req.headers)) {
+					const match = this.findMatch(req);
+					if (!match) throw new Exception("Upgrade failed", Status.UPGRADE_REQUIRED);
+					const result = await match.route.handler(c);
+					const upgraded = server?.upgrade(req, { data: result });
+					if (upgraded === false) throw new Exception("Upgrade failed", Status.UPGRADE_REQUIRED);
+					return null;
+				}
 
 				// gmw: global middlewares
-				const gmw = $registry.middlewares.find("*");
+				const gmw = $registry.middlewareRouter.find("*");
 				// gmwir: global middlewares inbound result
 				const gmwir = await gmw.inbound?.(c);
 				if (gmwir instanceof Res) return gmwir;
 
+				const match = this.findMatch(req);
 				if (!match) {
 					const result = await this.handleNotFound(c);
 					if (result instanceof Res) c.res = result;
 					else c.res.body = result;
 				} else {
 					// lmw: local middlewares
-					const lmw = $registry.middlewares.find(match.route.id);
+					const lmw = $registry.middlewareRouter.find(match.route.id);
 					// lmwir: local middlewares inbound result
 					const lmwir = await lmw.inbound?.(c);
 					if (lmwir instanceof Res) return lmwir;
 
 					await c.parseData(match);
 					const result = await match.route.handler(c);
-
-					if (this.isWebsocket(match.route.variant, req.headers)) {
-						const upgraded = server?.upgrade(req, { data: result });
-						if (!upgraded) throw new Exception("Upgrade failed", Status.UPGRADE_REQUIRED);
-						console.log("returning null");
-						return null;
-					}
 
 					if (result instanceof Res) c.res = result;
 					else c.res.body = result;
@@ -223,9 +236,8 @@ export class Server {
 		);
 	}
 
-	private isWebsocket(variant: RouteVariant, headers: Headers): boolean {
+	private isWebsocket(headers: Headers): boolean {
 		return (
-			variant === RouteVariant.websocket &&
 			headers.get(HeaderKey.Connection)?.toLowerCase() === "upgrade" &&
 			headers.get(HeaderKey.Upgrade)?.toLowerCase() === "websocket"
 		);

@@ -24,6 +24,6 @@ export abstract class BaseRoute<
 	model?: RouteModel<B, S, P, R> | undefined = undefined;
 
 	register(): void {
-		$registry.router.add(this);
+		$registry.register("route", this);
 	}
 }

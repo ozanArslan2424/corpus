@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "bun:test";
 
 import { MiddlewareRouter } from "@/Router/MiddlewareRouter";
 
-import type { RouterAdapterInterface, RouterData, RouterReturn } from "../_modules";
+import type { RouterInterface, RouterData, RouterReturn } from "../_modules";
 import { $registryTesting, TC } from "../_modules";
 import { createTestServer } from "../utils/createTestServer";
 import { parseBody } from "../utils/parse";
@@ -15,9 +15,8 @@ beforeEach(() => {
 describe("Registry - plug & play", () => {
 	it("reset() reinstantiates every field", () => {
 		const before = {
-			adapter: $registryTesting.adapter,
 			router: $registryTesting.router,
-			middlewares: $registryTesting.middlewares,
+			middlewares: $registryTesting.middlewareRouter,
 			urlParamsParser: $registryTesting.urlParamsParser,
 			searchParamsParser: $registryTesting.searchParamsParser,
 			formDataParser: $registryTesting.formDataParser,
@@ -30,9 +29,8 @@ describe("Registry - plug & play", () => {
 
 		$registryTesting.reset();
 
-		expect($registryTesting.adapter).not.toBe(before.adapter);
 		expect($registryTesting.router).not.toBe(before.router);
-		expect($registryTesting.middlewares).not.toBe(before.middlewares);
+		expect($registryTesting.middlewareRouter).not.toBe(before.middlewares);
 		expect($registryTesting.urlParamsParser).not.toBe(before.urlParamsParser);
 		expect($registryTesting.searchParamsParser).not.toBe(before.searchParamsParser);
 		expect($registryTesting.formDataParser).not.toBe(before.formDataParser);
@@ -42,36 +40,22 @@ describe("Registry - plug & play", () => {
 		expect($registryTesting.cors).toBeNull();
 		expect($registryTesting.prefix).toBe("");
 	});
-
-	it("setting adapter replaces router with one wrapping the new adapter", () => {
-		const oldRouter = $registryTesting.router;
-		const customAdapter: RouterAdapterInterface = {
-			__brand: "customAdapter",
-			add: () => {},
-			find: () => null,
-			list: () => [],
-		};
-
-		$registryTesting.adapter = customAdapter;
-
-		expect($registryTesting.adapter).toBe(customAdapter);
-		expect($registryTesting.router).not.toBe(oldRouter);
-	});
 });
 
 describe("Registry - swapped fields are honored by the server", () => {
-	it("custom adapter's find() is the one the server calls", async () => {
+	it("custom router's find() is the one the server calls", async () => {
 		const findCalls: string[] = [];
 		const addCalls: string[] = [];
 
 		let capturedData: RouterData | null = null;
-		const customAdapter: RouterAdapterInterface = {
-			__brand: "customAdapter",
+		const customRouter: RouterInterface = {
+			__brand: "customRouter",
 			add: (data) => {
 				addCalls.push(data.id);
 				capturedData = data;
 			},
-			find: (_method: TC.Method, pathname: string) => {
+			find: (_method: TC.Method, url: string) => {
+				const pathname = new URL(url).pathname;
 				findCalls.push(pathname);
 				if (!capturedData) return null;
 				return { route: capturedData, params: {} } as RouterReturn;
@@ -79,20 +63,20 @@ describe("Registry - swapped fields are honored by the server", () => {
 			list: () => (capturedData ? [capturedData] : []),
 		};
 
-		$registryTesting.adapter = customAdapter;
+		$registryTesting.router = customRouter;
 
-		// Route must be constructed AFTER the swap so it registers on the new adapter
-		new TC.Route("/custom-adapter", () => {
-			return "from-custom-adapter";
+		// Route must be constructed AFTER the swap so it registers on the new router
+		new TC.Route("/custom-router", () => {
+			return "from-custom-router";
 		});
 
 		const s = createTestServer();
-		const res = await s.handle(req("/custom-adapter"));
+		const res = await s.handle(req("/custom-router"));
 		const data = await parseBody<string>(res);
 
 		expect(addCalls).toHaveLength(1);
-		expect(findCalls).toEqual(["/custom-adapter"]);
-		expect(data).toBe("from-custom-adapter");
+		expect(findCalls).toEqual(["/custom-router"]);
+		expect(data).toBe("from-custom-router");
 	});
 
 	it("custom middlewares router is the one the server calls find() on", async () => {
@@ -102,7 +86,7 @@ describe("Registry - swapped fields are honored by the server", () => {
 
 		// Delegate to real MiddlewareRouter for correctness, spy on the calls.
 		const real = new MiddlewareRouter();
-		$registryTesting.middlewares = {
+		$registryTesting.middlewareRouter = {
 			add: (mw) => {
 				addCalls.push(++addCount);
 				real.add(mw as any);
@@ -172,12 +156,13 @@ describe("Registry - swapped fields are honored by the server", () => {
 	it("swap persists across multiple requests", async () => {
 		const findCalls: string[] = [];
 		let capturedData: RouterData | null = null;
-		$registryTesting.adapter = {
-			__brand: "adaptertest",
+		$registryTesting.router = {
+			__brand: "routertest",
 			add: (data) => {
 				capturedData = data;
 			},
-			find: (_method: TC.Method, pathname: string) => {
+			find: (_method: TC.Method, url: string) => {
+				const pathname = new URL(url).pathname;
 				findCalls.push(pathname);
 				if (!capturedData) return null;
 				if (pathname !== capturedData.endpoint) return null;
@@ -207,16 +192,16 @@ describe("Registry - swapped fields are honored by the server", () => {
 	});
 
 	it("reset() restores defaults after a swap", () => {
-		const custom: RouterAdapterInterface = {
+		const custom: RouterInterface = {
 			__brand: "custom",
 			add: () => {},
 			find: () => null,
 			list: () => [],
 		};
-		$registryTesting.adapter = custom;
-		expect($registryTesting.adapter).toBe(custom);
+		$registryTesting.router = custom;
+		expect($registryTesting.router).toBe(custom);
 
 		$registryTesting.reset();
-		expect($registryTesting.adapter).not.toBe(custom);
+		expect($registryTesting.router).not.toBe(custom);
 	});
 });

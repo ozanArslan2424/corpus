@@ -8,7 +8,7 @@ beforeEach(() => $registryTesting.reset());
 
 describe("MemoiristAdapter - Route Collision Detection", () => {
 	createTestServer({
-		adapter: new MemoiristAdapter(),
+		router: new MemoiristAdapter(),
 	});
 
 	function makeRoutes(
