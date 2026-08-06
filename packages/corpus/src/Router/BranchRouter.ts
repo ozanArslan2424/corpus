@@ -98,6 +98,7 @@ export class BranchRouter implements RouterInterface {
 		};
 
 		walk(this._root);
+
 		return routes;
 	}
 
@@ -377,6 +378,7 @@ export class BranchRouter implements RouterInterface {
 			pathname = url.slice(start, end);
 			if (pathname === "") pathname = "/";
 		}
+
 		return pathname;
 	}
 }

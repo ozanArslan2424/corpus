@@ -46,7 +46,7 @@ describe("C.Context", () => {
 			},
 		};
 
-		const c = new TC.Context(r);
+		const c = new TC.Context(r, null);
 		expect(c.body).toBeEmptyObject();
 		expect(c.search).toBeEmptyObject();
 		expect(c.params).toBeEmptyObject();

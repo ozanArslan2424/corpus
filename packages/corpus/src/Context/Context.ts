@@ -2,10 +2,12 @@ import { Cookies } from "@/Cookies/Cookies";
 import { HeaderKey } from "@/enums/HeaderKey";
 import { $registry } from "@/registry";
 import { Res } from "@/Res/Res";
+import type { ServerApp } from "@/Server/types";
 import type { ContextDataInterface } from "@/types";
 import { isEmpty } from "@/utils/is";
 import type { SchemaValidator } from "@/utils/Schema";
 import { strSplit } from "@/utils/strings";
+import type { nil } from "@/utils/types";
 
 /**
  * The context object used in Route "callback" parameter.
@@ -28,7 +30,10 @@ import { strSplit } from "@/utils/strings";
  * */
 
 export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
-	constructor(public readonly req: Request) {}
+	constructor(
+		public readonly req: Request,
+		public readonly server: ServerApp | nil,
+	) {}
 
 	private _res: Res<R> | null = null;
 	get res(): Res<R> {

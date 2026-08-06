@@ -1,12 +1,11 @@
 import type { Context } from "@/Context/Context";
 import type { Controller } from "@/Controller/Controller";
-import type { Res } from "@/Res/Res";
 import type { BaseRoute } from "@/Route/BaseRoute";
 import type { Func } from "@/utils/functions";
 
-export type MiddlewareHandler = Func<
-	[context: Context, next: Func<[], Bun.MaybePromise<Res | void>>],
-	Bun.MaybePromise<Res | void>
+export type MiddlewareHandler<R = unknown> = Func<
+	[context: Context, next: Func<[], Bun.MaybePromise<R>>],
+	Bun.MaybePromise<R>
 >;
 
 export type MiddlewareOptions = {

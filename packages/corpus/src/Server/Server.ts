@@ -6,7 +6,7 @@ import { Exception } from "@/Exception/Exception";
 import type { MiddlewareHandler } from "@/Middleware/types";
 import { $registry } from "@/registry";
 import { Res } from "@/Res/Res";
-import type { ContextHandler } from "@/Route/types";
+import { RouteVariant, type ContextHandler } from "@/Route/types";
 import { WebSocketRoute } from "@/Route/WebSocketRoute";
 import type { RouterData } from "@/Router/types";
 import type { ErrorHandler, ServerApp, ServerOptions } from "@/Server/types";
@@ -46,9 +46,22 @@ export class Server {
 			process.on("SIGINT", () => this.close());
 			process.on("SIGTERM", () => this.close());
 			logger.log(`Listening on ${hostname}:${port}`);
-			await this.handleBeforeListen?.();
+
 			this.precompile();
-			this.app = this.createApp(port, hostname);
+			await this.handleBeforeListen?.();
+
+			this.app = Bun.serve<WebSocketRoute>({
+				port,
+				hostname,
+				idleTimeout: this.opts?.idleTimeout,
+				tls: this.opts?.tls,
+				fetch: (req, server) => this.handleRequest(req, server),
+				websocket: {
+					open: (ws) => ws.data.onOpen?.(ws),
+					message: (ws, msg) => ws.data.onMessage?.(ws, msg),
+					close: (ws, code, reason) => ws.data.onClose?.(ws, code, reason),
+				},
+			});
 		} catch (err) {
 			logger.error("Server unable to start:", err);
 			await this.close();
@@ -62,13 +75,9 @@ export class Server {
 	}
 
 	async handle(request: Request, server?: ServerApp | nil): Promise<Response> {
-		try {
-			const res = await this.handleRequest(request, server);
-			if (!res) logFatal("WebSocket requests cannot be handled with this method.");
-			return res.response;
-		} catch {
-			logFatal("WebSocket requests cannot be handled with this method.");
-		}
+		const res = await this.handleRequest(request, server);
+		if (!res) logFatal("WebSocket requests cannot be handled with this method.");
+		return res;
 	}
 
 	/**
@@ -80,25 +89,23 @@ export class Server {
 		this.handlers.clear();
 
 		for (const route of $registry.router.list()) {
-			const chain = this.compose(route.id, async (c) => {
-				await c.parseData({
-					params: c.params as Record<string, string>,
-					bodyValidator: route.validators?.body,
-					paramsValidator: route.validators?.params,
-					searchValidator: route.validators?.search,
-				});
-				const result = await route.handler(c);
-				if (result instanceof Res) c.res = result;
-				else c.res.body = result;
-			});
-			this.handlers.set(route.id, chain);
+			this.handlers.set(
+				route.id,
+				this.compose(route.id, async (c) => {
+					if (route.variant !== RouteVariant.websocket) {
+						await c.parseData({
+							params: c.params as Record<string, string>,
+							bodyValidator: route.validators?.body,
+							paramsValidator: route.validators?.params,
+							searchValidator: route.validators?.search,
+						});
+					}
+					return route.handler(c);
+				}),
+			);
 		}
 
-		const notFoundChain = this.compose("*", async (c) => {
-			const result = await this.handleNotFound(c);
-			if (result instanceof Res) c.res = result;
-			else c.res.body = result;
-		});
+		const notFoundChain = this.compose("*", (c) => this.handleNotFound(c));
 		this.handlers.set(NOT_FOUND_CHAIN, notFoundChain);
 	}
 
@@ -117,7 +124,7 @@ export class Server {
 				if (!handler) return outerNext();
 
 				let called = false;
-				let downstream: Res | undefined | void;
+				let downstream: unknown | undefined;
 				const next = async () => {
 					called = true;
 					downstream = await dispatch(i + 1);
@@ -126,69 +133,49 @@ export class Server {
 
 				return (async () => {
 					const result = await handler(c, next);
-					if (result instanceof Res) return result;
+					if (result !== undefined) return result; // terminal body OR middleware Res short-circuit
 					if (!called) return next();
-					if (downstream) return downstream;
+					return downstream;
 				})();
 			};
 			return dispatch(0);
 		};
 	}
 
-	private createApp(
-		port: number,
-		hostname: OrString<"0.0.0.0" | "127.0.0.1" | "localhost">,
-	): ServerApp {
-		return Bun.serve<WebSocketRoute>({
-			port,
-			hostname,
-			idleTimeout: this.opts?.idleTimeout,
-			tls: this.opts?.tls,
-			fetch: async (request, server) => {
-				const res = await this.handleRequest(request, server);
-				return res?.response;
-			},
-			websocket: {
-				async open(ws) {
-					await ws.data.onOpen?.(ws);
-				},
-				async message(ws, message) {
-					await ws.data.onMessage(ws, message);
-				},
-				async close(ws, code, reason) {
-					await ws.data.onClose?.(ws, code, reason);
-				},
-			},
-		});
-	}
+	protected async handleRequest(
+		req: Request,
+		server: ServerApp | nil,
+	): Promise<Response | undefined> {
+		const c = new Context(req, server);
 
-	protected async handleRequest(req: Request, server: ServerApp | nil): Promise<Res | null> {
-		const c = new Context(req);
-
-		if (this.isPreflight(req.method, req.headers)) {
+		if (this.isPreflight(c.req.method, c.req.headers)) {
 			const result = await this.handlePreflight(c);
 			if (result instanceof Res) c.res = result;
 			else c.res.body = result;
 		} else {
 			try {
-				const match = $registry.router.find(req.method, req.url);
+				const match = $registry.router.find(c.req.method, c.req.url);
 
 				let handler: MiddlewareHandler | undefined;
 				if (!match) {
 					handler = this.handlers.get(NOT_FOUND_CHAIN);
-				} else if (this.isWebsocket(req.headers)) {
-					// websockets bypass the middleware chain
-					const result = await match.route.handler(c);
-					const upgraded = server?.upgrade(req, { data: result });
-					if (upgraded === false) throw new Exception("Upgrade failed", Status.UPGRADE_REQUIRED);
-					return null;
 				} else {
 					handler = this.handlers.get(match.route.id);
 					c.params = match.params;
 				}
+
 				if (!handler) throw new Exception("Route not composed", Status.INTERNAL_SERVER_ERROR);
-				const short = await handler(c, noop);
-				if (short instanceof Res) c.res = short;
+				const result = await handler(c, noop);
+
+				if (this.isWebsocket(c.req.headers)) {
+					const upgraded = c.server?.upgrade(c.req, { data: result as WebSocketRoute });
+					if (upgraded === false) throw new Exception("Upgrade failed", Status.UPGRADE_REQUIRED);
+					return undefined;
+				} else if (result instanceof Res) {
+					c.res = result;
+				} else if (result !== undefined) {
+					c.res.body = result;
+				}
 			} catch (err) {
 				const result = await this.handleError(err as Error, c);
 				if (result instanceof Res) c.res = result;
@@ -197,7 +184,7 @@ export class Server {
 		}
 
 		await $registry.cors?.handler(c, noop);
-		return c.res;
+		return c.res.response;
 	}
 
 	protected handleBeforeListen: Func<[], Bun.MaybePromise<void>> | undefined;

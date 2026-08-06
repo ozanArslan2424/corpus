@@ -12,6 +12,7 @@ const server = new TC.Server();
 async function run(withAbstract: boolean) {
 	T.log.info("Setting up WebSocket route...");
 	createTestWebSocketRoute(T.log, withAbstract);
+	await server.listen(PORT);
 
 	const WS_URL = `${BASE_URL}/ws`;
 	T.log.info(`WebSocket URL: ${WS_URL}`);
@@ -236,17 +237,17 @@ async function run(withAbstract: boolean) {
 		await runTests();
 	} catch (err) {
 		T.log.error("WebSocket Test suite failed:", err);
-		T.failures.push(`WebSocket run threw: ${T.stringify(err)}`);
+		T.failures.push(`WebSocket run threw: ${String(err)}`);
 		T.failed++;
 	}
 }
 
-await server.listen(PORT);
-
 await run(false);
 T.logResults("RESULTS FOR WEBSOCKET SIMULATON USING CONSTRUCTOR");
+await server.close();
 
 await run(true);
 T.logResults("RESULTS FOR WEBSOCKET SIMULATON USING EXTENDED ABSTRACT CLASS");
+await server.close();
 
 process.exit(T.failed > 0 ? 1 : 0);

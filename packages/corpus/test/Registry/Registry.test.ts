@@ -122,12 +122,12 @@ describe("Registry - swapped fields are honored by the server", () => {
 		$registryTesting.cors = {
 			register: () => {},
 			useOn: "*",
-			variant: "outbound",
-			handler: () => {
+			handler: async (_, next) => {
+				await next();
 				corsCalls++;
 			},
 			handlePreflight: () => new TC.Res(null, { status: 204 }),
-		} as typeof $registryTesting.cors extends infer T ? T : never; // cast to CorsInterface
+		};
 
 		new TC.Route("/cors-route", (c) => {
 			c.data = "ok";
