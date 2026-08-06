@@ -2,16 +2,16 @@ import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
 import type { SchemaParserInterface } from "@/Registry/types";
 import { isObjectWith } from "@/utils/objects";
-import type { SchemaValidator, ValidationIssues } from "@/utils/Schema";
+import type { Schema, ValidationIssues } from "@/utils/Schema";
 
 export class SchemaParser implements SchemaParserInterface {
 	async parse<T = Record<string, unknown>>(
 		label: string,
 		data: unknown,
-		validate?: SchemaValidator<T>,
+		schema?: Schema<T>,
 	): Promise<T> {
-		if (!validate) return data as T;
-		const result = await validate(data);
+		if (!schema) return data as T;
+		const result = await schema["~standard"].validate(data);
 		if (result.issues !== undefined) {
 			const msg = this.issuesToErrorMessage(label, data, result.issues);
 			throw new Exception(msg, Status.UNPROCESSABLE_ENTITY, data);
@@ -19,13 +19,9 @@ export class SchemaParser implements SchemaParserInterface {
 		return result.value;
 	}
 
-	parseSync<T = Record<string, unknown>>(
-		label: string,
-		data: unknown,
-		validate?: SchemaValidator<T>,
-	): T {
-		if (!validate) return data as T;
-		const result = validate(data);
+	parseSync<T = Record<string, unknown>>(label: string, data: unknown, schema?: Schema<T>): T {
+		if (!schema) return data as T;
+		const result = schema["~standard"].validate(data);
 		if (result instanceof Promise || typeof (result as any)?.then === "function") {
 			throw new Error("parseSync called with async validator — use a sync schema library");
 		}

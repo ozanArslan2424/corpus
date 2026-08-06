@@ -3,9 +3,8 @@ import { HeaderKey } from "@/enums/HeaderKey";
 import { $registry } from "@/registry";
 import { Res } from "@/Res/Res";
 import type { ServerApp } from "@/Server/types";
-import type { ContextDataInterface } from "@/types";
+import type { ContextDataInterface, RouteModel } from "@/types";
 import { isEmpty } from "@/utils/is";
-import type { SchemaValidator } from "@/utils/Schema";
 import { strSplit } from "@/utils/strings";
 import type { nil } from "@/utils/types";
 
@@ -84,26 +83,21 @@ export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	search: S = Object.create(null);
 	params: P = Object.create(null);
 
-	async parseData(input: {
-		params: Record<string, string>;
-		bodyValidator?: SchemaValidator<any> | undefined;
-		searchValidator?: SchemaValidator<any>;
-		paramsValidator?: SchemaValidator<any>;
-	}) {
+	async parseData(params: Record<string, string>, model?: RouteModel<B, S, P, R>) {
 		const body = await $registry.bodyParser.parse(this.req);
-		this.body = await $registry.schemaParser.parse("body", body, input?.bodyValidator);
+		this.body = await $registry.schemaParser.parse("body", body, model?.body);
 
 		const qIndex = this.req.url.indexOf("?");
 		if (qIndex !== -1) {
 			const search = $registry.searchParamsParser.parse(
 				new URLSearchParams(this.req.url.slice(qIndex + 1)),
 			);
-			this.search = await $registry.schemaParser.parse("search", search, input?.searchValidator);
+			this.search = await $registry.schemaParser.parse("search", search, model?.search);
 		}
 
-		if (!isEmpty(input.paramsValidator)) {
-			const params = $registry.urlParamsParser.parse(input.params);
-			this.params = await $registry.schemaParser.parse("params", params, input?.paramsValidator);
+		if (!isEmpty(params)) {
+			const parsedParams = $registry.urlParamsParser.parse(params);
+			this.params = await $registry.schemaParser.parse("params", parsedParams, model?.params);
 		}
 	}
 }

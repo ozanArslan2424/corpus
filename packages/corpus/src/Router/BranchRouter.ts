@@ -1,9 +1,10 @@
 import type { Method } from "@/enums/Method";
 import type { RouterInterface } from "@/Registry/types";
-import type { RouterData, RouterReturn } from "@/Router/types";
+import type { BaseRoute } from "@/Route/BaseRoute";
+import type { RouterReturn } from "@/Router/types";
 import type { Func } from "@/utils/functions";
 
-type Store = Map<Method, RouterData>;
+type Store = Map<Method, BaseRoute>;
 
 type ParamBranch = {
 	paramName: string;
@@ -71,13 +72,13 @@ export class BranchRouter implements RouterInterface {
 		return { route, params };
 	}
 
-	public add(data: RouterData): void {
+	public add(data: BaseRoute): void {
 		const store = this.createBranchStore(data.endpoint);
 		store.set(data.method, data);
 	}
 
-	public list(): Array<RouterData> {
-		const routes: Array<RouterData> = [];
+	public list(): Array<BaseRoute> {
+		const routes: Array<BaseRoute> = [];
 
 		const walk = (branch: Branch) => {
 			if (branch.store !== null) routes.push(...branch.store.values());

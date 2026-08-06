@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 
-import type { RouterInterface, RouterData, RouterReturn } from "../_modules";
+import type { RouterInterface, RouterReturn, BaseRoute } from "../_modules";
 import { $registryTesting, TC } from "../_modules";
 import { createTestServer } from "../utils/createTestServer";
 import { parseBody } from "../utils/parse";
@@ -45,7 +45,7 @@ describe("Registry - swapped fields are honored by the server", () => {
 		const findCalls: string[] = [];
 		const addCalls: string[] = [];
 
-		let capturedData: RouterData | null = null;
+		let capturedData: BaseRoute | null = null;
 		const customRouter: RouterInterface = {
 			__brand: "customRouter",
 			add: (data) => {
@@ -153,7 +153,7 @@ describe("Registry - swapped fields are honored by the server", () => {
 
 	it("swap persists across multiple requests", async () => {
 		const findCalls: string[] = [];
-		let capturedData: RouterData | null = null;
+		let capturedData: BaseRoute | null = null;
 		$registryTesting.router = {
 			__brand: "routertest",
 			add: (data) => {

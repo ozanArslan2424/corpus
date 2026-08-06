@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 
 import type { SchemaParser } from "@/Parser/SchemaParser";
-import type { Schema, SchemaValidator, ValidationIssues } from "@/utils/Schema";
+import type { Schema, ValidationIssues } from "@/utils/Schema";
 
 import { $registryTesting, TC } from "../_modules";
 import { createTestServer } from "../utils/createTestServer";
@@ -19,26 +19,45 @@ beforeEach(() => {
 });
 
 const parser = $registryTesting.schemaParser as SchemaParser;
-const parse = (data: unknown, schema: Schema) =>
-	parser.parse("test", data, schema["~standard"].validate);
+const parse = (data: unknown, schema: Schema) => parser.parse("test", data, schema);
 
 // Inline sync and async validators for parser.parseSync tests.
 // These mimic the Standard Schema validator shape.
-const syncValidator: SchemaValidator<typeof GOOD> = (input) => {
-	if (input && typeof input === "object" && "hello" in input && input.hello === 1) {
-		return { value: input as typeof GOOD };
-	}
-	return {
-		value: undefined as never,
-		issues: [{ message: "expected { hello: 1 }", path: ["hello"] }],
-	};
+const syncSchema: Schema<typeof GOOD> = {
+	"~standard": {
+		validate: (input) => {
+			if (input && typeof input === "object" && "hello" in input && input.hello === 1) {
+				return { value: input as typeof GOOD };
+			}
+			return {
+				value: undefined as never,
+				issues: [{ message: "expected { hello: 1 }", path: ["hello"] }],
+			};
+		},
+	} as Schema<typeof GOOD>["~standard"],
 };
 
-const asyncValidator: SchemaValidator<typeof GOOD> = async (input) => syncValidator(input);
+const asyncValidator: Schema<typeof GOOD> = {
+	"~standard": {
+		validate: async (input) => {
+			if (input && typeof input === "object" && "hello" in input && input.hello === 1) {
+				return { value: input as typeof GOOD };
+			}
+			return {
+				value: undefined as never,
+				issues: [{ message: "expected { hello: 1 }", path: ["hello"] }],
+			};
+		},
+	} as Schema<typeof GOOD>["~standard"],
+};
 
-const thenableValidator: SchemaValidator<typeof GOOD> = ((input: unknown) => ({
-	then: (resolve: (v: unknown) => void) => resolve(syncValidator(input)),
-})) as unknown as SchemaValidator<typeof GOOD>;
+const thenableValidator: Schema<typeof GOOD> = {
+	"~standard": {
+		validate: (input: unknown) => ({
+			then: (resolve: (v: unknown) => void) => resolve(syncSchema["~standard"].validate(input)),
+		}),
+	},
+} as Schema<typeof GOOD>;
 
 describe("Parser unit", () => {
 	describe("success", () => {
@@ -121,11 +140,11 @@ describe("Parser unit", () => {
 		});
 
 		it("returns validated value for sync validator on good input", () => {
-			expect(parser.parseSync("test", GOOD, syncValidator)).toEqual(GOOD);
+			expect(parser.parseSync("test", GOOD, syncSchema)).toEqual(GOOD);
 		});
 
 		it("throws Exception for sync validator on bad input", () => {
-			expect(() => parser.parseSync("test", BAD, syncValidator)).toThrow(TC.Exception);
+			expect(() => parser.parseSync("test", BAD, syncSchema)).toThrow(TC.Exception);
 		});
 
 		it("throws when given an async validator", () => {

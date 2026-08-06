@@ -19,6 +19,7 @@ export * from "./Middleware/Middleware";
 
 export * from "./Res/Res";
 
+export * from "./Route/BaseRoute";
 export * from "./Route/Route";
 export * from "./Route/RouteAbstract";
 export * from "./Route/StaticRoute";

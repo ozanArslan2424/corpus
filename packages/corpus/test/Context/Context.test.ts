@@ -42,7 +42,7 @@ describe("C.Context", () => {
 				handler: () => {},
 				method: "POST",
 				variant: "dynamic",
-				validators: undefined,
+				register() {},
 			},
 		};
 
@@ -51,7 +51,7 @@ describe("C.Context", () => {
 		expect(c.search).toBeEmptyObject();
 		expect(c.params).toBeEmptyObject();
 
-		await c.parseData(fakeRouterReturn);
+		await c.parseData(fakeRouterReturn.params, fakeRouterReturn.route.model);
 
 		expect(c.body).toEqual({ hello: "world" });
 		expect(c.params).toEqual(fakeRouterReturn.params);

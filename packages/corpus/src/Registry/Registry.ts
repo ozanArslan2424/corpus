@@ -18,12 +18,8 @@ import type { BaseRoute } from "@/Route/BaseRoute";
 import { RouteVariant } from "@/Route/types";
 import { BranchRouter } from "@/Router/BranchRouter";
 import { MiddlewareRouter } from "@/Router/MiddlewareRouter";
-import type { RouterData } from "@/Router/types";
 import { arrIncludes } from "@/utils/arrays";
-import { internFunc, type Func } from "@/utils/functions";
 import { joinPathSegments } from "@/utils/joinPathSegments";
-import { objGetEntries } from "@/utils/objects";
-import { strRemoveWhitespace } from "@/utils/strings";
 
 export class Registry implements RegistryInterface {
 	constructor() {
@@ -83,45 +79,12 @@ export class Registry implements RegistryInterface {
 		}
 	}
 
-	private readonly funcMap = new Map<string, Func>();
-
-	registerRoute(route: BaseRoute<any, any, any, any, any>): void {
-		const data: RouterData = {
-			id: route.id,
-			endpoint: route.endpoint,
-			method: route.method,
-			handler: route.handler,
-			variant: route.variant,
-		};
-
-		if (arrIncludes(data.variant, [RouteVariant.dynamic, RouteVariant.websocket])) {
-			data.endpoint = joinPathSegments(this.prefix, route.endpoint);
+	registerRoute(route: BaseRoute): void {
+		if (arrIncludes(route.variant, [RouteVariant.dynamic, RouteVariant.websocket])) {
+			route.endpoint = joinPathSegments(this.prefix, route.endpoint);
 		}
 
-		if (route.model) {
-			const { config, ...model } = route.model;
-			if (config) data.config = config;
-
-			data.validators ??= {};
-			for (const [key, schema] of objGetEntries(model)) {
-				if (key === "response") continue;
-				if (!schema) continue;
-				data.validators[key] = internFunc(
-					this.funcMap,
-					schema["~standard"].validate,
-					"model",
-					strRemoveWhitespace(JSON.stringify(schema)),
-				);
-			}
-		}
-
-		this.router.add(data);
-		this.docs.set(data.id, {
-			id: data.id,
-			endpoint: data.endpoint,
-			method: data.method,
-			model: route.model,
-		});
+		this.router.add(route);
 	}
 
 	registerMiddleware(middleware: Middleware): void {

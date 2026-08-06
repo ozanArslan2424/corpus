@@ -1,6 +1,6 @@
 import Memoirist from "memoirist";
 
-import type { RouterInterface, RouterData, RouterReturn, TC } from "../_modules";
+import type { RouterInterface, BaseRoute, RouterReturn, TC } from "../_modules";
 
 /**
  * Router adapter wrapping the "memoirist" package.
@@ -24,7 +24,7 @@ import type { RouterInterface, RouterData, RouterReturn, TC } from "../_modules"
  */
 export class MemoiristAdapter implements RouterInterface {
 	readonly __brand: string = "MemoiristAdapter";
-	private readonly router = new Memoirist<RouterData>();
+	private readonly router = new Memoirist<BaseRoute>();
 
 	find(method: TC.Method, url: string | URL): RouterReturn | null {
 		const pathname = this.getPathname(url);
@@ -35,13 +35,13 @@ export class MemoiristAdapter implements RouterInterface {
 		return { route, params };
 	}
 
-	list(): Array<RouterData> {
+	list(): Array<BaseRoute> {
 		return Object.values(this.router.root)
 			.map((node) => node.store)
 			.filter((store) => store !== null);
 	}
 
-	add(data: RouterData): void {
+	add(data: BaseRoute): void {
 		this.router.add(data.method, data.endpoint, data);
 	}
 

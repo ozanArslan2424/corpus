@@ -2,13 +2,7 @@ import { Method } from "@/enums/Method";
 import { $registry } from "@/registry";
 import type { ContextHandler, RouteModel, RouteVariant } from "@/Route/types";
 
-export abstract class BaseRoute<
-	B = unknown,
-	S = unknown,
-	P = unknown,
-	R = unknown,
-	E extends string = string,
-> {
+export abstract class BaseRoute<B = any, S = any, P = any, R = any, E extends string = string> {
 	get id(): string {
 		return `${this.method.toUpperCase()} ${this.endpoint}`;
 	}

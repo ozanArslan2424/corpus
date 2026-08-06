@@ -2,9 +2,10 @@ import type { Method } from "@/enums/Method";
 import type { Middleware } from "@/Middleware/Middleware";
 import type { MiddlewareHandler } from "@/Middleware/types";
 import type { Res } from "@/Res/Res";
+import type { BaseRoute } from "@/Route/BaseRoute";
 import type { ContextHandler, RouteModel } from "@/Route/types";
-import type { RouterReturn, RouterData } from "@/Router/types";
-import type { SchemaValidator } from "@/utils/Schema";
+import type { RouterReturn } from "@/Router/types";
+import type { Schema } from "@/utils/Schema";
 
 export interface RegistryInterface {
 	router: RouterInterface;
@@ -30,8 +31,8 @@ export type RegistryDocEntry = {
 export interface RouterInterface {
 	readonly __brand: string;
 	find(method: Method, url: string | URL): RouterReturn | null;
-	add(data: RouterData): void;
-	list(): Array<RouterData>;
+	add(data: BaseRoute): void;
+	list(): Array<BaseRoute>;
 }
 
 export interface CorsInterface extends Middleware {
@@ -59,11 +60,7 @@ export interface SchemaParserInterface {
 	parse<T = Record<string, unknown>>(
 		label: string,
 		data: unknown,
-		validate?: SchemaValidator<T>,
+		validate?: Schema<T>,
 	): Promise<T>;
-	parseSync<T = Record<string, unknown>>(
-		label: string,
-		data: unknown,
-		validate?: SchemaValidator<T>,
-	): T;
+	parseSync<T = Record<string, unknown>>(label: string, data: unknown, validate?: Schema<T>): T;
 }

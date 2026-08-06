@@ -6,9 +6,9 @@ import { Exception } from "@/Exception/Exception";
 import type { MiddlewareHandler } from "@/Middleware/types";
 import { $registry } from "@/registry";
 import { Res } from "@/Res/Res";
+import type { BaseRoute } from "@/Route/BaseRoute";
 import { RouteVariant, type ContextHandler } from "@/Route/types";
 import { WebSocketRoute } from "@/Route/WebSocketRoute";
-import type { RouterData } from "@/Router/types";
 import type { ErrorHandler, ServerApp, ServerOptions } from "@/Server/types";
 import { noop, type Func } from "@/utils/functions";
 import { logger, logFatal } from "@/utils/logger";
@@ -26,11 +26,10 @@ export class Server {
 	constructor(protected readonly opts?: ServerOptions) {}
 
 	protected app: ServerApp | undefined;
-
 	/** routeId -> fully composed chain (middlewares + terminal handler) */
 	private readonly handlers = new Map<string, MiddlewareHandler>();
 
-	get routes(): Array<RouterData> {
+	get routes(): Array<BaseRoute> {
 		return $registry.router.list();
 	}
 
@@ -45,9 +44,8 @@ export class Server {
 		try {
 			process.on("SIGINT", () => this.close());
 			process.on("SIGTERM", () => this.close());
-			logger.log(`Listening on ${hostname}:${port}`);
 
-			this.precompile();
+			this.compile();
 			await this.handleBeforeListen?.();
 
 			this.app = Bun.serve<WebSocketRoute>({
@@ -80,109 +78,38 @@ export class Server {
 		return res;
 	}
 
-	/**
-	 * Builds one complete handler per route (global + local middlewares + terminal)
-	 * and caches it by route id. Runs once, before listen starts the server.
-	 * Also builds the shared not-found chain (global middlewares + not-found terminal).
-	 */
-	protected precompile(): void {
-		this.handlers.clear();
-
-		for (const route of $registry.router.list()) {
-			this.handlers.set(
-				route.id,
-				this.compose(route.id, async (c) => {
-					if (route.variant !== RouteVariant.websocket) {
-						await c.parseData({
-							params: c.params as Record<string, string>,
-							bodyValidator: route.validators?.body,
-							paramsValidator: route.validators?.params,
-							searchValidator: route.validators?.search,
-						});
-					}
-					return route.handler(c);
-				}),
-			);
-		}
-
-		const notFoundChain = this.compose("*", (c) => this.handleNotFound(c));
-		this.handlers.set(NOT_FOUND_CHAIN, notFoundChain);
-	}
-
-	/** koa-style onion dispatch with auto-next. */
-	protected compose(routeId: string, terminal: ContextHandler): MiddlewareHandler {
-		const handlers = [...$registry.middlewareRouter.find(routeId), terminal];
-		return (c, outerNext) => {
-			let index = -1;
-			const dispatch = (i: number): ReturnType<MiddlewareHandler> => {
-				if (i <= index) {
-					throw new Exception("next() called multiple times", Status.INTERNAL_SERVER_ERROR);
-				}
-				index = i;
-
-				const handler = handlers[i];
-				if (!handler) return outerNext();
-
-				let called = false;
-				let downstream: unknown | undefined;
-				const next = async () => {
-					called = true;
-					downstream = await dispatch(i + 1);
-					return downstream;
-				};
-
-				return (async () => {
-					const result = await handler(c, next);
-					if (result !== undefined) return result; // terminal body OR middleware Res short-circuit
-					if (!called) return next();
-					return downstream;
-				})();
-			};
-			return dispatch(0);
-		};
-	}
-
 	protected async handleRequest(
 		req: Request,
 		server: ServerApp | nil,
 	): Promise<Response | undefined> {
 		const c = new Context(req, server);
+		let result: unknown;
 
 		if (this.isPreflight(c.req.method, c.req.headers)) {
-			const result = await this.handlePreflight(c);
-			if (result instanceof Res) c.res = result;
-			else c.res.body = result;
+			result = await this.handlePreflight(c);
 		} else {
 			try {
 				const match = $registry.router.find(c.req.method, c.req.url);
-
-				let handler: MiddlewareHandler | undefined;
-				if (!match) {
-					handler = this.handlers.get(NOT_FOUND_CHAIN);
-				} else {
-					handler = this.handlers.get(match.route.id);
-					c.params = match.params;
-				}
-
+				const handler = this.getHandler(match?.route.id ?? NOT_FOUND_CHAIN);
 				if (!handler) throw new Exception("Route not composed", Status.INTERNAL_SERVER_ERROR);
-				const result = await handler(c, noop);
+
+				c.params = match?.params;
+				result = await handler(c, noop);
 
 				if (this.isWebsocket(c.req.headers)) {
 					const upgraded = c.server?.upgrade(c.req, { data: result as WebSocketRoute });
 					if (upgraded === false) throw new Exception("Upgrade failed", Status.UPGRADE_REQUIRED);
 					return undefined;
-				} else if (result instanceof Res) {
-					c.res = result;
-				} else if (result !== undefined) {
-					c.res.body = result;
 				}
 			} catch (err) {
-				const result = await this.handleError(err as Error, c);
-				if (result instanceof Res) c.res = result;
-				else c.res.body = result;
+				result = await this.handleError(err as Error, c);
 			}
 		}
 
+		if (result instanceof Res) c.res = result;
+		else if (result !== undefined) c.res.body = result;
+
+		// CORS must come last and be separate from other middlewares
 		await $registry.cors?.handler(c, noop);
 		return c.res.response;
 	}
@@ -263,5 +190,68 @@ export class Server {
 			headers.get(HeaderKey.Connection)?.toLowerCase() === "upgrade" &&
 			headers.get(HeaderKey.Upgrade)?.toLowerCase() === "websocket"
 		);
+	}
+
+	protected getHandler(routeId: string): MiddlewareHandler | null {
+		return this.handlers.get(routeId) ?? null;
+	}
+
+	/**
+	 * Builds one complete handler per route (global + local middlewares + terminal)
+	 * and caches it by route id. Runs once, before listen starts the server.
+	 * Also builds the shared not-found chain (global middlewares + not-found terminal).
+	 */
+	protected compile(): void {
+		this.handlers.clear();
+
+		for (const route of $registry.router.list()) {
+			this.handlers.set(
+				route.id,
+				this.compose(route.id, async (c) => {
+					if (route.variant !== RouteVariant.websocket) {
+						await c.parseData(c.params as Record<string, string>, route.model);
+					}
+					return route.handler(c);
+				}),
+			);
+		}
+
+		const notFoundChain = this.compose("*", (c) => this.handleNotFound(c));
+		this.handlers.set(NOT_FOUND_CHAIN, notFoundChain);
+	}
+
+	/** koa-style onion dispatch with auto-next. */
+	protected compose(routeId: string, terminal: ContextHandler): MiddlewareHandler {
+		const middlewares = $registry.middlewareRouter.find(routeId);
+		const handlers = [...middlewares, terminal];
+
+		return (c, outerNext) => {
+			let index = -1;
+			const dispatch = (i: number): ReturnType<MiddlewareHandler> => {
+				if (i <= index) {
+					throw new Exception("next() called multiple times", Status.INTERNAL_SERVER_ERROR);
+				}
+				index = i;
+
+				const handler = handlers[i];
+				if (!handler) return outerNext();
+
+				let called = false;
+				let downstream: unknown | undefined;
+				const next = async () => {
+					called = true;
+					downstream = await dispatch(i + 1);
+					return downstream;
+				};
+
+				return (async () => {
+					const result = await handler(c, next);
+					if (result !== undefined) return result; // terminal body OR middleware Res short-circuit
+					if (!called) return next();
+					return downstream;
+				})();
+			};
+			return dispatch(0);
+		};
 	}
 }
