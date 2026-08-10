@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "bun:test";
 import type { SchemaParser } from "@/Parser/SchemaParser";
 import type { Schema, ValidationIssues } from "@/utils/Schema";
 
-import { $registryTesting } from "../_modules";
+import { $registryTesting, TC } from "../_modules";
 import { createTestServer } from "../utils/createTestServer";
 import { TestModel } from "../utils/TestModel";
 import { TestParsingController } from "../utils/TestParsingController";
@@ -18,10 +18,10 @@ beforeEach(() => {
 	new TestParsingController();
 });
 
-const parser = $registryTesting.schemaParser as unknown as SchemaParser;
+const parser = $registryTesting.schemaParser as SchemaParser;
 const parse = (data: unknown, schema: Schema) => parser.parse("test", data, schema);
 
-// Inline sync and async validators for parser.parse tests.
+// Inline sync and async validators for parser.parseSync tests.
 // These mimic the Standard Schema validator shape.
 const syncSchema: Schema<typeof GOOD> = {
 	"~standard": {
@@ -51,81 +51,111 @@ const asyncValidator: Schema<typeof GOOD> = {
 	} as Schema<typeof GOOD>["~standard"],
 };
 
+const thenableValidator: Schema<typeof GOOD> = {
+	"~standard": {
+		validate: (input: unknown) => ({
+			then: (resolve: (v: unknown) => void) => resolve(syncSchema["~standard"].validate(input)),
+		}),
+	},
+} as Schema<typeof GOOD>;
+
 describe("Parser unit", () => {
 	describe("success", () => {
 		it("ark object", () => {
-			expect(parse(GOOD, TestModel.arkObject)).toEqual(GOOD);
+			expect(parse(GOOD, TestModel.arkObject)).resolves.toEqual(GOOD);
 		});
 		it("zod object", () => {
-			expect(parse(GOOD, TestModel.zodObject)).toEqual(GOOD);
+			expect(parse(GOOD, TestModel.zodObject)).resolves.toEqual(GOOD);
 		});
 		it("ark route — coerces params and search, passes body through", () => {
-			expect(parse(GOOD, TestModel.arkRoute.params)).toEqual(GOOD);
-			expect(parse(GOOD, TestModel.arkRoute.search)).toEqual(GOOD);
-			expect(parse(GOOD, TestModel.arkRoute.body)).toEqual(GOOD);
+			expect(parse(GOOD, TestModel.arkRoute.params)).resolves.toEqual(GOOD);
+			expect(parse(GOOD, TestModel.arkRoute.search)).resolves.toEqual(GOOD);
+			expect(parse(GOOD, TestModel.arkRoute.body)).resolves.toEqual(GOOD);
 		});
 		it("zod route — coerces params and search, passes body through", () => {
-			expect(parse(GOOD, TestModel.zodRoute.params)).toEqual(GOOD);
-			expect(parse(GOOD, TestModel.zodRoute.search)).toEqual(GOOD);
-			expect(parse(GOOD, TestModel.zodRoute.body)).toEqual(GOOD);
+			expect(parse(GOOD, TestModel.zodRoute.params)).resolves.toEqual(GOOD);
+			expect(parse(GOOD, TestModel.zodRoute.search)).resolves.toEqual(GOOD);
+			expect(parse(GOOD, TestModel.zodRoute.body)).resolves.toEqual(GOOD);
 		});
 		it("ark route (referenced schemas)", () => {
-			expect(parse(GOOD, TestModel.arkRouteReferenced.params)).toEqual(GOOD);
-			expect(parse(GOOD, TestModel.arkRouteReferenced.search)).toEqual(GOOD);
-			expect(parse(GOOD, TestModel.arkRouteReferenced.body)).toEqual(GOOD);
+			expect(parse(GOOD, TestModel.arkRouteReferenced.params)).resolves.toEqual(GOOD);
+			expect(parse(GOOD, TestModel.arkRouteReferenced.search)).resolves.toEqual(GOOD);
+			expect(parse(GOOD, TestModel.arkRouteReferenced.body)).resolves.toEqual(GOOD);
 		});
 		it("zod route (referenced schemas)", () => {
-			expect(parse(GOOD, TestModel.zodRouteReferenced.params)).toEqual(GOOD);
-			expect(parse(GOOD, TestModel.zodRouteReferenced.search)).toEqual(GOOD);
-			expect(parse(GOOD, TestModel.zodRouteReferenced.body)).toEqual(GOOD);
+			expect(parse(GOOD, TestModel.zodRouteReferenced.params)).resolves.toEqual(GOOD);
+			expect(parse(GOOD, TestModel.zodRouteReferenced.search)).resolves.toEqual(GOOD);
+			expect(parse(GOOD, TestModel.zodRouteReferenced.body)).resolves.toEqual(GOOD);
 		});
 	});
 
 	describe("failure", () => {
 		it("ark object", () => {
-			expect(() => parse(BAD, TestModel.arkObject)).toThrow();
+			expect(parse(BAD, TestModel.arkObject)).rejects.toThrow(TC.Exception);
 		});
 		it("zod object", () => {
-			expect(() => parse(BAD, TestModel.zodObject)).toThrow();
+			expect(parse(BAD, TestModel.zodObject)).rejects.toThrow(TC.Exception);
 		});
 		it("ark route", () => {
-			expect(() => parse(BAD, TestModel.arkRoute.params)).toThrow();
-			expect(() => parse(BAD, TestModel.arkRoute.search)).toThrow();
-			expect(() => parse(BAD, TestModel.arkRoute.body)).toThrow();
+			expect(parse(BAD, TestModel.arkRoute.params)).rejects.toThrow(TC.Exception);
+			expect(parse(BAD, TestModel.arkRoute.search)).rejects.toThrow(TC.Exception);
+			expect(parse(BAD, TestModel.arkRoute.body)).rejects.toThrow(TC.Exception);
 		});
 		it("zod route", () => {
-			expect(() => parse(BAD, TestModel.zodRoute.params)).toThrow();
-			expect(() => parse(BAD, TestModel.zodRoute.search)).toThrow();
-			expect(() => parse(BAD, TestModel.zodRoute.body)).toThrow();
+			expect(parse(BAD, TestModel.zodRoute.params)).rejects.toThrow(TC.Exception);
+			expect(parse(BAD, TestModel.zodRoute.search)).rejects.toThrow(TC.Exception);
+			expect(parse(BAD, TestModel.zodRoute.body)).rejects.toThrow(TC.Exception);
 		});
 		it("ark route (referenced schemas)", () => {
-			expect(() => parse(BAD, TestModel.arkRouteReferenced.params)).toThrow();
-			expect(() => parse(BAD, TestModel.arkRouteReferenced.search)).toThrow();
-			expect(() => parse(BAD, TestModel.arkRouteReferenced.body)).toThrow();
+			expect(parse(BAD, TestModel.arkRouteReferenced.params)).rejects.toThrow(TC.Exception);
+			expect(parse(BAD, TestModel.arkRouteReferenced.search)).rejects.toThrow(TC.Exception);
+			expect(parse(BAD, TestModel.arkRouteReferenced.body)).rejects.toThrow(TC.Exception);
 		});
 		it("zod route (referenced schemas)", () => {
-			expect(() => parse(BAD, TestModel.zodRouteReferenced.params)).toThrow();
-			expect(() => parse(BAD, TestModel.zodRouteReferenced.search)).toThrow();
-			expect(() => parse(BAD, TestModel.zodRouteReferenced.body)).toThrow();
+			expect(parse(BAD, TestModel.zodRouteReferenced.params)).rejects.toThrow(TC.Exception);
+			expect(parse(BAD, TestModel.zodRouteReferenced.search)).rejects.toThrow(TC.Exception);
+			expect(parse(BAD, TestModel.zodRouteReferenced.body)).rejects.toThrow(TC.Exception);
 		});
 	});
 
-	describe("parser.parse", () => {
+	describe("parser.parse — no validator", () => {
 		it("returns data as-is when validator is undefined", () => {
-			expect(parser.parse<typeof GOOD>("test", GOOD)).toEqual(GOOD);
+			expect(parser.parse("test", GOOD, undefined)).resolves.toEqual(GOOD);
+		});
+
+		it("returns data as-is when validator is omitted", () => {
+			expect(parser.parse("test", GOOD)).resolves.toEqual(GOOD);
+		});
+
+		it("preserves reference identity when no validator runs", async () => {
+			const ref = { a: 1 };
+			const result = await parser.parse("test", ref);
+			expect(result).toBe(ref);
+		});
+	});
+
+	describe("parser.parseSync", () => {
+		it("returns data as-is when validator is undefined", () => {
+			expect(parser.parseSync<typeof GOOD>("test", GOOD)).toEqual(GOOD);
 		});
 
 		it("returns validated value for sync validator on good input", () => {
-			expect(parser.parse("test", GOOD, syncSchema)).toEqual(GOOD);
+			expect(parser.parseSync("test", GOOD, syncSchema)).toEqual(GOOD);
 		});
 
 		it("throws Exception for sync validator on bad input", () => {
-			expect(() => parser.parse("test", BAD, syncSchema)).toThrow();
+			expect(() => parser.parseSync("test", BAD, syncSchema)).toThrow(TC.Exception);
 		});
 
 		it("throws when given an async validator", () => {
-			expect(() => parser.parse("test", GOOD, asyncValidator)).toThrow(
-				"async validators are not supported — use a sync schema library",
+			expect(() => parser.parseSync("test", GOOD, asyncValidator)).toThrow(
+				"parseSync called with async validator",
+			);
+		});
+
+		it("throws when given a thenable (non-Promise) validator", () => {
+			expect(() => parser.parseSync("test", GOOD, thenableValidator)).toThrow(
+				"parseSync called with async validator",
 			);
 		});
 	});

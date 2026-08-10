@@ -35,7 +35,7 @@ export function isNil<T>(input: T): input is Extract<T, nil> {
 }
 
 export function isEmpty<T>(input: T): input is Extract<T, nil | "" | 0> {
-	if (isNil(input)) return false;
+	if (isNil(input)) return true;
 	if (isString(input)) return input.trim() === "";
 	if (isNumber(input)) return input === 0;
 	if (isObject(input)) return JSON.stringify(input) === JSON.stringify({});

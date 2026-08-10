@@ -1,10 +1,8 @@
 import { Cookies } from "@/Cookies/Cookies";
 import { HeaderKey } from "@/enums/HeaderKey";
-import { $registry } from "@/registry";
 import { Res } from "@/Res/Res";
 import type { ServerApp } from "@/Server/types";
-import type { ContextDataInterface, RouteModel } from "@/types";
-import { isEmpty } from "@/utils/is";
+import type { ContextDataInterface } from "@/types";
 import { createSafeObject } from "@/utils/objects";
 import { strSplit } from "@/utils/strings";
 import type { nil } from "@/utils/types";
@@ -42,9 +40,10 @@ export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 		public readonly server: ServerApp | nil,
 	) {}
 
-	model: RouteModel<B, S, P, R> | undefined;
 	rawBody: RawBody;
-	rawParams: Record<string, string> | undefined;
+	body = createSafeObject<B>();
+	params = createSafeObject<P>();
+	search = createSafeObject<S>();
 	data: ContextDataInterface = createSafeObject();
 
 	private _res: Res<R> | null = null;
@@ -88,59 +87,5 @@ export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 		}
 
 		return this._cookies;
-	}
-
-	private _body: B | undefined;
-	public get body(): B {
-		if (!this._body) {
-			if (this.rawBody) {
-				this._body = $registry.schemaParser.parse("body", this.rawBody, this.model?.body);
-			} else {
-				this._body = createSafeObject<B>();
-			}
-		}
-		return this._body;
-	}
-	public set body(value: B) {
-		this._body = value;
-	}
-
-	private _search: S | undefined;
-	public get search(): S {
-		if (!this._search) {
-			const qIndex = this.req.url.indexOf("?");
-			if (qIndex !== -1) {
-				this._search = $registry.schemaParser.parse(
-					"search",
-					$registry.searchParamsParser.parse(new URLSearchParams(this.req.url.slice(qIndex + 1))),
-					this.model?.search,
-				);
-			} else {
-				this._search = createSafeObject<S>();
-			}
-		}
-		return this._search;
-	}
-	public set search(value: S) {
-		this._search = value;
-	}
-
-	private _params: P | undefined;
-	public get params(): P {
-		if (!this._params) {
-			if (!isEmpty(this.rawParams)) {
-				this._params = $registry.schemaParser.parse(
-					"params",
-					$registry.urlParamsParser.parse(this.rawParams),
-					this.model?.params,
-				);
-			} else {
-				this._params = createSafeObject<P>();
-			}
-		}
-		return this._params;
-	}
-	public set params(value: P) {
-		this._params = value;
 	}
 }

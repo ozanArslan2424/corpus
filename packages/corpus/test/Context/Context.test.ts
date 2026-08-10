@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "bun:test";
 
 import { type } from "arktype";
 
-import { $registryTesting, TC, type RouterReturn } from "../_modules";
+import { $registryTesting, TC } from "../_modules";
 import { createTestServer } from "../utils/createTestServer";
 import { req } from "../utils/req";
 

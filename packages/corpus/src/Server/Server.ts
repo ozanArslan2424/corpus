@@ -12,6 +12,7 @@ import { WebSocketRoute } from "@/Route/WebSocketRoute";
 import type { ErrorHandler, ServerApp, ServerOptions } from "@/Server/types";
 import { arrIncludes } from "@/utils/arrays";
 import { noop, type Func } from "@/utils/functions";
+import { isEmpty } from "@/utils/is";
 import { logger, logFatal } from "@/utils/logger";
 import type { OrString } from "@/utils/strings";
 import type { nil } from "@/utils/types";
@@ -99,9 +100,26 @@ export class Server {
 				const isWebsocket = this.isWebsocket(c.req.headers);
 				if (!isMethodWithoutBody && !isWebsocket) {
 					c.rawBody = await $registry.bodyParser.parse(c.req);
+					c.body = await $registry.schemaParser.parse("body", c.rawBody, match?.route.model?.body);
 				}
-				c.rawParams = match?.params;
-				c.model = match?.route.model;
+
+				if (!isEmpty(match?.params)) {
+					c.params = await $registry.schemaParser.parse(
+						"params",
+						$registry.urlParamsParser.parse(match.params),
+						match.route.model?.params,
+					);
+				}
+
+				const qIndex = c.req.url.indexOf("?");
+				if (qIndex !== -1) {
+					c.search = await $registry.schemaParser.parse(
+						"search",
+						$registry.searchParamsParser.parse(new URLSearchParams(c.req.url.slice(qIndex + 1))),
+						match?.route.model?.search,
+					);
+				}
+
 				result = await handler(c, noop);
 
 				if (isWebsocket) {
