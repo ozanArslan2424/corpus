@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "path";
 
-import type { RegistryDocEntry, RegistryInterface } from "@ozanarslan/corpus";
+import type { BaseRoute } from "@ozanarslan/corpus";
 
 import type { Config } from "@/config/Config";
 import type { Schema } from "@/schema/Schema";
@@ -19,7 +19,7 @@ const CT_GENERIC = `CT extends "json" | "formData" = "json"`;
 const schemaPrinter = new SchemaPrinter();
 const typeToNameMap = new Map<string, string>();
 
-type Route = RegistryDocEntry & {
+type Route = Omit<BaseRoute, "register"> & {
 	camelKey: string;
 	pascalKey: string;
 	params: string[];
@@ -123,24 +123,24 @@ const getTypeLine = cache(
 	},
 );
 
-export function generateApiClient(registry: RegistryInterface, config: Config) {
+export function generateApiClient(prefix: string, routesArr: Array<BaseRoute>, config: Config) {
 	const b = new StringBuilder();
 
-	const routes = Array.from(registry.docs.values()).map((route) => {
+	const routes = routesArr.map((route) => {
 		const camelKey = toCamelCaseKey(
 			route.endpoint,
 			route.method,
-			registry.prefix,
+			prefix,
 			config.ignoreGlobalPrefix,
 		);
 		const pascalKey = toPascalCaseKey(
 			route.endpoint,
 			route.method,
-			registry.prefix,
+			prefix,
 			config.ignoreGlobalPrefix,
 		);
 		const params = extractParams(route.endpoint);
-		return { ...route, camelKey, pascalKey, params };
+		return { ...route, id: route.id, camelKey, pascalKey, params };
 	}) satisfies Array<Route>;
 
 	writeBase(b, routes);

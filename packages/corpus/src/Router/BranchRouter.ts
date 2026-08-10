@@ -57,6 +57,7 @@ export class BranchRouter implements RouterInterface {
 	private readonly SLASH = "/";
 	private readonly SLASH_CHAR_CODE = 47;
 
+	private readonly _list: Array<BaseRoute> = [];
 	private readonly _root: Branch = this.createBranch(this.SLASH, null);
 	private readonly storeFactory: Func<[], Store> = () => new Map();
 
@@ -72,40 +73,42 @@ export class BranchRouter implements RouterInterface {
 		return { route, params };
 	}
 
-	public add(data: BaseRoute): void {
-		const store = this.createBranchStore(data.endpoint);
-		store.set(data.method, data);
+	public add(route: BaseRoute): void {
+		const store = this.createBranchStore(route.endpoint);
+		store.set(route.method, route);
+		this._list.push(route);
 	}
 
 	public list(): Array<BaseRoute> {
-		const routes: Array<BaseRoute> = [];
-
-		const walk = (branch: Branch) => {
-			if (branch.store !== null) routes.push(...branch.store.values());
-			if (branch.wildcardStore !== null) routes.push(...branch.wildcardStore.values());
-
-			if (branch.paramBranch !== null) {
-				if (branch.paramBranch.store !== null) routes.push(...branch.paramBranch.store.values());
-				if (branch.paramBranch.wildcardStore !== null)
-					routes.push(...branch.paramBranch.wildcardStore.values());
-				if (branch.paramBranch.branch !== null) walk(branch.paramBranch.branch);
-			}
-
-			if (branch.children !== null) {
-				for (const child of branch.children.values()) {
-					walk(child);
-				}
-			}
-		};
-
-		walk(this._root);
-
-		return routes;
+		return this._list;
+		// const routes: Array<BaseRoute> = [];
+		//
+		// const walk = (branch: Branch) => {
+		// 	if (branch.store !== null) routes.push(...branch.store.values());
+		// 	if (branch.wildcardStore !== null) routes.push(...branch.wildcardStore.values());
+		//
+		// 	if (branch.paramBranch !== null) {
+		// 		if (branch.paramBranch.store !== null) routes.push(...branch.paramBranch.store.values());
+		// 		if (branch.paramBranch.wildcardStore !== null)
+		// 			routes.push(...branch.paramBranch.wildcardStore.values());
+		// 		if (branch.paramBranch.branch !== null) walk(branch.paramBranch.branch);
+		// 	}
+		//
+		// 	if (branch.children !== null) {
+		// 		for (const child of branch.children.values()) {
+		// 			walk(child);
+		// 		}
+		// 	}
+		// };
+		//
+		// walk(this._root);
+		//
+		// return routes;
 	}
 
 	private findResult(
-		url: string,
-		urlLength: number,
+		pathname: string,
+		pathnameLength: number,
 		branch: Branch,
 		startIndex: number,
 	): FindResultReturn {
@@ -116,25 +119,25 @@ export class BranchRouter implements RouterInterface {
 		// Only check the pathPart if its length is > 1 since the parent has
 		// already checked that the url matches the first character
 		if (pathPartLen > 1) {
-			if (pathPartEndIndex > urlLength) {
+			if (pathPartEndIndex > pathnameLength) {
 				return null;
 			}
 
 			if (pathPartLen < 15) {
 				// Using a loop is faster for short strings
 				for (let i = 1, j = startIndex + 1; i < pathPartLen; ++i, ++j) {
-					if (part[i] !== url[j]) {
+					if (part[i] !== pathname[j]) {
 						return null;
 					}
 				}
-			} else if (url.slice(startIndex, pathPartEndIndex) !== part) {
+			} else if (pathname.slice(startIndex, pathPartEndIndex) !== part) {
 				return null;
 			}
 		}
 
 		startIndex = pathPartEndIndex;
 
-		if (startIndex === urlLength) {
+		if (startIndex === pathnameLength) {
 			// Reached the end of the URL
 			if (branch.store !== null) {
 				return {
@@ -154,10 +157,10 @@ export class BranchRouter implements RouterInterface {
 		}
 
 		if (branch.children !== null) {
-			const staticChild = branch.children.get(url.charCodeAt(startIndex));
+			const staticChild = branch.children.get(pathname.charCodeAt(startIndex));
 
 			if (staticChild !== undefined) {
-				const route = this.findResult(url, urlLength, staticChild, startIndex);
+				const route = this.findResult(pathname, pathnameLength, staticChild, startIndex);
 
 				if (route !== null) {
 					return route;
@@ -167,24 +170,24 @@ export class BranchRouter implements RouterInterface {
 
 		if (branch.paramBranch !== null) {
 			const paramBranch = branch.paramBranch;
-			const slashIndex = url.indexOf(this.SLASH, startIndex);
+			const slashIndex = pathname.indexOf(this.SLASH, startIndex);
 
 			if (slashIndex !== startIndex) {
 				// Params cannot be empty
-				if (slashIndex === -1 || slashIndex >= urlLength) {
+				if (slashIndex === -1 || slashIndex >= pathnameLength) {
 					if (paramBranch.store !== null) {
 						const params: Record<string, string> = {};
-						params[paramBranch.paramName] = url.slice(startIndex, urlLength);
+						params[paramBranch.paramName] = pathname.slice(startIndex, pathnameLength);
 						return {
 							store: paramBranch.store,
 							params,
 						};
 					}
 				} else if (paramBranch.branch !== null) {
-					const route = this.findResult(url, urlLength, paramBranch.branch, slashIndex);
+					const route = this.findResult(pathname, pathnameLength, paramBranch.branch, slashIndex);
 
 					if (route !== null) {
-						route.params[paramBranch.paramName] = url.slice(startIndex, slashIndex);
+						route.params[paramBranch.paramName] = pathname.slice(startIndex, slashIndex);
 						return route;
 					}
 				}
@@ -195,7 +198,7 @@ export class BranchRouter implements RouterInterface {
 			return {
 				store: branch.wildcardStore,
 				params: {
-					[this.WILD]: url.slice(startIndex, urlLength),
+					[this.WILD]: pathname.slice(startIndex, pathnameLength),
 				},
 			};
 		}
@@ -203,20 +206,20 @@ export class BranchRouter implements RouterInterface {
 		return null;
 	}
 
-	private createBranchStore(path: string) {
+	private createBranchStore(endpoint: string) {
 		// begin with slash
-		if (path === this.EMPTY || path.charCodeAt(0) !== this.SLASH_CHAR_CODE) {
-			path = this.SLASH + path;
+		if (endpoint === this.EMPTY || endpoint.charCodeAt(0) !== this.SLASH_CHAR_CODE) {
+			endpoint = this.SLASH + endpoint;
 		}
 
-		const endsWithWildcard = path.endsWith(this.WILD);
+		const endsWithWildcard = endpoint.endsWith(this.WILD);
 
 		if (endsWithWildcard) {
-			path = path.slice(0, -1); // Slice off trailing '*'
+			endpoint = endpoint.slice(0, -1); // Slice off trailing '*'
 		}
 
-		const staticParts = path.split(/:.+?(?=\/|$)/);
-		const paramParts = path.match(/:.+?(?=\/|$)/g) ?? [];
+		const staticParts = endpoint.split(/:.+?(?=\/|$)/);
+		const paramParts = endpoint.match(/:.+?(?=\/|$)/g) ?? [];
 
 		// remove last part if empty
 		if (staticParts[staticParts.length - 1] === this.EMPTY) {
@@ -237,7 +240,7 @@ export class BranchRouter implements RouterInterface {
 					branch.paramBranch = this.createParamBranch(paramName);
 				} else if (branch.paramBranch.paramName !== paramName) {
 					throw new Error(
-						`Cannot create route "${path}" with parameter "${paramName}". A route already exists with a different parameter name ("${branch.paramBranch.paramName}") in the same location.`,
+						`Cannot create route "${endpoint}" with parameter "${paramName}". A route already exists with a different parameter name ("${branch.paramBranch.paramName}") in the same location.`,
 					);
 				}
 
@@ -309,7 +312,7 @@ export class BranchRouter implements RouterInterface {
 				branch.paramBranch = this.createParamBranch(paramName);
 			} else if (branch.paramBranch.paramName !== paramName) {
 				throw new Error(
-					`Cannot create route "${path}" with parameter "${paramName}". A route already exists with a different parameter name ("${branch.paramBranch.paramName}") in the same location.`,
+					`Cannot create route "${endpoint}" with parameter "${paramName}". A route already exists with a different parameter name ("${branch.paramBranch.paramName}") in the same location.`,
 				);
 			}
 

@@ -1,8 +1,9 @@
 import { ObjectParserAbstract } from "@/Parser/ObjectParserAbstract";
+import { createSafeObject } from "@/utils/objects";
 
 export class SearchParamsParser extends ObjectParserAbstract<URLSearchParams> {
 	parse(searchParams: URLSearchParams): Record<string, unknown> {
-		const result = this.newSafeObject();
+		const result = createSafeObject();
 
 		searchParams.forEach((entry, key) => {
 			const parts = this.parseKey(key);
@@ -26,10 +27,10 @@ export class SearchParamsParser extends ObjectParserAbstract<URLSearchParams> {
 			// each part needs an entry
 			const isIndexAssigned = typeof next === "number";
 			if (container[part] === undefined) {
-				container[part] = isIndexAssigned ? [] : this.newSafeObject();
+				container[part] = isIndexAssigned ? [] : createSafeObject();
 			} else if (typeof container[part] !== "object" || container[part] === null) {
 				// scalar already sitting where we need to descend: replace it
-				container[part] = isIndexAssigned ? [] : this.newSafeObject();
+				container[part] = isIndexAssigned ? [] : createSafeObject();
 			}
 			(current as unknown) = container[part];
 		}

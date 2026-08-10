@@ -34,7 +34,8 @@ export function isNil<T>(input: T): input is Extract<T, nil> {
 	return isUndefined(input) || isNull(input);
 }
 
-export function isEmpty<T>(input: T): boolean {
+export function isEmpty<T>(input: T): input is Extract<T, nil | "" | 0> {
+	if (isNil(input)) return false;
 	if (isString(input)) return input.trim() === "";
 	if (isNumber(input)) return input === 0;
 	if (isObject(input)) return JSON.stringify(input) === JSON.stringify({});

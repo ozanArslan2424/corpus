@@ -20,6 +20,7 @@ export class FileParser {
 	private readonly reader: StringReader;
 	private contents: string;
 	private program: Program;
+
 	getProgram() {
 		const { program, errors } = parseSync(this.filePath, this.contents, { sourceType: "module" });
 		if (errors.length > 0) {
@@ -31,9 +32,11 @@ export class FileParser {
 		}
 		return program;
 	}
+
 	runCallback(cb: FileParserCallback) {
 		this.handleNode(this.program, cb);
 	}
+
 	private handleNode(input: unknown, cb: FileParserCallback) {
 		// duck typing required
 		if (typeof input !== "object") return;

@@ -24,9 +24,9 @@ export class ApiClientModule extends ModuleAbstract {
 		];
 	}
 
-	override main(): void | Promise<void> {
+	override async main(): Promise<void> {
 		const mainPath = path.resolve(this.config.main);
-		const tempPath = mainPath.replace(/\.ts$/, ".temp.ts");
+		const outPath = mainPath.replace(/\.ts$/, ".temp.mjs");
 		const generatorImport =
 			process.env.NODE_ENV === "development"
 				? "@/index"
@@ -44,47 +44,58 @@ export class ApiClientModule extends ModuleAbstract {
 			const match = LISTEN_PATTERN.exec(mainFileContents);
 			if (!match) {
 				logFatal(
-					`Could not find a .listen() call in: ${mainPath}.\n   Make sure your entry file calls .listen() either at the top level or inside a function.`,
+					`
+Could not find a .listen() call in: ${mainPath}.
+    Make sure your entry file calls .listen() either at the top level or inside a top level function.
+`.trim(),
 				);
 			}
-			// if the listen call lived inside a function, that function must run for the
-			// routes to register: drop any existing call sites and append exactly one
 			const funcName = findEnclosingFunctionName(mainFileContents, match.index);
-
 			if (funcName) {
 				logger.step(`Making sure ${funcName} is called.`);
 				const callSite = new RegExp(`^\\s*(?:void|await)?\\s*${funcName}\\s*\\(\\s*\\);?.*$`, "gm");
 				mainFileContents = mainFileContents.replace(callSite, "");
 				mainFileContents += `\n\nawait ${funcName}();\n`;
 			}
-
 			mainFileContents = mainFileContents.replace(
 				LISTEN_PATTERN,
-				`${GEN_FUNC}($registry, ${JSON.stringify(this.config)});`,
+				`
+try {
+    const prefix = $registry.prefix;
+    const routesArr = $registry.router.list();
+    const config = ${JSON.stringify(this.config)};
+    ${GEN_FUNC}(prefix, routesArr, config);
+    process.exit(0);
+} catch (err) {
+    console.log(String(err));
+    process.exit(1);
+}
+`.trim(),
 			);
-
 			b.line(mainFileContents);
 
-			logger.step(`Writing temp file at ${tempPath}`);
-			const content = b.toString();
-			fs.writeFileSync(tempPath, content, "utf-8");
+			logger.step(`Transpiling to JS...`);
+			const transpiler = new Bun.Transpiler({ loader: "ts" });
+			const js = transpiler.transformSync(b.toString());
+
+			logger.step(`Writing temp file at ${outPath}`);
+			fs.writeFileSync(outPath, js, "utf-8");
 
 			logger.step(`Running generator...`);
-			const result = spawnSync("bun", ["run", tempPath], {
+			const result = spawnSync(process.execPath, [outPath], {
 				stdio: "inherit",
 				env: process.env,
 			});
 			if (result.status !== 0) {
-				logFatal(`bun exited with status ${result.status}`);
+				logFatal(`exited with status ${result.status}`);
 			}
-
 			logger.success(`Generator completed successfully`);
 		} catch (err) {
 			logger.error(String(err));
 			process.exit(1);
 		} finally {
-			logger.step(`Deleting temp file at ${tempPath}`);
-			fs.unlinkSync(tempPath);
+			logger.step(`Deleting temp file at ${outPath}`);
+			fs.rmSync(outPath, { force: true });
 		}
 	}
 }

@@ -5,6 +5,7 @@ import { Res } from "@/Res/Res";
 import type { ServerApp } from "@/Server/types";
 import type { ContextDataInterface, RouteModel } from "@/types";
 import { isEmpty } from "@/utils/is";
+import { createSafeObject } from "@/utils/objects";
 import { strSplit } from "@/utils/strings";
 import type { nil } from "@/utils/types";
 
@@ -28,11 +29,23 @@ import type { nil } from "@/utils/types";
  * data = Data object shared with middlewares
  * */
 
+type RawBody =
+	| Record<string, unknown>
+	| Array<unknown>
+	| string
+	| ReadableStream<Uint8Array>
+	| undefined;
+
 export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	constructor(
 		public readonly req: Request,
 		public readonly server: ServerApp | nil,
 	) {}
+
+	model: RouteModel<B, S, P, R> | undefined;
+	rawBody: RawBody;
+	rawParams: Record<string, string> | undefined;
+	data: ContextDataInterface = createSafeObject();
 
 	private _res: Res<R> | null = null;
 	get res(): Res<R> {
@@ -46,7 +59,6 @@ export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	private _url: URL | null = null;
 	get url(): URL {
 		if (!this._url) this._url = new URL(this.req.url);
-		if (!this._url.pathname) this._url.pathname += "/";
 		return this._url;
 	}
 
@@ -78,26 +90,57 @@ export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 		return this._cookies;
 	}
 
-	data: ContextDataInterface = Object.create(null);
-	body: B = Object.create(null);
-	search: S = Object.create(null);
-	params: P = Object.create(null);
-
-	async parseData(params: Record<string, string>, model?: RouteModel<B, S, P, R>) {
-		const body = await $registry.bodyParser.parse(this.req);
-		this.body = await $registry.schemaParser.parse("body", body, model?.body);
-
-		const qIndex = this.req.url.indexOf("?");
-		if (qIndex !== -1) {
-			const search = $registry.searchParamsParser.parse(
-				new URLSearchParams(this.req.url.slice(qIndex + 1)),
-			);
-			this.search = await $registry.schemaParser.parse("search", search, model?.search);
+	private _body: B | undefined;
+	public get body(): B {
+		if (!this._body) {
+			if (this.rawBody) {
+				this._body = $registry.schemaParser.parse("body", this.rawBody, this.model?.body);
+			} else {
+				this._body = createSafeObject<B>();
+			}
 		}
+		return this._body;
+	}
+	public set body(value: B) {
+		this._body = value;
+	}
 
-		if (!isEmpty(params)) {
-			const parsedParams = $registry.urlParamsParser.parse(params);
-			this.params = await $registry.schemaParser.parse("params", parsedParams, model?.params);
+	private _search: S | undefined;
+	public get search(): S {
+		if (!this._search) {
+			const qIndex = this.req.url.indexOf("?");
+			if (qIndex !== -1) {
+				this._search = $registry.schemaParser.parse(
+					"search",
+					$registry.searchParamsParser.parse(new URLSearchParams(this.req.url.slice(qIndex + 1))),
+					this.model?.search,
+				);
+			} else {
+				this._search = createSafeObject<S>();
+			}
 		}
+		return this._search;
+	}
+	public set search(value: S) {
+		this._search = value;
+	}
+
+	private _params: P | undefined;
+	public get params(): P {
+		if (!this._params) {
+			if (!isEmpty(this.rawParams)) {
+				this._params = $registry.schemaParser.parse(
+					"params",
+					$registry.urlParamsParser.parse(this.rawParams),
+					this.model?.params,
+				);
+			} else {
+				this._params = createSafeObject<P>();
+			}
+		}
+		return this._params;
+	}
+	public set params(value: P) {
+		this._params = value;
 	}
 }

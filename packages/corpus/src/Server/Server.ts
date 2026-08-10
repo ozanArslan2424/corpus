@@ -7,9 +7,10 @@ import type { MiddlewareHandler } from "@/Middleware/types";
 import { $registry } from "@/registry";
 import { Res } from "@/Res/Res";
 import type { BaseRoute } from "@/Route/BaseRoute";
-import { RouteVariant, type ContextHandler } from "@/Route/types";
+import type { ContextHandler } from "@/Route/types";
 import { WebSocketRoute } from "@/Route/WebSocketRoute";
 import type { ErrorHandler, ServerApp, ServerOptions } from "@/Server/types";
+import { arrIncludes } from "@/utils/arrays";
 import { noop, type Func } from "@/utils/functions";
 import { logger, logFatal } from "@/utils/logger";
 import type { OrString } from "@/utils/strings";
@@ -61,7 +62,7 @@ export class Server {
 				},
 			});
 		} catch (err) {
-			logger.error("Server unable to start:", err);
+			logger.error(err);
 			await this.close();
 		}
 	}
@@ -93,10 +94,16 @@ export class Server {
 				const handler = this.getHandler(match?.route.id ?? NOT_FOUND_CHAIN);
 				if (!handler) throw new Exception("Route not composed", Status.INTERNAL_SERVER_ERROR);
 
-				c.params = match?.params;
+				const isMethodWithoutBody = this.isMethodWithoutBody(c.req.method);
+				const isWebsocket = this.isWebsocket(c.req.headers);
+				if (!isMethodWithoutBody && !isWebsocket) {
+					c.rawBody = await $registry.bodyParser.parse(c.req);
+				}
+				c.rawParams = match?.params;
+				c.model = match?.route.model;
 				result = await handler(c, noop);
 
-				if (this.isWebsocket(c.req.headers)) {
+				if (isWebsocket) {
 					const upgraded = c.server?.upgrade(c.req, { data: result as WebSocketRoute });
 					if (upgraded === false) throw new Exception("Upgrade failed", Status.UPGRADE_REQUIRED);
 					return undefined;
@@ -186,10 +193,15 @@ export class Server {
 	}
 
 	private isWebsocket(headers: Headers): boolean {
-		return (
-			headers.get(HeaderKey.Connection)?.toLowerCase() === "upgrade" &&
-			headers.get(HeaderKey.Upgrade)?.toLowerCase() === "websocket"
-		);
+		const conn = headers.get(HeaderKey.Connection);
+		// Connection may be a list ("keep-alive, Upgrade"); check token presence case-insensitively
+		if (conn !== "Upgrade" && conn !== "upgrade") return false;
+		const upgrade = headers.get(HeaderKey.Upgrade);
+		return upgrade === "websocket" || upgrade === "WebSocket";
+	}
+
+	private isMethodWithoutBody(method: Method): boolean {
+		return arrIncludes(method, [Method.GET, Method.HEAD]);
 	}
 
 	protected getHandler(routeId: string): MiddlewareHandler | null {
@@ -207,12 +219,7 @@ export class Server {
 		for (const route of $registry.router.list()) {
 			this.handlers.set(
 				route.id,
-				this.compose(route.id, async (c) => {
-					if (route.variant !== RouteVariant.websocket) {
-						await c.parseData(c.params as Record<string, string>, route.model);
-					}
-					return route.handler(c);
-				}),
+				this.compose(route.id, (c) => route.handler(c)),
 			);
 		}
 

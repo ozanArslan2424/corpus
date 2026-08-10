@@ -28,35 +28,6 @@ describe("C.Context", () => {
 		expect(res.status).toBe(TC.Status.OK);
 	});
 
-	it("APPENDS CORRECT PARSED DATA", async () => {
-		const r = new Request("http://localhost:3000/hello/randomID?a=b", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ hello: "world" }),
-		});
-		const fakeRouterReturn: RouterReturn = {
-			params: { id: "randomID" },
-			route: {
-				endpoint: "/hello/:id",
-				id: "POST /hello/:id",
-				handler: () => {},
-				method: "POST",
-				variant: "dynamic",
-				register() {},
-			},
-		};
-
-		const c = new TC.Context(r, null);
-		expect(c.body).toBeEmptyObject();
-		expect(c.search).toBeEmptyObject();
-		expect(c.params).toBeEmptyObject();
-
-		await c.parseData(fakeRouterReturn.params, fakeRouterReturn.route.model);
-
-		expect(c.body).toEqual({ hello: "world" });
-		expect(c.params).toEqual(fakeRouterReturn.params);
-	});
-
 	it("BODY - JSON", async () => {
 		new TC.Route({ method: TC.Method.POST, path: "/ctx-body-json" }, (c) => {
 			expect(c.body).toEqual({ hello: "world" });

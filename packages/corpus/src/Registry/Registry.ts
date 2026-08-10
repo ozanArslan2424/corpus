@@ -9,7 +9,6 @@ import type {
 	CorsInterface,
 	MiddlewareRouterInterface,
 	ObjectParserInterface,
-	RegistryDocEntry,
 	RegistryInterface,
 	RouterInterface,
 	SchemaParserInterface,
@@ -28,7 +27,6 @@ export class Registry implements RegistryInterface {
 
 	reset(): void {
 		this.router = new BranchRouter();
-		this.docs = new Map();
 		this.cors = null;
 		this.prefix = "";
 		this.middlewareRouter = new MiddlewareRouter();
@@ -57,11 +55,9 @@ export class Registry implements RegistryInterface {
 
 	router!: RouterInterface;
 
-	docs!: Map<string, RegistryDocEntry>;
-
 	register(
 		kind: "route" | "middleware" | "cors",
-		item: BaseRoute<any, any, any, any, any> | Middleware | CorsInterface,
+		item: BaseRoute | Middleware | CorsInterface,
 	): void {
 		switch (kind) {
 			case "route":

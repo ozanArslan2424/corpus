@@ -5,25 +5,11 @@ import { isObjectWith } from "@/utils/objects";
 import type { Schema, ValidationIssues } from "@/utils/Schema";
 
 export class SchemaParser implements SchemaParserInterface {
-	async parse<T = Record<string, unknown>>(
-		label: string,
-		data: unknown,
-		schema?: Schema<T>,
-	): Promise<T> {
-		if (!schema) return data as T;
-		const result = await schema["~standard"].validate(data);
-		if (result.issues !== undefined) {
-			const msg = this.issuesToErrorMessage(label, data, result.issues);
-			throw new Exception(msg, Status.UNPROCESSABLE_ENTITY, data);
-		}
-		return result.value;
-	}
-
-	parseSync<T = Record<string, unknown>>(label: string, data: unknown, schema?: Schema<T>): T {
+	parse<T = Record<string, unknown>>(label: string, data: unknown, schema?: Schema<T>): T {
 		if (!schema) return data as T;
 		const result = schema["~standard"].validate(data);
 		if (result instanceof Promise || typeof (result as any)?.then === "function") {
-			throw new Error("parseSync called with async validator — use a sync schema library");
+			throw new Error("async validators are not supported — use a sync schema library");
 		}
 		if (result.issues !== undefined) {
 			const msg = this.issuesToErrorMessage(label, data, result.issues);

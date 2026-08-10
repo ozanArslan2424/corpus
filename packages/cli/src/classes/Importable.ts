@@ -9,7 +9,9 @@ import { logFatal } from "@/utils/logger";
 import { resolveCwdPath } from "@/utils/paths";
 import { toCamelCase, toKebabCase, toPascalCase } from "@/utils/strings";
 import type { OrString } from "@/utils/types";
+
 export type ImportableKind = OrString<"model" | "service" | "controller" | "route" | "exception">;
+
 export class Importable {
 	constructor(
 		readonly resourceName: string,

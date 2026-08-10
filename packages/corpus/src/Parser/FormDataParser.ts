@@ -1,8 +1,9 @@
 import { ObjectParserAbstract } from "@/Parser/ObjectParserAbstract";
+import { createSafeObject } from "@/utils/objects";
 
 export class FormDataParser extends ObjectParserAbstract<FormData> {
 	parse(formData: FormData): Record<string, unknown> {
-		const result = this.newSafeObject();
+		const result = createSafeObject();
 
 		formData.forEach((entry, key) => {
 			const parts = this.parseKey(key);
@@ -26,7 +27,7 @@ export class FormDataParser extends ObjectParserAbstract<FormData> {
 			// container[part] is undefined so we assign it as inner container
 			if (container[part] === undefined) {
 				const isIndexAssigned = typeof next === "number";
-				container[part] = isIndexAssigned ? [] : this.newSafeObject();
+				container[part] = isIndexAssigned ? [] : createSafeObject();
 			}
 
 			// if container[part] defined, it is a value assigned directly

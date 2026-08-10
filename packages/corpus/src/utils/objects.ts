@@ -2,6 +2,10 @@
 
 import type { OrString } from "./strings";
 
+export function createSafeObject<T = Record<string, unknown>>(): T {
+	return Object.create(null);
+}
+
 export function objGetKeys<O extends object>(o: O): Array<keyof O> {
 	return Object.keys(o) as Array<keyof O>;
 }

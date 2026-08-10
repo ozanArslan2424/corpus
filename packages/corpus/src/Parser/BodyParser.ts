@@ -1,10 +1,9 @@
 import { HeaderKey } from "@/enums/HeaderKey";
-import { Method } from "@/enums/Method";
 import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
 import type { BodyParserInterface, ObjectParserInterface } from "@/Registry/types";
 import type { Res } from "@/Res/Res";
-import { arrIncludes } from "@/utils/arrays";
+import { createSafeObject } from "@/utils/objects";
 
 type NormalizedContentType =
 	| "json"
@@ -27,9 +26,7 @@ export class BodyParser implements BodyParserInterface {
 		maxRequestBodySize?: number,
 	): Promise<Record<string, unknown> | Array<unknown> | string | ReadableStream<Uint8Array>> {
 		let input = this.toWebRequestResponse(r);
-		const empty = Object.create(null);
-
-		if (this.isMethodWithoutBody(input)) return empty;
+		const empty = createSafeObject();
 
 		if (input instanceof Request) {
 			input = input.clone();
@@ -129,11 +126,6 @@ export class BodyParser implements BodyParserInterface {
 		}
 
 		return "unknown";
-	}
-
-	private isMethodWithoutBody(input: Request | Response): boolean {
-		if (!("method" in input) || typeof input.method !== "string") return false;
-		return arrIncludes(input.method.toUpperCase(), [Method.GET, Method.HEAD]);
 	}
 
 	private getJsonBody(

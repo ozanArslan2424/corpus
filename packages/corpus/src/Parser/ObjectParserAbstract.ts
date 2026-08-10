@@ -7,10 +7,6 @@ export abstract class ObjectParserAbstract<T> implements ObjectParserInterface<T
 
 	// PROTECTED
 
-	protected newSafeObject(): Record<string, unknown> {
-		return Object.create(null);
-	}
-
 	protected newContainer(current: unknown): Record<string | number, unknown> {
 		return current as Record<string | number, unknown>;
 	}
