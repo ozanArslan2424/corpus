@@ -23,7 +23,7 @@ export function createTestServer(
 	class Server extends TC.Server {
 		compiled = false;
 		override handle(request: Request, server?: ServerApp | nil): Promise<Response> {
-			this.compile();
+			this.composeHandlers();
 			return super.handle(request, server);
 		}
 	}

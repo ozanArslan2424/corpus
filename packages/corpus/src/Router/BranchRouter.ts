@@ -57,7 +57,6 @@ export class BranchRouter implements RouterInterface {
 	private readonly SLASH = "/";
 	private readonly SLASH_CHAR_CODE = 47;
 
-	private readonly _list: Array<BaseRoute> = [];
 	private readonly _root: Branch = this.createBranch(this.SLASH, null);
 	private readonly storeFactory: Func<[], Store> = () => new Map();
 
@@ -76,34 +75,32 @@ export class BranchRouter implements RouterInterface {
 	public add(route: BaseRoute): void {
 		const store = this.createBranchStore(route.endpoint);
 		store.set(route.method, route);
-		this._list.push(route);
 	}
 
 	public list(): Array<BaseRoute> {
-		return this._list;
-		// const routes: Array<BaseRoute> = [];
-		//
-		// const walk = (branch: Branch) => {
-		// 	if (branch.store !== null) routes.push(...branch.store.values());
-		// 	if (branch.wildcardStore !== null) routes.push(...branch.wildcardStore.values());
-		//
-		// 	if (branch.paramBranch !== null) {
-		// 		if (branch.paramBranch.store !== null) routes.push(...branch.paramBranch.store.values());
-		// 		if (branch.paramBranch.wildcardStore !== null)
-		// 			routes.push(...branch.paramBranch.wildcardStore.values());
-		// 		if (branch.paramBranch.branch !== null) walk(branch.paramBranch.branch);
-		// 	}
-		//
-		// 	if (branch.children !== null) {
-		// 		for (const child of branch.children.values()) {
-		// 			walk(child);
-		// 		}
-		// 	}
-		// };
-		//
-		// walk(this._root);
-		//
-		// return routes;
+		const routes: Array<BaseRoute> = [];
+
+		const walk = (branch: Branch) => {
+			if (branch.store !== null) routes.push(...branch.store.values());
+			if (branch.wildcardStore !== null) routes.push(...branch.wildcardStore.values());
+
+			if (branch.paramBranch !== null) {
+				if (branch.paramBranch.store !== null) routes.push(...branch.paramBranch.store.values());
+				if (branch.paramBranch.wildcardStore !== null)
+					routes.push(...branch.paramBranch.wildcardStore.values());
+				if (branch.paramBranch.branch !== null) walk(branch.paramBranch.branch);
+			}
+
+			if (branch.children !== null) {
+				for (const child of branch.children.values()) {
+					walk(child);
+				}
+			}
+		};
+
+		walk(this._root);
+
+		return routes;
 	}
 
 	private findResult(

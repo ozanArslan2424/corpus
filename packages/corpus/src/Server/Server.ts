@@ -46,7 +46,7 @@ export class Server {
 			process.on("SIGINT", () => this.close());
 			process.on("SIGTERM", () => this.close());
 
-			this.compile();
+			this.composeHandlers();
 			await this.handleBeforeListen?.();
 
 			this.app = Bun.serve<WebSocketRoute>({
@@ -55,6 +55,7 @@ export class Server {
 				idleTimeout: this.opts?.idleTimeout,
 				tls: this.opts?.tls,
 				fetch: (req, server) => this.handleRequest(req, server),
+				routes: {},
 				websocket: {
 					open: (ws) => ws.data.onOpen?.(ws),
 					message: (ws, msg) => ws.data.onMessage?.(ws, msg),
@@ -213,7 +214,7 @@ export class Server {
 	 * and caches it by route id. Runs once, before listen starts the server.
 	 * Also builds the shared not-found chain (global middlewares + not-found terminal).
 	 */
-	protected compile(): void {
+	protected composeHandlers(): void {
 		this.handlers.clear();
 
 		for (const route of $registry.router.list()) {
