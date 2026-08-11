@@ -4,8 +4,6 @@ export * from "./Context/Context";
 
 export * from "./Controller/Controller";
 
-export * from "./Cookies/Cookies";
-
 export * from "./enums/HeaderKey";
 export * from "./enums/Method";
 export * from "./enums/Status";

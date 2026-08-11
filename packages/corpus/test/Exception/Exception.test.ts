@@ -68,12 +68,12 @@ describe("C.Exception", () => {
 	// ─── integration ──────────────────────────────────────────────
 
 	it("INTEGRATION - THROWN IN ROUTE RETURNS CORRECT STATUS", async () => {
-		new TC.Route("/error-404", () => {
-			throw new TC.Exception("not here", TC.Status.NOT_FOUND);
+		new TC.Route("/error-400", () => {
+			throw new TC.Exception("not here", TC.Status.BAD_REQUEST);
 		});
 
-		const res = await s.handle(req("/error-404"));
-		expect(res.status).toBe(404);
+		const res = await s.handle(req("/error-400"));
+		expect(res.status).toBe(400);
 	});
 
 	it("INTEGRATION - THROWN IN ROUTE RETURNS DEFAULT BODY", async () => {

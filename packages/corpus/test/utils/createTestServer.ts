@@ -8,11 +8,13 @@ import {
 	type ServerApp,
 	type ServerOptions,
 } from "../_modules";
+import { TEST_PORT } from "./req";
 
 export function createTestServer(
 	opts?: ServerOptions & { withLogging?: boolean; router?: RouterInterface },
 ) {
 	const { withLogging, router, ...serverOpts } = opts ?? {
+		port: TEST_PORT,
 		withLogging: false,
 	};
 
@@ -31,15 +33,17 @@ export function createTestServer(
 	const s = new Server(serverOpts);
 
 	if (withLogging === true) {
-		s.setOnError((err, c) => {
+		const defaultErrorHandler = s.handleError;
+		const defaultNotFoundHandler = s.handleNotFound;
+		s.handleError = (err, c) => {
 			logger.error("thrown error", err);
-			return s.defaultErrorHandler(err, c);
-		});
+			return defaultErrorHandler(err, c);
+		};
 
-		s.setOnNotFound((req) => {
+		s.handleNotFound = (req) => {
 			logger.error("not found request", req);
-			return s.defaultNotFoundHandler(req);
-		});
+			return defaultNotFoundHandler(req);
+		};
 	}
 
 	return s;

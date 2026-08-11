@@ -3,11 +3,13 @@ import { beforeEach, describe, expect, it } from "bun:test";
 import { $registryTesting, TC } from "./_modules";
 import { MemoiristAdapter } from "./other/MemoiristAdapter";
 import { createTestServer } from "./utils/createTestServer";
+import { TEST_PORT } from "./utils/req";
 
 beforeEach(() => $registryTesting.reset());
 
 describe("MemoiristAdapter - Route Collision Detection", () => {
 	createTestServer({
+		port: TEST_PORT,
 		router: new MemoiristAdapter(),
 	});
 

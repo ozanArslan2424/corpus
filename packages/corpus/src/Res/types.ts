@@ -1,4 +1,3 @@
-import type { CookiesInit } from "@/Cookies/types";
 import type { Status } from "@/enums/Status";
 import type { Func } from "@/utils/functions";
 
@@ -12,7 +11,7 @@ export type NdjsonSource = Func<
 >;
 
 export type ResInit = {
-	cookies?: CookiesInit;
+	cookies?: Bun.CookieMap | string[][] | Record<string, string> | string;
 	headers?: HeadersInit;
 	status?: Status;
 	statusText?: string;

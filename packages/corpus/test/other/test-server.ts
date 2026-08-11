@@ -4,7 +4,7 @@ import { TC } from "../_modules";
 import { createTestServer } from "../utils/createTestServer";
 import { TEST_PORT } from "../utils/req";
 
-const server = createTestServer();
+const server = createTestServer({ port: TEST_PORT });
 
 // ── Parameterised routes (existing) ──────────────────────────────────────────
 
@@ -208,4 +208,4 @@ new TC.Middleware({
 	},
 });
 
-void server.listen(TEST_PORT);
+void server.listen();

@@ -1,4 +1,3 @@
-import { Cookies } from "@/Cookies/Cookies";
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Res } from "@/Res/Res";
 import type { ServerApp } from "@/Server/types";
@@ -65,11 +64,16 @@ export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 		return this.req.headers;
 	}
 
-	private _cookies: Cookies | null = null;
-	public get cookies(): Cookies {
+	private _cookies: Bun.CookieMap | null = null;
+	public get cookies(): Bun.CookieMap {
 		if (this._cookies) return this._cookies;
+		// req may be Bun.BunRequest
+		if ("cookies" in this.req && this.req.cookies instanceof Bun.CookieMap) {
+			this._cookies = this.req.cookies;
+			return this._cookies;
+		}
 
-		this._cookies = new Cookies();
+		this._cookies = new Bun.CookieMap();
 
 		const cookieHeader = this.req.headers.get(HeaderKey.Cookie);
 

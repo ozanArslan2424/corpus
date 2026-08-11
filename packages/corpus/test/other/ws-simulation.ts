@@ -7,12 +7,12 @@ const PORT = 9876;
 const BASE_URL = `ws://localhost:${PORT}`;
 const SILENT = process.argv[2] === "-s";
 const T = new TestHelper(SILENT);
-const server = new TC.Server();
+const server = new TC.Server({ port: PORT });
 
 async function run(withAbstract: boolean) {
 	T.log.info("Setting up WebSocket route...");
 	createTestWebSocketRoute(T.log, withAbstract);
-	await server.listen(PORT);
+	await server.listen();
 
 	const WS_URL = `${BASE_URL}/ws`;
 	T.log.info(`WebSocket URL: ${WS_URL}`);

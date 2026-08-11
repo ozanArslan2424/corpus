@@ -1,5 +1,3 @@
-export * from "./Cookies/types";
-
 export * from "./Cors/types";
 
 export * from "./Middleware/types";

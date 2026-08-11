@@ -10,7 +10,7 @@ const PORT = 9876;
 const BASE_URL = `http://localhost:${PORT}`;
 const SILENT = process.argv[2] === "-s";
 const T = new TestHelper(SILENT);
-const server = new TC.Server();
+const server = new TC.Server({ port: PORT });
 
 // ── http client ───────────────────────────────────────────────────────────────
 
@@ -256,7 +256,7 @@ new TC.Route(
 //  START & RUN
 // ─────────────────────────────────────────────────────────────────────────────
 
-await server.listen(PORT);
+await server.listen();
 T.log.info(`Server up on ${BASE_URL}\n`);
 
 // ── HEALTH ────────────────────────────────────────────────────────────────────

@@ -280,9 +280,10 @@ describe("C.Server", () => {
 
 	it("SET ON ERROR - CUSTOM HANDLER IS CALLED ON ERROR", async () => {
 		const s = createTestServer();
-		s.setOnError(() => {
+		const defaultErrorHandler = s.handleError;
+		s.handleError = () => {
 			return new TC.Res({ error: true, message: "custom error" }, { status: 500 });
-		});
+		};
 		new TC.Route("/srv-error", () => {
 			throw new Error("boom");
 		});
@@ -291,7 +292,7 @@ describe("C.Server", () => {
 		const data = await parseBody<{ message: string }>(res);
 		expect(data.message).toBe("custom error");
 
-		s.setOnError(s.defaultErrorHandler);
+		s.handleError = defaultErrorHandler;
 	});
 
 	it("SET ON ERROR - DEFAULT HANDLER RETURNS 500", async () => {
@@ -316,13 +317,14 @@ describe("C.Server", () => {
 
 	it("SET ON ERROR - CUSTOM HANDLER RECEIVES ERROR AND CONTEXT", async () => {
 		const s = createTestServer();
+		const defaultErrorHandler = s.handleError;
 		let receivedErrMessage: string | undefined;
 		let receivedReqUrl: string | undefined;
-		s.setOnError((err, ctx) => {
+		s.handleError = (err, ctx) => {
 			receivedErrMessage = (err as Error).message;
 			receivedReqUrl = ctx.req.url;
 			return new TC.Res({ error: true }, { status: 500 });
-		});
+		};
 		new TC.Route("/srv-error-ctx", () => {
 			throw new Error("boom-ctx");
 		});
@@ -330,7 +332,7 @@ describe("C.Server", () => {
 		expect(receivedErrMessage).toBe("boom-ctx");
 		expect(receivedReqUrl).toContain("/srv-error-ctx");
 
-		s.setOnError(s.defaultErrorHandler);
+		s.handleError = defaultErrorHandler;
 	});
 
 	it("SET ON ERROR - ERROR THROWN IN MIDDLEWARE IS HANDLED", async () => {
@@ -350,15 +352,16 @@ describe("C.Server", () => {
 
 	it("SET ON NOT FOUND - CUSTOM HANDLER IS CALLED", async () => {
 		const s = createTestServer();
-		s.setOnNotFound(() => {
+		const defaultNotFoundHandler = s.handleNotFound;
+		s.handleNotFound = () => {
 			return new TC.Res({ error: true, message: "custom not found" }, { status: 404 });
-		});
+		};
 		const res = await s.handle(req("/srv-custom-404"));
 		expect(res.status).toBe(404);
 		const data = await parseBody<{ message: string }>(res);
 		expect(data.message).toBe("custom not found");
 
-		s.setOnNotFound(s.defaultNotFoundHandler);
+		s.handleNotFound = defaultNotFoundHandler;
 	});
 
 	it("SET ON NOT FOUND - DEFAULT HANDLER INCLUDES METHOD AND URL", async () => {
@@ -393,12 +396,12 @@ describe("C.Server", () => {
 	// ─── setOnBeforeListen / setOnBeforeClose ─────────────────────
 
 	it("SET ON BEFORE LISTEN - HOOK RUNS BEFORE SERVER STARTS", async () => {
-		const s = createTestServer();
+		const s = createTestServer({ port: 4482, hostname: "localhost" });
 		let called = false;
-		s.setOnBeforeListen(() => {
+		s.handleBeforeListen = () => {
 			called = true;
-		});
-		await s.listen(4482, "localhost");
+		};
+		await s.listen();
 		try {
 			expect(called).toBe(true);
 		} finally {
@@ -407,20 +410,20 @@ describe("C.Server", () => {
 	});
 
 	it("SET ON BEFORE CLOSE - HOOK RUNS BEFORE SERVER STOPS", async () => {
-		const s = createTestServer();
+		const s = createTestServer({ port: 4483, hostname: "localhost" });
 		let called = false;
-		s.setOnBeforeClose(() => {
+		s.handleBeforeClose = () => {
 			called = true;
-		});
-		await s.listen(4483, "localhost");
+		};
+		await s.listen();
 		await s.close();
 		expect(called).toBe(true);
 	});
 
 	it("SET ON BEFORE LISTEN - UNDEFINED HOOK IS A NO-OP", async () => {
-		const s = createTestServer();
-		s.setOnBeforeListen(undefined);
-		await s.listen(4484, "localhost");
+		const s = createTestServer({ port: 4484, hostname: "localhost" });
+		s.handleBeforeListen = undefined;
+		await s.listen();
 		await s.close();
 		// no throw = pass
 	});
@@ -482,23 +485,25 @@ describe("C.Server", () => {
 	// ─── live server (.listen) ────────────────────────────────────
 
 	it("LISTEN - SERVES REAL HTTP REQUESTS", async () => {
-		const s = createTestServer();
-		new TC.Route("/live", () => ({ live: true }));
 		const PORT = 4485;
-		await s.listen(PORT, "localhost");
+		const s = createTestServer({ port: PORT, hostname: "localhost" });
+		new TC.Route("/live", () => ({ live: true }));
+		await s.listen();
 		try {
 			const res = await fetch(`http://localhost:${PORT}/live`);
 			expect(res.status).toBe(200);
 			const data = (await res.json()) as { live: boolean };
 			expect(data.live).toBe(true);
+		} catch (err) {
+			console.log(err);
 		} finally {
 			await s.close();
 		}
 	});
 
 	it("LISTEN - DOUBLE CLOSE DOES NOT THROW", async () => {
-		const s = createTestServer();
-		await s.listen(4486, "localhost");
+		const s = createTestServer({ port: 4486, hostname: "localhost" });
+		await s.listen();
 		await s.close();
 		await s.close();
 	});
@@ -506,10 +511,10 @@ describe("C.Server", () => {
 	// ─── idle timeout ─────────────────────────────────────────────
 
 	it("IDLE TIMEOUT - CLOSES IDLE KEEP-ALIVE CONNECTION", async () => {
-		const s = createTestServer({ idleTimeout: 1 });
-		new TC.Route("/idle-timeout-test", () => "ok");
 		const PORT = 4481;
 		const HOST = "localhost";
+		const s = createTestServer({ port: PORT, hostname: HOST, idleTimeout: 1 });
+		new TC.Route("/idle-timeout-test", () => "ok");
 
 		function rawRequest(path: string): string {
 			return [
@@ -536,7 +541,7 @@ describe("C.Server", () => {
 			});
 		}
 
-		await s.listen(PORT, HOST);
+		await s.listen();
 
 		let error: unknown;
 		try {

@@ -49,10 +49,6 @@ export interface BodyParserInterface {
 }
 
 export interface SchemaParserInterface {
-	parse<T = Record<string, unknown>>(
-		label: string,
-		data: unknown,
-		validate?: Schema<T>,
-	): Promise<T>;
-	parseSync<T = Record<string, unknown>>(label: string, data: unknown, validate?: Schema<T>): T;
+	parse<T = Record<string, unknown>>(label: string, input: unknown, schema?: Schema<T>): Promise<T>;
+	parseSync<T = Record<string, unknown>>(label: string, input: unknown, schema?: Schema<T>): T;
 }

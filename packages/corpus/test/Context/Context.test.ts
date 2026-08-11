@@ -16,7 +16,7 @@ describe("C.Context", () => {
 			expect(c.req).toBeInstanceOf(Request);
 			expect(c.url).toBeInstanceOf(URL);
 			expect(c.headers).toBeInstanceOf(Headers);
-			expect(c.cookies).toBeInstanceOf(TC.Cookies);
+			expect(c.cookies).toBeInstanceOf(Bun.CookieMap);
 			expect(c.res).toBeInstanceOf(TC.Res);
 			expect(c.body).toBeDefined();
 			expect(c.search).toBeDefined();

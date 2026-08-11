@@ -24,7 +24,7 @@ describe("C.Res", () => {
 	}) {
 		// types and instances
 		expect(res.headers).toBeInstanceOf(Headers);
-		expect(res.cookies).toBeInstanceOf(TC.Cookies);
+		expect(res.cookies).toBeInstanceOf(Bun.CookieMap);
 		expect(res.status).toBeTypeOf("number");
 		expect(res.statusText).toBeTypeOf("string");
 

@@ -2,11 +2,13 @@ import { beforeEach, describe, expect, it } from "bun:test";
 
 import { $registryTesting, TC } from "./_modules";
 import { createTestServer } from "./utils/createTestServer";
+import { TEST_PORT } from "./utils/req";
 
 beforeEach(() => $registryTesting.reset());
 
 describe("BranchAdapter - Route Collision Detection", () => {
 	createTestServer({
+		port: TEST_PORT,
 		router: new TC.BranchRouter(),
 	});
 

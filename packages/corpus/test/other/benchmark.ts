@@ -21,9 +21,9 @@ switch (first) {
 	}
 
 	case "corpus": {
-		const server = new C.Server();
+		const server = new C.Server({ port: 3000 });
 		new C.Route("/", () => ({ hello: "world" }));
-		server.listen(3000);
+		server.listen();
 		break;
 	}
 

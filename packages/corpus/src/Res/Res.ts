@@ -1,4 +1,3 @@
-import { Cookies } from "@/Cookies/Cookies";
 import { ContentDispositionDirective } from "@/Directives/ContentDispositionDirective";
 import { DefaultStatusTexts } from "@/enums/DefaultStatusTexts";
 import { HeaderKey } from "@/enums/HeaderKey";
@@ -129,13 +128,17 @@ export class Res<R = unknown> {
 		this._headers = value;
 	}
 
-	private _cookies: Cookies | undefined;
-	public get cookies(): Cookies {
+	private _cookies: Bun.CookieMap | undefined;
+	public get cookies(): Bun.CookieMap {
 		if (!isUndefined(this._cookies)) return this._cookies;
-		this._cookies = new Cookies(this.init?.cookies);
+		if (this.init?.cookies instanceof Bun.CookieMap) {
+			this._cookies = this.init.cookies;
+			return this._cookies;
+		}
+		this._cookies = new Bun.CookieMap(this.init?.cookies);
 		return this._cookies;
 	}
-	public set cookies(value: Cookies) {
+	public set cookies(value: Bun.CookieMap) {
 		this._cookies = value;
 	}
 
