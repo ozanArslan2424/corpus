@@ -7,7 +7,6 @@ import { URLParamsParser } from "@/Parser/URLParamsParser";
 import type {
 	BodyParserInterface,
 	CorsInterface,
-	MiddlewareRouterInterface,
 	ObjectParserInterface,
 	RegistryInterface,
 	RouterInterface,
@@ -15,8 +14,7 @@ import type {
 } from "@/Registry/types";
 import type { BaseRoute } from "@/Route/BaseRoute";
 import { RouteVariant } from "@/Route/types";
-import { BranchRouter } from "@/Router/BranchRouter";
-import { MiddlewareRouter } from "@/Router/MiddlewareRouter";
+import { InternalRouteRegexpMatcher } from "@/Router/InternalRouteRegexpMatcher";
 import { arrIncludes } from "@/utils/arrays";
 import { joinPathSegments } from "@/utils/joinPathSegments";
 
@@ -26,10 +24,9 @@ export class Registry implements RegistryInterface {
 	}
 
 	reset(): void {
-		this.router = new BranchRouter();
+		this.router = new InternalRouteRegexpMatcher();
 		this.cors = null;
 		this.prefix = "";
-		this.middlewareRouter = new MiddlewareRouter();
 		this.urlParamsParser = new URLParamsParser();
 		this.searchParamsParser = new SearchParamsParser();
 		this.formDataParser = new FormDataParser();
@@ -40,8 +37,6 @@ export class Registry implements RegistryInterface {
 	cors!: CorsInterface | null;
 
 	prefix!: string;
-
-	middlewareRouter!: MiddlewareRouterInterface;
 
 	urlParamsParser!: ObjectParserInterface<Record<string, string>>;
 
@@ -84,7 +79,7 @@ export class Registry implements RegistryInterface {
 	}
 
 	registerMiddleware(middleware: Middleware): void {
-		this.middlewareRouter.add(middleware);
+		this.router.addMiddleware(middleware);
 	}
 
 	registerCors(cors: CorsInterface): void {

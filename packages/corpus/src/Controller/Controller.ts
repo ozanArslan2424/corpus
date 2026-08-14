@@ -50,7 +50,7 @@ export abstract class Controller {
 			{ method, path },
 			async (ctx) => {
 				await this.beforeEach?.(ctx);
-				return handler(ctx);
+				return await handler(ctx);
 			},
 			model,
 		);
@@ -76,7 +76,7 @@ export abstract class Controller {
 				? undefined
 				: async (ctx, content) => {
 						await this.beforeEach?.(ctx);
-						return callback(ctx, content);
+						return await callback(ctx, content);
 					},
 			model,
 		);

@@ -23,6 +23,10 @@ import type { RouterInterface, BaseRoute, RouterReturn, TC } from "../_modules";
  * RPS:        19849324
  */
 export class MemoiristAdapter implements RouterInterface {
+	addMiddleware(_middleware: TC.Middleware): void {}
+	findMiddlewares(_routeId: string): Array<TC.Middleware> {
+		return [];
+	}
 	readonly __brand: string = "MemoiristAdapter";
 	private readonly router = new Memoirist<BaseRoute>();
 
@@ -32,7 +36,7 @@ export class MemoiristAdapter implements RouterInterface {
 		if (!result) return null;
 		const route = result.store;
 		const params = result.params;
-		return { route, params };
+		return { route, params, middlewares: [] };
 	}
 
 	list(): Array<BaseRoute> {

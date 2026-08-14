@@ -1,6 +1,5 @@
 import type { Method } from "@/enums/Method";
 import type { Middleware } from "@/Middleware/Middleware";
-import type { MiddlewareHandler } from "@/Middleware/types";
 import type { Res } from "@/Res/Res";
 import type { BaseRoute } from "@/Route/BaseRoute";
 import type { ContextHandler } from "@/Route/types";
@@ -11,7 +10,6 @@ export interface RegistryInterface {
 	router: RouterInterface;
 	cors: CorsInterface | null;
 	prefix: string;
-	middlewareRouter: MiddlewareRouterInterface;
 	urlParamsParser: ObjectParserInterface<Record<string, string>>;
 	searchParamsParser: ObjectParserInterface<URLSearchParams>;
 	formDataParser: ObjectParserInterface<FormData>;
@@ -21,20 +19,16 @@ export interface RegistryInterface {
 }
 
 export interface RouterInterface {
-	readonly __brand: string;
 	find(method: Method, url: string | URL): RouterReturn | null;
 	add(data: BaseRoute): void;
 	list(): Array<BaseRoute>;
+	addMiddleware(middleware: Middleware): void;
+	findMiddlewares(routeId: string): Array<Middleware>;
 }
 
 export interface CorsInterface extends Middleware {
 	/** Preflight handler for OPTIONS requests. */
 	handlePreflight: ContextHandler;
-}
-
-export interface MiddlewareRouterInterface {
-	add(middleware: Middleware): void;
-	find(routeId: string): MiddlewareHandler[];
 }
 
 export interface ObjectParserInterface<T> {

@@ -1,7 +1,7 @@
 import { logFatal, logger } from "@/utils/logger";
 
-import { BranchRouter } from "../_modules";
 import { RouterBenchmark } from "../utils/RouterBenchmark";
+import { BranchRouter } from "./BranchRouter";
 import { MemoiristAdapter } from "./MemoiristAdapter";
 
 function main() {

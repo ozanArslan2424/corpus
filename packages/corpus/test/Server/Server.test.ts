@@ -66,20 +66,6 @@ describe("C.Server", () => {
 		expect(data.q).toBe("hello");
 	});
 
-	// ─── routes getter ────────────────────────────────────────────
-
-	it("ROUTES - GETTER RETURNS EMPTY ARRAY WHEN NONE REGISTERED", () => {
-		const s = createTestServer();
-		expect(s.routes).toEqual([]);
-	});
-
-	it("ROUTES - GETTER LISTS REGISTERED ROUTES", () => {
-		const s = createTestServer();
-		new TC.Route("/srv-list-1", () => "a");
-		new TC.Route("/srv-list-2", () => "b");
-		expect(s.routes.length).toBe(2);
-	});
-
 	// ─── method routing ───────────────────────────────────────────
 
 	it("METHOD - GET AND POST ON SAME PATH ARE DISTINCT", async () => {
@@ -371,26 +357,6 @@ describe("C.Server", () => {
 		const data = await parseBody<{ message: string }>(res);
 		expect(data.message).toContain("GET");
 		expect(data.message).toContain("/srv-default-404");
-	});
-
-	// ─── setGlobalPrefix ──────────────────────────────────────────
-
-	it("SET GLOBAL PREFIX - ROUTE IS ACCESSIBLE UNDER PREFIX", async () => {
-		const s = createTestServer();
-		s.setGlobalPrefix("/api");
-		new TC.Route("/srv-prefixed", () => "prefixed");
-		const res = await s.handle(new Request("http://localhost:4444/api/srv-prefixed"));
-		expect(res.status).toBe(200);
-		s.setGlobalPrefix("");
-	});
-
-	it("SET GLOBAL PREFIX - ROUTE IS NOT ACCESSIBLE WITHOUT PREFIX", async () => {
-		const s = createTestServer();
-		s.setGlobalPrefix("/api");
-		new TC.Route("/srv-no-prefix", () => "ok");
-		const res = await s.handle(new Request("http://localhost:4444/srv-no-prefix"));
-		expect(res.status).toBe(404);
-		s.setGlobalPrefix("");
 	});
 
 	// ─── setOnBeforeListen / setOnBeforeClose ─────────────────────

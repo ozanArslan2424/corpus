@@ -1,13 +1,6 @@
 import { logger } from "@/utils/logger";
-import type { nil } from "@/utils/types";
 
-import {
-	$registryTesting,
-	TC,
-	type RouterInterface,
-	type ServerApp,
-	type ServerOptions,
-} from "../_modules";
+import { $registryTesting, TC, type RouterInterface, type ServerOptions } from "../_modules";
 import { TEST_PORT } from "./req";
 
 export function createTestServer(
@@ -22,15 +15,7 @@ export function createTestServer(
 		$registryTesting.router = router;
 	}
 
-	class Server extends TC.Server {
-		compiled = false;
-		override handle(request: Request, server?: ServerApp | nil): Promise<Response> {
-			this.composeHandlers();
-			return super.handle(request, server);
-		}
-	}
-
-	const s = new Server(serverOpts);
+	const s = router ? new TC.ServerWithRouter({ ...serverOpts, router }) : new TC.Server(serverOpts);
 
 	if (withLogging === true) {
 		const defaultErrorHandler = s.handleError;

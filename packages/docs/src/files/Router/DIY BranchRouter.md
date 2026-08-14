@@ -1,4 +1,9 @@
+# Branch Router Example
+
+```ts
 import type { Method } from "@/enums/Method";
+import type { Middleware } from "@/Middleware/Middleware";
+import type { MiddlewareUseOn } from "@/Middleware/types";
 import type { RouterInterface } from "@/Registry/types";
 import type { BaseRoute } from "@/Route/BaseRoute";
 import type { RouterReturn } from "@/Router/types";
@@ -51,12 +56,12 @@ type FindResultReturn = {
  * RPS:        20426881
  */
 export class BranchRouter implements RouterInterface {
-	public readonly __brand: string = "BranchRouter";
 	private readonly WILD = "*";
 	private readonly EMPTY = "";
 	private readonly SLASH = "/";
 	private readonly SLASH_CHAR_CODE = 47;
 
+	private readonly middlewares = new Map<string, Array<Middleware>>();
 	private readonly _root: Branch = this.createBranch(this.SLASH, null);
 	private readonly storeFactory: Func<[], Store> = () => new Map();
 
@@ -69,7 +74,9 @@ export class BranchRouter implements RouterInterface {
 		if (!route) return null;
 		const params = result.params;
 
-		return { route, params };
+		const middlewares = this.findMiddlewares(route.id);
+
+		return { route, params, middlewares };
 	}
 
 	public add(route: BaseRoute): void {
@@ -101,6 +108,21 @@ export class BranchRouter implements RouterInterface {
 		walk(this._root);
 
 		return routes;
+	}
+
+	public addMiddleware(middleware: Middleware): void {
+		for (const routeId of this.resolveMiddlewareRouteIds(middleware.useOn)) {
+			const arr = this.middlewares.get(routeId);
+			if (arr) arr.push(middleware);
+			else this.middlewares.set(routeId, [middleware]);
+		}
+	}
+
+	public findMiddlewares(routeId: string): Array<Middleware> {
+		// if already searching for global, no need to concat
+		const global = routeId === "*" ? [] : (this.middlewares.get("*") ?? []);
+		const local = this.middlewares.get(routeId) ?? [];
+		return [...global, ...local];
 	}
 
 	private findResult(
@@ -382,4 +404,21 @@ export class BranchRouter implements RouterInterface {
 
 		return pathname;
 	}
+
+	private resolveMiddlewareRouteIds(useOn: MiddlewareUseOn): string[] {
+		if (useOn === "*") return ["*"];
+		const targets = Array.isArray(useOn) ? useOn : [useOn];
+		const routeIds = new Set<string>();
+		for (const target of targets) {
+			if (typeof target === "string") {
+				routeIds.add(target);
+			} else if ("id" in target) {
+				routeIds.add(target.id);
+			} else {
+				target.routeIds.forEach((id) => routeIds.add(id));
+			}
+		}
+		return Array.from(routeIds);
+	}
 }
+```

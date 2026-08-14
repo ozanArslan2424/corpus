@@ -1,4 +1,4 @@
-# Redis Adapter Example
+# Memoirist Router Example
 
 This example uses the Memoirist router from [Elysia](https://github.com/elysiajs/elysia).
 

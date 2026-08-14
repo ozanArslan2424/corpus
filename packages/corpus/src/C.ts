@@ -29,6 +29,5 @@ export * from "./Route/FileRouteAbstract";
 export * from "./Route/WebSocketRoute";
 export * from "./Route/WebSocketRouteAbstract";
 
-export * from "./Router/BranchRouter";
-
 export * from "./Server/Server";
+export * from "./Server/ServerWithRouter";
