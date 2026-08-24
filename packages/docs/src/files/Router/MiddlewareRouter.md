@@ -9,7 +9,7 @@ import {
 } from "@/Middleware/types";
 import type { MiddlewareRouterInterface } from "@/Registry/types";
 import type { MiddlewareRouterReturn } from "@/Router/types";
-import { compile } from "@/utils/compile";
+import { compile } from "@ozanarslan/utils/compile";
 
 export class MiddlewareRouter implements MiddlewareRouterInterface {
 	private readonly maps = {

@@ -1,6 +1,7 @@
+import { isNil } from "@ozanarslan/utils/maybe";
+
 import { MiddlewareAbstract } from "@/Middleware/MiddlewareAbstract";
 import type { MiddlewareOptions } from "@/Middleware/types";
-import { isNil } from "@/utils/is";
 
 /**
  * Simple Middleware registration class.

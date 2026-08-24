@@ -1,10 +1,10 @@
 import type { OrString } from "@ozanarslan/corpus";
+import { toPascalCase, toCamelCase, toKebabCase, quote } from "@ozanarslan/utils/lexical";
+import { isNil } from "@ozanarslan/utils/maybe";
 
 import { Importable } from "@/classes/Importable";
 import type { Config } from "@/config/Config";
 import { getConfig } from "@/config/getConfig";
-import { isNil } from "@/utils/is";
-import { toPascalCase, toCamelCase, toKebabCase, quote } from "@/utils/strings";
 
 export class Resource {
 	constructor(key: string) {

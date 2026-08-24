@@ -7,5 +7,5 @@
 	"access": "public",
 	"baseBranch": "main",
 	"updateInternalDependencies": "patch",
-	"ignore": ["corpus-docs"]
+	"ignore": ["corpus-docs", "benchmark", "@ozanarslan/utils"]
 }

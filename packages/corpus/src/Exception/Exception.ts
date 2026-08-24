@@ -1,6 +1,8 @@
+import { isNumber } from "@ozanarslan/utils/numerical";
+import { isObject } from "@ozanarslan/utils/object";
+
 import { Status } from "@/enums/Status";
 import { Res } from "@/Res/Res";
-import { isNumber, isObject } from "@/utils/is";
 
 export class Exception extends Error {
 	constructor(

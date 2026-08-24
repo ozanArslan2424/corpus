@@ -1,3 +1,5 @@
+import type { Func } from "@ozanarslan/utils/function";
+
 import type { Context } from "@/Context/Context";
 import { Method } from "@/enums/Method";
 import { BaseRoute } from "@/Route/BaseRoute";
@@ -7,7 +9,6 @@ import {
 	type WebSocketOnMessage,
 	type WebSocketOnOpen,
 } from "@/Route/types";
-import type { Func } from "@/utils/functions";
 
 export abstract class WebSocketRouteAbstract<E extends string = string> extends BaseRoute<E> {
 	abstract readonly onOpen?: WebSocketOnOpen;

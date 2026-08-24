@@ -1,25 +1,26 @@
+import { enumerate, type ValueOf } from "@ozanarslan/utils/enum";
+import type { Func } from "@ozanarslan/utils/function";
+import type { Schema } from "@ozanarslan/utils/schema";
+
 import type { Context } from "@/Context/Context";
 import type { CacheControlDirective } from "@/Directives/CacheControlDirective";
 import type { ContentDispositionDirective } from "@/Directives/ContentDispositionDirective";
 import type { Method } from "@/enums/Method";
 import type { Res } from "@/Res/Res";
 import type { ServerWebSocket } from "@/Server/types";
-import type { Func } from "@/utils/functions";
-import type { Schema } from "@/utils/Schema";
-import type { ValueOf } from "@/utils/ValueOf";
 
 export type ContextHandler<B = unknown, S = unknown, P = unknown, R = unknown> = Func<
 	[context: Context<B, S, P, R>],
 	Bun.MaybePromise<R>
 >;
 
-export const RouteVariant = {
+export const RouteVariant = enumerate({
 	static: "static",
 	file: "file",
 	dynamic: "dynamic",
 	websocket: "websocket",
 	bundle: "bundle",
-} as const;
+});
 
 export type RouteVariant = ValueOf<typeof RouteVariant>;
 

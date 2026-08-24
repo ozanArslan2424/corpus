@@ -21,7 +21,9 @@ const {
 console.log(`==== VALI ${VALI} ====`);
 
 export async function startServer(PORT: number = 9876) {
-	const server = new C.Server();
+	const server = new C.Server({
+		port: PORT,
+	});
 
 	// ── Parameterised routes (existing) ──────────────────────────────────────────
 
@@ -145,5 +147,5 @@ export async function startServer(PORT: number = 9876) {
 	//  START & RUN
 	// ─────────────────────────────────────────────────────────────────────────────
 
-	await server.listen(PORT);
+	await server.listen();
 }

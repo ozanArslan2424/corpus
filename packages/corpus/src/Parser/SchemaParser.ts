@@ -1,8 +1,9 @@
+import { isObjectWith } from "@ozanarslan/utils/object";
+import type { Schema, ValidationIssues } from "@ozanarslan/utils/schema";
+
 import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
 import type { SchemaParserInterface } from "@/Registry/types";
-import { isObjectWith } from "@/utils/objects";
-import type { Schema, ValidationIssues } from "@/utils/Schema";
 
 export class SchemaParser implements SchemaParserInterface {
 	async parse<T = Record<string, unknown>>(

@@ -1,3 +1,6 @@
+import { noop } from "@ozanarslan/utils/function";
+import type { Maybe } from "@ozanarslan/utils/maybe";
+
 import { Context } from "@/Context/Context";
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Method } from "@/enums/Method";
@@ -5,8 +8,6 @@ import type { MiddlewareHandler } from "@/Middleware/types";
 import { $registry } from "@/registry";
 import { ServerAbstract } from "@/Server/ServerAbstract";
 import type { ServerApp, ServerOptionsWithRouter } from "@/Server/types";
-import { noop } from "@/utils/functions";
-import type { nil } from "@/utils/types";
 
 const NOT_FOUND_CHAIN = "NOT_FOUND_CHAIN";
 
@@ -17,7 +18,7 @@ export class ServerWithRouter extends ServerAbstract {
 		this.init(opts);
 	}
 
-	async handle(request: Request, server?: ServerApp | nil): Promise<Response> {
+	async handle(request: Request, server?: Maybe<ServerApp>): Promise<Response> {
 		const context = new Context(request, server);
 
 		return this.finalize(context, async (c) => {

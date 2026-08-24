@@ -1,4 +1,4 @@
-import type { Logger } from "@/utils/logger";
+import type { Logger } from "@ozanarslan/utils/logger";
 
 import { TC, type WebSocketRouteCallbacks } from "../_modules";
 

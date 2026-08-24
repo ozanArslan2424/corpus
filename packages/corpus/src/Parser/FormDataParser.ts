@@ -1,5 +1,6 @@
+import { createSafeObject } from "@ozanarslan/utils/object";
+
 import { ObjectParserAbstract } from "@/Parser/ObjectParserAbstract";
-import { createSafeObject } from "@/utils/objects";
 
 export class FormDataParser extends ObjectParserAbstract<FormData> {
 	parse(formData: FormData): Record<string, unknown> {

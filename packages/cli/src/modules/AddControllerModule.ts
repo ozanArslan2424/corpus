@@ -1,15 +1,16 @@
 import fs from "fs";
 
+import { assert } from "@ozanarslan/utils/assert";
+import { isString, quote } from "@ozanarslan/utils/lexical";
+import { isNil } from "@ozanarslan/utils/maybe";
+import { objGetEntries, objGetValues } from "@ozanarslan/utils/object";
+import { StringBuilder } from "@ozanarslan/utils/StringBuilder";
+
 import { Importable } from "@/classes/Importable";
 import { MainFileUpdater } from "@/classes/MainFileUpdater";
 import { EXE_NAME, NAME_FLAG_HELP, NEVER_SCHEMAS } from "@/constants";
 import { parseModelDefinition } from "@/functions/parseModelDefinition";
-import { assert } from "@/utils/assert";
-import { isNil, isString } from "@/utils/is";
-import { ModuleAbstract } from "@/utils/ModuleAbstract";
-import { objGetEntries, objGetValues } from "@/utils/objects";
-import { StringBuilder } from "@/utils/StringBuilder";
-import { quote } from "@/utils/strings";
+import { ModuleAbstract } from "@/modules/ModuleAbstract";
 
 export class AddControllerModule extends ModuleAbstract {
 	constructor(private readonly mainFileUpdater: MainFileUpdater) {

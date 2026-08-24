@@ -1,4 +1,4 @@
-import { logFatal, logger } from "@/utils/logger";
+import { logFatal, logger } from "@ozanarslan/utils/logger";
 
 import { RouterBenchmark } from "../utils/RouterBenchmark";
 import { BranchRouter } from "./BranchRouter";

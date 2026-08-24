@@ -1,14 +1,15 @@
 import fs from "fs";
 
+import { assert } from "@ozanarslan/utils/assert";
+import { objGetEntries, objGetValues } from "@ozanarslan/utils/object";
+import { StringBuilder } from "@ozanarslan/utils/StringBuilder";
+
 import { Importable } from "@/classes/Importable";
 import { MainFileUpdater } from "@/classes/MainFileUpdater";
 import { EXE_NAME, NAME_FLAG_HELP, NEVER_SCHEMAS } from "@/constants";
 import { checkNotImplementedExceptionExists } from "@/functions/checkNotImplementedExceptionExists";
 import { parseModelDefinition } from "@/functions/parseModelDefinition";
-import { assert } from "@/utils/assert";
-import { ModuleAbstract } from "@/utils/ModuleAbstract";
-import { objGetEntries, objGetValues } from "@/utils/objects";
-import { StringBuilder } from "@/utils/StringBuilder";
+import { ModuleAbstract } from "@/modules/ModuleAbstract";
 
 export class AddServiceModule extends ModuleAbstract {
 	constructor(private readonly mainFileUpdater: MainFileUpdater) {

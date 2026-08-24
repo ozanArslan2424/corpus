@@ -1,3 +1,5 @@
+import { noop } from "@ozanarslan/utils/function";
+
 import { Context } from "@/Context/Context";
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Method } from "@/enums/Method";
@@ -5,8 +7,6 @@ import { $registry } from "@/registry";
 import type { ContextHandler } from "@/Route/types";
 import { ServerAbstract } from "@/Server/ServerAbstract";
 import type { ServerApp, ServerHandler, ServerOptions, ServerRouteMap } from "@/Server/types";
-import { noop } from "@/utils/functions";
-import type { nil } from "@/utils/types";
 
 export class Server extends ServerAbstract {
 	constructor(opts?: ServerOptions) {
@@ -14,7 +14,7 @@ export class Server extends ServerAbstract {
 		this.init(opts);
 	}
 
-	async handle(request: Request, server?: ServerApp | nil): Promise<Response> {
+	async handle(request: Request, server?: ServerApp | null | undefined): Promise<Response> {
 		const context = new Context(request, server);
 		return this.finalize(context, async (c) => {
 			try {

@@ -1,15 +1,15 @@
 import fs from "fs";
 import path from "path";
 
+import { cache } from "@ozanarslan/utils/cache";
+import { isString, quote } from "@ozanarslan/utils/lexical";
+import { logger } from "@ozanarslan/utils/logger";
+import { objGetEntries, isObject } from "@ozanarslan/utils/object";
+import { StringBuilder } from "@ozanarslan/utils/StringBuilder";
+
 import type { Config } from "@/config/Config";
 import { CONFIG_FILE_NAME } from "@/constants";
-import { cache } from "@/utils/cache";
-import { isObject, isString } from "@/utils/is";
-import { logger } from "@/utils/logger";
-import { objGetEntries } from "@/utils/objects";
-import { resolveCwdPath } from "@/utils/paths";
-import { StringBuilder } from "@/utils/StringBuilder";
-import { quote } from "@/utils/strings";
+import { resolveCwdPath } from "@/functions/resolveCwdPath";
 
 export function getDefaultConfig(): Config {
 	return {

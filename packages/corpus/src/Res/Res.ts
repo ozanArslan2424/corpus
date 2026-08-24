@@ -1,12 +1,12 @@
+import { isNil, isUndefined } from "@ozanarslan/utils/maybe";
+import { isPrimitive } from "@ozanarslan/utils/primitive";
+
 import { ContentDispositionDirective } from "@/Directives/ContentDispositionDirective";
 import { DefaultStatusTexts } from "@/enums/DefaultStatusTexts";
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
 import type { ResInit, SseSource, NdjsonSource } from "@/Res/types";
-import { isNil, isUndefined } from "@/utils/is";
-import { isPrimitive } from "@/utils/primitives";
-import type { nil } from "@/utils/types";
 import { XFile } from "@/XFile/XFile";
 
 /**
@@ -37,7 +37,7 @@ import { XFile } from "@/XFile/XFile";
 
 export class Res<R = unknown> {
 	constructor(
-		public body?: BodyInit | R | nil,
+		public body?: BodyInit | R | null | undefined,
 		protected readonly init?: ResInit | Res,
 	) {
 		if (init?.status) this.status = init.status;
@@ -68,7 +68,7 @@ export class Res<R = unknown> {
 	}
 
 	// Single pass: body + content-type together, no double instanceof walk.
-	private resolve(): [BodyInit | nil, string | undefined] {
+	private resolve(): [BodyInit | null | undefined, string | undefined] {
 		const b = this.body;
 		if (isNil(b)) return [b, undefined];
 		if (isPrimitive(b)) return [String(b), "text/plain"];

@@ -4,7 +4,7 @@ import { Route } from "@/Route/Route";
 import { StaticRoute } from "@/Route/StaticRoute";
 import { WebSocketRoute } from "@/Route/WebSocketRoute";
 import type { ContextHandler } from "@/types";
-import { joinPathSegments } from "@/utils/joinPathSegments";
+import { joinPathSegments } from "@ozanarslan/utils/joinPathSegments";
 
 /**
  * Base class for grouping related routes under a shared prefix and optional middleware.

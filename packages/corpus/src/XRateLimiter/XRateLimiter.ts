@@ -1,5 +1,9 @@
 import crypto from "crypto";
 
+import { logFatal } from "@ozanarslan/utils/logger";
+import { isEmpty } from "@ozanarslan/utils/maybe";
+import { objGetEntries, objGetValues } from "@ozanarslan/utils/object";
+
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
@@ -7,9 +11,6 @@ import { MiddlewareAbstract } from "@/Middleware/MiddlewareAbstract";
 import type { MiddlewareUseOn, MiddlewareHandler } from "@/Middleware/types";
 import { $registry } from "@/registry";
 import { RouteVariant } from "@/Route/types";
-import { logFatal } from "@/utils/logger";
-import { objGetEntries, objGetValues } from "@/utils/objects";
-import { strIsDefined } from "@/utils/strings";
 import type { RateLimitConfig } from "@/XRateLimiter/RateLimitConfig";
 import { RateLimiterFileStore } from "@/XRateLimiter/RateLimiterFileStore";
 import { RateLimiterMemoryStore } from "@/XRateLimiter/RateLimiterMemoryStore";
@@ -109,7 +110,7 @@ export class XRateLimiter extends MiddlewareAbstract {
 		// --- Authenticated: hash the JWT token ---
 		const authHeader = headers.get(HeaderKey.Authorization);
 		const token = authHeader?.split(" ")[1];
-		if (strIsDefined(token) && token.length >= 20 && token.length <= 2048) {
+		if (!isEmpty(token) && token.length >= 20 && token.length <= 2048) {
 			return `u:${this.hash(token, 16)}`;
 		}
 
@@ -143,7 +144,7 @@ export class XRateLimiter extends MiddlewareAbstract {
 	}
 
 	private isValidIp(ip: string | null | undefined): ip is string {
-		if (!strIsDefined(ip) || ip.length === 0) return false;
+		if (!!isEmpty(ip) || ip.length === 0) return false;
 
 		// IPv4
 		if (ip.includes(".")) {

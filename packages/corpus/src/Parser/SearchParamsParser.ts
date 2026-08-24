@@ -1,5 +1,6 @@
+import { createSafeObject } from "@ozanarslan/utils/object";
+
 import { ObjectParserAbstract } from "@/Parser/ObjectParserAbstract";
-import { createSafeObject } from "@/utils/objects";
 
 export class SearchParamsParser extends ObjectParserAbstract<URLSearchParams> {
 	parse(searchParams: URLSearchParams): Record<string, unknown> {

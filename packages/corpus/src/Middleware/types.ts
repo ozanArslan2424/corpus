@@ -1,7 +1,8 @@
+import type { Func } from "@ozanarslan/utils/function";
+
 import type { Context } from "@/Context/Context";
 import type { Controller } from "@/Controller/Controller";
 import type { BaseRoute } from "@/Route/BaseRoute";
-import type { Func } from "@/utils/functions";
 
 export type MiddlewareHandler<R = unknown> = Func<
 	[context: Context, next: Func<[], Bun.MaybePromise<R>>],

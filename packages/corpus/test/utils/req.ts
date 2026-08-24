@@ -1,4 +1,4 @@
-import { joinPathSegments } from "@/utils/joinPathSegments";
+import { joinPathSegments } from "@ozanarslan/utils/joinPathSegments";
 
 import { $registryTesting } from "../_modules";
 

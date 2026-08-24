@@ -1,9 +1,10 @@
+import type { Func } from "@ozanarslan/utils/function";
+
 import type { Context } from "@/Context/Context";
 import type { Method } from "@/enums/Method";
 import { resolveRouteAddress } from "@/Route/resolveRouteAddress";
 import { RouteAbstract } from "@/Route/RouteAbstract";
 import type { ContextHandler, RouteAddress, RouteModel } from "@/Route/types";
-import type { Func } from "@/utils/functions";
 
 /**
  * Defines an HTTP endpoint. Accepts a {@link RouteAddress} which can either be a plain

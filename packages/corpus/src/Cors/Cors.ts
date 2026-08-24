@@ -6,8 +6,8 @@ import { $registry } from "@/registry";
 import type { CorsInterface } from "@/Registry/types";
 import { Res } from "@/Res/Res";
 import type { ContextHandler } from "@/Route/types";
-import { isSomeArray } from "@/utils/arrays";
-import { boolToString } from "@/utils/booleans";
+import { isSomeArray } from "@ozanarslan/utils/array";
+import { boolToString } from "@ozanarslan/utils/booleans";
 
 /**
  * Simple cors helper to set CORS headers. Also provides a preflight handler for the Server.

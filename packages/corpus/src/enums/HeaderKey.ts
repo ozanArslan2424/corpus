@@ -1,8 +1,8 @@
-import type { OrString } from "@/utils/strings";
-import type { ValueOf } from "@/utils/ValueOf";
+import { enumerate, type ValueOf } from "@ozanarslan/utils/enum";
+import type { OrString } from "@ozanarslan/utils/lexical";
 
 /** Just some common headers. */
-export const HeaderKey = {
+export const HeaderKey = enumerate({
 	/** Controls caching mechanisms for requests and responses */
 	CacheControl: "Cache-Control",
 	/** Specifies the media type of the resource or data */
@@ -65,6 +65,6 @@ export const HeaderKey = {
 	Cookie: "Cookie",
 	/** Determines which headers should be used to select a response from cache when content negotiation is in use */
 	Vary: "Vary",
-} as const;
+});
 
 export type HeaderKey = OrString<ValueOf<typeof HeaderKey>>;

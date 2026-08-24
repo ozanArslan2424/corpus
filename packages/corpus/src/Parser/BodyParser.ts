@@ -1,9 +1,10 @@
+import { createSafeObject } from "@ozanarslan/utils/object";
+
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
 import type { BodyParserInterface, ObjectParserInterface } from "@/Registry/types";
 import type { Res } from "@/Res/Res";
-import { createSafeObject } from "@/utils/objects";
 
 type NormalizedContentType =
 	| "json"

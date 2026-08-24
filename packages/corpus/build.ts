@@ -1,9 +1,8 @@
 import fs from "fs/promises";
 
+import { logger } from "@ozanarslan/utils/logger";
+import { Timer } from "@ozanarslan/utils/Timer";
 import dts from "bun-plugin-dts";
-
-import { logger } from "@/utils/logger";
-import { Timer } from "@/utils/Timer";
 
 async function clean(outdir: string) {
 	const exists = await fs.exists(outdir);

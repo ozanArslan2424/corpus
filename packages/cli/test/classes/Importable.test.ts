@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, mock, spyOn, test } from "bun:test";
 import path from "path";
 
+import type { Nullable } from "@ozanarslan/utils/maybe";
+
 import type { Config } from "@/config/Config";
 import { defineConfig } from "@/config/defineConfig";
 import type { PartialTsConfig } from "@/config/getTsConfig";
-import type { Nullable } from "@/utils/types";
 
 let mockConfig: Config;
 let mockTsConfig: Nullable<PartialTsConfig>;

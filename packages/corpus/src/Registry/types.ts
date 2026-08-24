@@ -1,10 +1,11 @@
+import type { Schema } from "@ozanarslan/utils/schema";
+
 import type { Method } from "@/enums/Method";
 import type { Middleware } from "@/Middleware/Middleware";
 import type { Res } from "@/Res/Res";
 import type { BaseRoute } from "@/Route/BaseRoute";
 import type { ContextHandler } from "@/Route/types";
 import type { RouterReturn } from "@/Router/types";
-import type { Schema } from "@/utils/Schema";
 
 export interface RegistryInterface {
 	router: RouterInterface;

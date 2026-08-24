@@ -1,9 +1,10 @@
+import type { Func } from "@ozanarslan/utils/function";
+import type { OrString } from "@ozanarslan/utils/lexical";
+
 import type { Context } from "@/Context/Context";
 import type { Method } from "@/enums/Method";
 import type { WebSocketRoute } from "@/Route/WebSocketRoute";
 import type { RouterInterface } from "@/types";
-import type { Func } from "@/utils/functions";
-import type { OrString } from "@/utils/strings";
 
 export interface ServerOptions {
 	port?: number;

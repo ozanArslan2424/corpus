@@ -1,3 +1,5 @@
+import type { Func } from "@ozanarslan/utils/function";
+
 import type { Context } from "@/Context/Context";
 import { CacheControlDirective } from "@/Directives/CacheControlDirective";
 import { HeaderKey } from "@/enums/HeaderKey";
@@ -7,7 +9,6 @@ import { Exception } from "@/Exception/Exception";
 import { Res } from "@/Res/Res";
 import { BaseRoute } from "@/Route/BaseRoute";
 import { type StaticRouteRes, RouteVariant } from "@/Route/types";
-import type { Func } from "@/utils/functions";
 import { XFile } from "@/XFile/XFile";
 
 export abstract class StaticRouteAbstract<

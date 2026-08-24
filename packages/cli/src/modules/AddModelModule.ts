@@ -1,11 +1,12 @@
+import { assert } from "@ozanarslan/utils/assert";
+import { quote } from "@ozanarslan/utils/lexical";
+import { isNil } from "@ozanarslan/utils/maybe";
+import { StringBuilder } from "@ozanarslan/utils/StringBuilder";
+
 import { Importable } from "@/classes/Importable";
 import type { Config } from "@/config/Config";
 import { EXE_NAME, NAME_FLAG_HELP } from "@/constants";
-import { assert } from "@/utils/assert";
-import { isNil } from "@/utils/is";
-import { ModuleAbstract } from "@/utils/ModuleAbstract";
-import { StringBuilder } from "@/utils/StringBuilder";
-import { quote } from "@/utils/strings";
+import { ModuleAbstract } from "@/modules/ModuleAbstract";
 
 export class AddModelModule extends ModuleAbstract {
 	override keys: string[] = ["model", "mdl"];

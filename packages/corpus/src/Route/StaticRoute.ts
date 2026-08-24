@@ -1,8 +1,9 @@
+import type { Func } from "@ozanarslan/utils/function";
+
 import type { Context } from "@/Context/Context";
 import { resolveRouteAddress } from "@/Route/resolveRouteAddress";
 import { StaticRouteAbstract } from "@/Route/StaticRouteAbstract";
 import type { RouteAddress, RouteModel, StaticRouteRes } from "@/Route/types";
-import type { Func } from "@/utils/functions";
 
 /**
  * Defines a route that serves a static file. Accepts a path and a {@link StaticRouteDefinition}

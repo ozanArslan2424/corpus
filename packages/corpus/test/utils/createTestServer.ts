@@ -1,4 +1,4 @@
-import { logger } from "@/utils/logger";
+import { logger } from "@ozanarslan/utils/logger";
 
 import { $registryTesting, TC, type RouterInterface, type ServerOptions } from "../_modules";
 import { TEST_PORT } from "./req";

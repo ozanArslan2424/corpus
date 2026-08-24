@@ -15,8 +15,8 @@ import type {
 import type { BaseRoute } from "@/Route/BaseRoute";
 import { RouteVariant } from "@/Route/types";
 import { InternalRouteRegexpMatcher } from "@/Router/InternalRouteRegexpMatcher";
-import { arrIncludes } from "@/utils/arrays";
-import { joinPathSegments } from "@/utils/joinPathSegments";
+import { arrIncludes } from "@ozanarslan/utils/array";
+import { joinPathSegments } from "@ozanarslan/utils/joinPathSegments";
 
 export class Registry implements RegistryInterface {
 	constructor() {

@@ -1,6 +1,8 @@
+import type { Func } from "@ozanarslan/utils/function";
+import type { OrString } from "@ozanarslan/utils/lexical";
+import { isEmpty } from "@ozanarslan/utils/maybe";
+
 import type { Env } from "@/types";
-import type { Func } from "@/utils/functions";
-import { type OrString, strIsDefined } from "@/utils/strings";
 
 type NodeEnv = OrString<"development" | "production" | "test">;
 type EnvKey = OrString<keyof Env>;
@@ -27,7 +29,7 @@ export class XConfig {
 	}
 
 	static has(key: EnvKey): boolean {
-		return strIsDefined(this.env[key]);
+		return !isEmpty(this.env[key]);
 	}
 
 	static get(key: EnvKey): string | undefined;
@@ -42,7 +44,7 @@ export class XConfig {
 	): T | undefined {
 		const value = this.env[key];
 
-		if (strIsDefined(value)) {
+		if (!isEmpty(value)) {
 			return opts?.parser ? opts.parser(value) : (value as T);
 		}
 
@@ -56,7 +58,7 @@ export class XConfig {
 	static require<T = string>(key: EnvKey, parser?: Func<[string], T>): T {
 		const value = this.env[key];
 
-		if (!strIsDefined(value)) {
+		if (!!isEmpty(value)) {
 			throw new Error(`Required environment variable "${key}" is not set`);
 		}
 

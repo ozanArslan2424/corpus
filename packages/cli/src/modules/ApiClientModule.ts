@@ -2,12 +2,13 @@ import { spawnSync } from "child_process";
 import fs from "fs";
 import path from "path";
 
+import { findEnclosingFunctionName } from "@ozanarslan/utils/function";
+import { logFatal, logger } from "@ozanarslan/utils/logger";
+import { StringBuilder } from "@ozanarslan/utils/StringBuilder";
+
 import { EXE_NAME, GEN_FUNC, LISTEN_PATTERN } from "@/constants";
-import { findEnclosingFunctionName } from "@/utils/functions";
-import { logFatal, logger } from "@/utils/logger";
-import { ModuleAbstract } from "@/utils/ModuleAbstract";
-import { resolveCwdPath } from "@/utils/paths";
-import { StringBuilder } from "@/utils/StringBuilder";
+import { resolveCwdPath } from "@/functions/resolveCwdPath";
+import { ModuleAbstract } from "@/modules/ModuleAbstract";
 
 export class ApiClientModule extends ModuleAbstract {
 	override keys = ["api"];

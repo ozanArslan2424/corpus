@@ -1,6 +1,6 @@
 import { type } from "arktype";
 
-import { TestHelper } from "@/utils/TestHelper";
+import { TestHelper } from "@ozanarslan/utils/TestHelper";
 
 import { TC } from "../_modules";
 

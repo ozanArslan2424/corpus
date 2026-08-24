@@ -1,5 +1,7 @@
 import path from "path";
 
+import type { Func } from "@ozanarslan/utils/function";
+
 import type { Context } from "@/Context/Context";
 import { CacheControlDirective } from "@/Directives/CacheControlDirective";
 import { ContentDispositionDirective } from "@/Directives/ContentDispositionDirective";
@@ -15,7 +17,6 @@ import {
 	type RouteModel,
 	type StaticRouteRes,
 } from "@/Route/types";
-import type { Func } from "@/utils/functions";
 import { XFile } from "@/XFile/XFile";
 
 export abstract class BundleRouteAbstract<

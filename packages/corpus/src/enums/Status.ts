@@ -1,8 +1,8 @@
-import type { ValueOf } from "@/utils/ValueOf";
-
 /** Commonly used HTTP status codes. */
 
-export const Status = {
+import { enumerate, type ValueOf } from "@ozanarslan/utils/enum";
+
+export const Status = enumerate({
 	/** --- 1xx Informational --- */
 	/** Continue: Request received, please continue */
 	CONTINUE: 100,
@@ -136,6 +136,6 @@ export const Status = {
 	NOT_EXTENDED: 510,
 	/** Network Authentication Required */
 	NETWORK_AUTHENTICATION_REQUIRED: 511,
-} as const;
+});
 
 export type Status = ValueOf<typeof Status> | (number & {});

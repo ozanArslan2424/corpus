@@ -1,7 +1,9 @@
+import { isString } from "@ozanarslan/utils/lexical";
+import { isNil } from "@ozanarslan/utils/maybe";
+
 import { FileRouteAbstract } from "@/Route/FileRouteAbstract";
 import { resolveRouteAddress } from "@/Route/resolveRouteAddress";
 import type { FileRouteDefinition, RouteAddress } from "@/Route/types";
-import { isString, isNil } from "@/utils/is";
 
 /**
  * Defines a route that serves a static file. Accepts a path and a {@link FileRouteDefinition}

@@ -1,10 +1,11 @@
+import type { Func } from "@ozanarslan/utils/function";
+
 import type { Method } from "@/enums/Method";
 import type { Middleware } from "@/Middleware/Middleware";
 import type { MiddlewareUseOn } from "@/Middleware/types";
 import type { RouterInterface } from "@/Registry/types";
 import type { BaseRoute } from "@/Route/BaseRoute";
 import type { RouterReturn } from "@/Router/types";
-import type { Func } from "@/utils/functions";
 
 type Store = Map<Method, BaseRoute>;
 

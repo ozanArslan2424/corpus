@@ -1,3 +1,6 @@
+import type { Func } from "@ozanarslan/utils/function";
+import { isNil } from "@ozanarslan/utils/maybe";
+
 import type { Context } from "@/Context/Context";
 import { CacheControlDirective } from "@/Directives/CacheControlDirective";
 import { ContentDispositionDirective } from "@/Directives/ContentDispositionDirective";
@@ -8,8 +11,6 @@ import { Exception } from "@/Exception/Exception";
 import { Res } from "@/Res/Res";
 import { BaseRoute } from "@/Route/BaseRoute";
 import { type StaticRouteRes, RouteVariant } from "@/Route/types";
-import type { Func } from "@/utils/functions";
-import { isNil } from "@/utils/is";
 import { XFile } from "@/XFile/XFile";
 
 export abstract class FileRouteAbstract<E extends string = string> extends BaseRoute<

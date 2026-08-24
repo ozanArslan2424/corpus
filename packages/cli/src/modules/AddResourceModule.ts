@@ -1,3 +1,6 @@
+import { assert } from "@ozanarslan/utils/assert";
+import { quote } from "@ozanarslan/utils/lexical";
+
 import { MainFileUpdater } from "@/classes/MainFileUpdater";
 import { Resource } from "@/classes/Resource";
 import { EXE_NAME, NAME_FLAG_HELP } from "@/constants";
@@ -5,9 +8,7 @@ import type { AddControllerModule } from "@/modules/AddControllerModule";
 import type { AddExceptionModule } from "@/modules/AddExceptionModule";
 import type { AddModelModule } from "@/modules/AddModelModule";
 import type { AddServiceModule } from "@/modules/AddServiceModule";
-import { assert } from "@/utils/assert";
-import { ModuleAbstract } from "@/utils/ModuleAbstract";
-import { quote } from "@/utils/strings";
+import { ModuleAbstract } from "@/modules/ModuleAbstract";
 
 export class AddResourceModule extends ModuleAbstract {
 	constructor(

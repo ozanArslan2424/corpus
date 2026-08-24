@@ -1,6 +1,7 @@
+import type { InferSchemaOut, Schema } from "@ozanarslan/utils/schema";
+import type { Prettify } from "@ozanarslan/utils/types";
+
 import type { RouteModel } from "@/Route/types";
-import type { InferSchemaOut, Schema } from "@/utils/Schema";
-import type { Prettify } from "@/utils/types";
 
 /** If you prefer to put all schemas into a single object, this will be helpful */
 export type XInferModel<T extends Record<string, any>> = {

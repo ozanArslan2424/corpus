@@ -1,3 +1,9 @@
+import { arrIncludes } from "@ozanarslan/utils/array";
+import { noop, type Func } from "@ozanarslan/utils/function";
+import type { OrString } from "@ozanarslan/utils/lexical";
+import { logger } from "@ozanarslan/utils/logger";
+import { isEmpty, type Maybe } from "@ozanarslan/utils/maybe";
+
 import { Context } from "@/Context/Context";
 import { Method } from "@/enums/Method";
 import { Status } from "@/enums/Status";
@@ -9,21 +15,15 @@ import type { BaseRoute } from "@/Route/BaseRoute";
 import { RouteVariant, type ContextHandler } from "@/Route/types";
 import { WebSocketRoute } from "@/Route/WebSocketRoute";
 import type { ErrorHandler, ServerApp, ServerOptions } from "@/Server/types";
-import { arrIncludes } from "@/utils/arrays";
-import { noop, type Func } from "@/utils/functions";
-import { isEmpty } from "@/utils/is";
-import { logger } from "@/utils/logger";
-import type { OrString } from "@/utils/strings";
-import type { nil } from "@/utils/types";
 import { XConfig } from "@/XConfig/XConfig";
 
 export abstract class ServerAbstract {
-	abstract handle(request: Request, server?: ServerApp | nil): Promise<Response>;
+	abstract handle(request: Request, server?: Maybe<ServerApp>): Promise<Response>;
 
 	port: number = 3000;
-	hostname?: OrString<"0.0.0.0" | "127.0.0.1" | "localhost"> | undefined;
-	idleTimeout?: number | undefined;
-	tls?: { cert: string | Buffer; key: string | Buffer; ca?: string | Buffer } | undefined;
+	hostname?: OrString<"0.0.0.0" | "127.0.0.1" | "localhost">;
+	idleTimeout?: number;
+	tls?: { cert: string | Buffer; key: string | Buffer; ca?: string | Buffer };
 
 	async listen(): Promise<void> {
 		try {

@@ -1,4 +1,4 @@
-import { ModuleAbstract } from "@/utils/ModuleAbstract";
+import { ModuleAbstract } from "@/modules/ModuleAbstract";
 
 export class BaseModule extends ModuleAbstract {
 	override keys = ["base"];

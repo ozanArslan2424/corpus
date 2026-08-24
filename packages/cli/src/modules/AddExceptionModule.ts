@@ -1,9 +1,10 @@
+import { assert } from "@ozanarslan/utils/assert";
+import { quote } from "@ozanarslan/utils/lexical";
+import { StringBuilder } from "@ozanarslan/utils/StringBuilder";
+
 import { Importable } from "@/classes/Importable";
 import { EXE_NAME, NAME_FLAG_HELP } from "@/constants";
-import { assert } from "@/utils/assert";
-import { ModuleAbstract } from "@/utils/ModuleAbstract";
-import { StringBuilder } from "@/utils/StringBuilder";
-import { quote } from "@/utils/strings";
+import { ModuleAbstract } from "@/modules/ModuleAbstract";
 
 export class AddExceptionModule extends ModuleAbstract {
 	override keys: string[] = ["exception", "exc"];

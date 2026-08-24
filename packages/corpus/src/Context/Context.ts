@@ -1,10 +1,10 @@
+import { strSplit } from "@ozanarslan/utils/lexical";
+import { createSafeObject } from "@ozanarslan/utils/object";
+
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Res } from "@/Res/Res";
 import type { ServerApp } from "@/Server/types";
 import type { ContextDataInterface } from "@/types";
-import { createSafeObject } from "@/utils/objects";
-import { strSplit } from "@/utils/strings";
-import type { nil } from "@/utils/types";
 
 /**
  * The context object used in Route "callback" parameter.
@@ -36,7 +36,7 @@ type RawBody =
 export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	constructor(
 		public readonly req: Request,
-		public readonly server: ServerApp | nil,
+		public readonly server: ServerApp | null | undefined,
 	) {}
 
 	rawBody: RawBody;

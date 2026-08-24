@@ -1,9 +1,9 @@
-import type { OrString } from "@/utils/strings";
-import type { ValueOf } from "@/utils/ValueOf";
+import { enumerate, type ValueOf } from "@ozanarslan/utils/enum";
+import type { OrString } from "@ozanarslan/utils/lexical";
 
 /** Commonly used HTTP verbs. */
 
-export const Method = {
+export const Method = enumerate({
 	/* Retrieve a resource from the server */
 	GET: "GET",
 	/* Submit data to create a new resource */
@@ -22,6 +22,6 @@ export const Method = {
 	CONNECT: "CONNECT",
 	/* Echo back received request */
 	TRACE: "TRACE",
-} as const;
+});
 
 export type Method = OrString<ValueOf<typeof Method>>;
