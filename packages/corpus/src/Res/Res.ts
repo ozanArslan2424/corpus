@@ -72,17 +72,15 @@ export class Res<R = unknown> {
 		const b = this.body;
 		if (isNil(b)) return [b, undefined];
 		if (isPrimitive(b)) return [String(b), "text/plain"];
-		if (typeof b === "object") {
-			if (b instanceof ArrayBuffer) return [b, "application/octet-stream"];
-			if (b instanceof Blob) return [b, b.type || undefined];
-			if (b instanceof FormData) return [b, "multipart/form-data"];
-			if (b instanceof URLSearchParams) return [b, "application/x-www-form-urlencoded"];
-			if (b instanceof ReadableStream) return [b, undefined];
-			if (b instanceof Date) return [b.toISOString(), "text/plain"];
-			// plain object or array
-			return [JSON.stringify(b), "application/json"];
-		}
-		return [String(b), undefined];
+		if (typeof b !== "object") return [String(b), undefined];
+		if (b instanceof ArrayBuffer) return [b, "application/octet-stream"];
+		if (b instanceof Blob) return [b, b.type || undefined];
+		if (b instanceof FormData) return [b, "multipart/form-data"];
+		if (b instanceof URLSearchParams) return [b, "application/x-www-form-urlencoded"];
+		if (b instanceof ReadableStream) return [b, undefined];
+		if (b instanceof Date) return [b.toISOString(), "text/plain"];
+		// plain object or array
+		return [JSON.stringify(b), "application/json"];
 	}
 
 	private _statusText: string | undefined;
