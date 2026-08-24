@@ -59,10 +59,10 @@ export class Server extends ServerAbstract {
 				message: (ws, msg) => ws.data.onMessage?.(ws, msg),
 				close: (ws, code, reason) => ws.data.onClose?.(ws, code, reason),
 			},
-			error: (err) => {
-				const context = (err as any).context as Context;
-				return this.finalize(context, (c) => this.handleError(err, c));
-			},
+			error: (err) =>
+				this.finalize((err as Error & { context: Context }).context, (c) =>
+					this.handleError(err, c),
+				),
 		});
 
 		return this.app;
@@ -129,9 +129,8 @@ export class Server extends ServerAbstract {
 			try {
 				return await handler(c);
 			} catch (err) {
-				const error = err as Error;
 				// we use bun's native error handler by appending the context to the error
-				Object.assign(error, { context: c });
+				Object.assign(err as Error, { context: c });
 				throw err;
 			}
 		};
