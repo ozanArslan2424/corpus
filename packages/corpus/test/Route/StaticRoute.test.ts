@@ -1,11 +1,9 @@
-import { beforeEach, describe, expect, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import path from "path";
 
-import { $registryTesting, TC, TX } from "../_modules";
+import { TC, TX } from "../_modules";
 import { createTestServer } from "../utils/createTestServer";
 import { req } from "../utils/req";
-
-beforeEach(() => $registryTesting.reset());
 
 const s = createTestServer();
 const f = (file: string) => path.resolve("test", "fixtures", file);
@@ -36,7 +34,7 @@ describe("StaticRoute", () => {
 		expect(res.status).toBe(404);
 	});
 
-	it("custom static route is also available through C.Route", async () => {
+	it("custom static route is also available through C.Route and X.File.bunFile", async () => {
 		const content = new TX.File(f("sample.txt")).bunFile;
 		const r = new TC.Route("/natively-handled", () => new TC.Res(content));
 		const res = await s.handle(r.request({}));

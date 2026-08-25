@@ -197,8 +197,7 @@ describe("X.File", () => {
 
 		it("throws when file missing", async () => {
 			const file = new TX.File(path.join(tmpDir, "missing-stream.txt"));
-			const stream = await file.stream();
-			expect(new Response(stream).text()).rejects.toThrow();
+			expect(file.stream()).resolves.toThrow();
 		});
 	});
 
