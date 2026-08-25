@@ -20,8 +20,7 @@
 	},
 	"files": [
 		"dist",
-		"LICENSE.txt",
-		"THIRD_PARTY_LICENSES.txt"
+		"LICENSE.txt"
 	],
 	"type": "module",
 	"module": "dist/index.js",
@@ -44,12 +43,12 @@
 		"test:all": "bun test --only-failures && bun run test:http -s && bun run test:ws -s && bun run test:benchmark"
 	},
 	"devDependencies": {
+		"@ozanarslan/utils": "workspace:*",
 		"@standard-schema/spec": "^1.1.0",
 		"@types/bun": "^1.3.14",
 		"arktype": "^2.2.3",
 		"bun-plugin-dts": "^0.4.0",
 		"memoirist": "^1.2.1",
-		"@ozanarslan/utils": "workspace:*",
 		"zod": "^4.4.3"
 	},
 	"peerDependencies": {
