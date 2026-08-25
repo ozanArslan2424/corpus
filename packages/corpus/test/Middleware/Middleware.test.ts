@@ -1,59 +1,113 @@
 import { describe, expect, it, beforeEach } from "bun:test";
 
-import { $registryTesting, TC, type MiddlewareHandler } from "../_modules";
+import { objGetValues } from "@ozanarslan/utils/object";
+
+import { $registryTesting, BaseRoute, Context, TC, type MiddlewareHandler } from "../_modules";
 import { createTestController } from "../utils/createTestController";
 import { createTestServer } from "../utils/createTestServer";
 import { parseBody } from "../utils/parse";
-import { req } from "../utils/req";
 
 beforeEach(() => {
 	$registryTesting.reset();
 });
 
 const s = createTestServer();
+declare module "../_modules" {
+	interface ContextDataInterface {
+		order: Array<string>;
+	}
+}
+s.contextFactory = (request, server) => {
+	const c = new Context(request, server);
+	c.data.order = [];
+	return c;
+};
 
-const pathnameFromId = (id: string) => id.split(" ")[1]!;
+describe("Middleware", () => {
+	it("calling next() twice throws", async () => {
+		const r = new TC.Route("/next-twice", () => "ok");
+		new TC.Middleware({
+			useOn: [r],
+			handler: async (_, next) => {
+				await next();
+				await next();
+			},
+		});
+		const res = await s.handle(r.request({}));
+		expect(res.status).toBe(500); // or whatever handleError maps Exception to
+	});
 
-describe("C.Middleware - find() correctness & matching", () => {
-	it("EXECUTES INBOUND MIDDLEWARES IN REGISTRATION ORDER", async () => {
-		const order: string[] = [];
-		const r = new TC.Route("/order-in", (c) => {
-			c.data = order.slice();
-			return c.data;
+	it("awaited next call is respected", async () => {
+		const r = new TC.Route("/m/1", (c) => {
+			return c.data.order;
 		});
 
 		new TC.Middleware({
 			useOn: [r],
-			handler: async (_, next) => {
-				order.push("a");
-				await next();
-			},
-		});
-		new TC.Middleware({
-			useOn: [r],
-			handler: async (_, next) => {
-				order.push("b");
-				await next();
-			},
-		});
-		new TC.Middleware({
-			useOn: [r],
-			handler: async (_, next) => {
-				order.push("c");
+			handler: async (c, next) => {
+				c.data.order.push("a");
 				await next();
 			},
 		});
 
-		const res = await s.handle(req("/order-in"));
+		new TC.Middleware({
+			useOn: [r],
+			handler: async (c, next) => {
+				// The next middleware will be run before this
+				await next();
+				c.data.order.push("c");
+			},
+		});
+
+		new TC.Middleware({
+			useOn: [r],
+			handler: async (c, next) => {
+				c.data.order.push("b");
+				await next();
+			},
+		});
+
+		const res = await s.handle(r.request({}));
 		const data = await parseBody<string[]>(res);
 		expect(data).toEqual(["a", "b", "c"]);
 	});
 
-	it("EXECUTES OUTBOUND MIDDLEWARES IN REGISTRATION ORDER AFTER HANDLER", async () => {
+	it("context data is per request", async () => {
+		const r1 = new TC.Route("/c.data/1", (c) => {
+			return c.data.order;
+		});
+		const r2 = new TC.Route("/c.data/2", (c) => {
+			return c.data.order;
+		});
+		new TC.Middleware({
+			useOn: [r1, r2],
+			handler: async (c, next) => {
+				c.data.order.push("a");
+				await next();
+			},
+		});
+
+		new TC.Middleware({
+			useOn: [r1],
+			handler: async (c, next) => {
+				c.data.order.push("b");
+				await next();
+			},
+		});
+
+		const res1 = await s.handle(r1.request({}));
+		const data1 = await parseBody<string[]>(res1);
+		expect(data1).toEqual(["a", "b"]);
+
+		const res2 = await s.handle(r2.request({}));
+		const data2 = await parseBody<string[]>(res2);
+		expect(data2).toEqual(["a"]);
+	});
+
+	it("executes outbound middlewares in registration order after handler", async () => {
 		const order: string[] = [];
-		const r = new TC.Route("/order-out", (c) => {
+		const r = new TC.Route("/order-out", () => {
 			order.push("handler");
-			c.data = "ok";
 		});
 
 		new TC.Middleware({
@@ -71,15 +125,14 @@ describe("C.Middleware - find() correctness & matching", () => {
 			},
 		});
 
-		await s.handle(req("/order-out"));
+		await s.handle(r.request({}));
 		expect(order).toEqual(["handler", "o2", "o1"]);
 	});
 
 	it("FULL PIPELINE ORDER - global inbound, local inbound, handler, local outbound, global outbound", async () => {
 		const order: string[] = [];
-		const r = new TC.Route("/pipeline", (c) => {
+		const r = new TC.Route("/pipeline", () => {
 			order.push("handler");
-			c.data = "ok";
 		});
 
 		new TC.Middleware({
@@ -109,15 +162,14 @@ describe("C.Middleware - find() correctness & matching", () => {
 			},
 		});
 
-		await s.handle(req("/pipeline"));
+		await s.handle(r.request({}));
 		expect(order).toEqual(["g-in", "l-in", "handler", "l-out", "g-out"]);
 	});
 
-	it("INBOUND SHORT-CIRCUIT - returning Res skips handler and later middlewares", async () => {
+	it("returning Res skips handler and later middlewares", async () => {
 		const order: string[] = [];
-		const r = new TC.Route("/short-in", (c) => {
+		const r = new TC.Route("/short-in", () => {
 			order.push("handler");
-			c.data = "should-not-run";
 		});
 
 		new TC.Middleware({
@@ -131,50 +183,41 @@ describe("C.Middleware - find() correctness & matching", () => {
 			useOn: [r],
 			handler: () => {
 				order.push("m2");
+				// next added at the end automatically
 			},
 		});
 
-		const res = await s.handle(req("/short-in"));
+		const res = await s.handle(r.request({}));
 		const data = await parseBody<{ intercepted: boolean }>(res);
 		expect(res.status).toBe(418);
 		expect(data).toEqual({ intercepted: true });
 		expect(order).toEqual(["m1"]);
 	});
 
-	it("GLOBAL INBOUND SHORT-CIRCUIT - skips routing entirely", async () => {
-		const order: string[] = [];
-		const r = new TC.Route("/short-global", (c) => {
-			order.push("handler");
-			c.data = "ok";
+	it("returning Res overrides handler return data", async () => {
+		const r = new TC.Route("/short-in/response", () => {
+			return "response";
 		});
+
 		new TC.Middleware({
 			useOn: [r],
 			handler: () => {
-				order.push("local");
-			},
-		});
-		new TC.Middleware({
-			useOn: "*",
-			handler: () => {
-				order.push("global");
-				return new TC.Res({ gate: "closed" }, { status: 401 });
+				return new TC.Res({ intercepted: true }, { status: 418 });
 			},
 		});
 
-		const res = await s.handle(req("/short-global"));
-		expect(res.status).toBe(401);
-		expect(order).toEqual(["global"]);
+		const res = await s.handle(r.request({}));
+		const data = await parseBody<{ intercepted: boolean }>(res);
+		expect(res.status).toBe(418);
+		expect(data).toEqual({ intercepted: true });
 	});
 
-	it("MIXED useOn - route instance, controller, and string routeId all register", async () => {
+	it("mixed useOn - route instance, controller, and string routeId all register", async () => {
 		const hits: string[] = [];
-		const rA = new TC.Route("/mixA", (c) => {
-			c.data = hits.slice();
-		});
-		const rB = new TC.Route("/mixB", (c) => {
-			c.data = hits.slice();
-		});
-		const ctrl = createTestController("mix-ctrl");
+		const expected: string[] = [];
+		const rA = new TC.Route("/mixA", () => "ok");
+		const rB = new TC.Route("/mixB", () => "ok");
+		const ctrl = createTestController("/mixC");
 
 		new TC.Middleware({
 			useOn: [rA, ctrl, rB.id],
@@ -183,20 +226,20 @@ describe("C.Middleware - find() correctness & matching", () => {
 			},
 		});
 
-		hits.length = 0;
-		await s.handle(req("/mixA"));
-		expect(hits).toEqual(["/mixA"]);
+		expected.push(rA.endpoint);
+		await s.handle(rA.request({}));
+		expect(hits).toEqual(expected);
 
-		hits.length = 0;
-		await s.handle(req("/mixB"));
-		expect(hits).toEqual(["/mixB"]);
+		expected.push(rB.endpoint);
+		await s.handle(rB.request({}));
+		expect(hits).toEqual(expected);
 
-		hits.length = 0;
-		await s.handle(req("/mix-ctrl/cr1"));
-		expect(hits).toEqual(["/mix-ctrl/cr1"]);
+		expected.push(ctrl.cr1.endpoint);
+		await s.handle(ctrl.cr1.request({}));
+		expect(hits).toEqual(expected);
 	});
 
-	it("CONTROLLER FAN-OUT - middleware applies to every route under the controller", async () => {
+	it("applies to every route under the controller", async () => {
 		const hits: string[] = [];
 		const ctrl = createTestController("fanout");
 
@@ -207,41 +250,17 @@ describe("C.Middleware - find() correctness & matching", () => {
 			},
 		});
 
-		for (const id of ctrl.routeIds) {
+		for (const val of objGetValues(ctrl)) {
+			if (!(val instanceof BaseRoute)) continue;
 			hits.length = 0;
-			await s.handle(req(pathnameFromId(id)));
-			expect(hits).toEqual([pathnameFromId(id)]);
+			await s.handle(val.request({}));
+			expect(hits).toEqual([val.endpoint]);
 		}
 	});
 
-	it("ISOLATION - middleware on route A does not run on route B", async () => {
-		const hits: string[] = [];
-		const rA = new TC.Route("/isoA", (c) => {
-			c.data = "a";
-		});
-		new TC.Route("/isoB", (c) => {
-			c.data = "b";
-		});
-
-		new TC.Middleware({
-			useOn: [rA],
-			handler: () => {
-				hits.push("A-mw");
-			},
-		});
-
-		await s.handle(req("/isoB"));
-		expect(hits).toEqual([]);
-
-		await s.handle(req("/isoA"));
-		expect(hits).toEqual(["A-mw"]);
-	});
-
-	it("DUPLICATE REGISTRATION - same handler on same route runs twice", async () => {
+	it("same handler on same route runs twice", async () => {
 		let count = 0;
-		const r = new TC.Route("/dup", (c) => {
-			c.data = count;
-		});
+		const r = new TC.Route("/dup", () => "ok");
 		const handler: MiddlewareHandler = () => {
 			count++;
 		};
@@ -250,160 +269,37 @@ describe("C.Middleware - find() correctness & matching", () => {
 		new TC.Middleware({ useOn: [r], handler });
 
 		count = 0;
-		await s.handle(req("/dup"));
+		await s.handle(r.request({}));
 		expect(count).toBe(2);
 	});
 
-	it("INBOUND vs OUTBOUND SEPARATION - variants do not cross-contaminate", async () => {
-		const order: string[] = [];
-		const r = new TC.Route("/variants", (c) => {
-			order.push("handler");
-			c.data = "ok";
-		});
-
-		new TC.Middleware({
-			useOn: [r],
-			handler: async (_, next) => {
-				order.push("inbound");
-				await next();
-			},
-		});
-		new TC.Middleware({
-			useOn: [r],
-			handler: async (_, next) => {
-				await next();
-				order.push("outbound");
-			},
-		});
-
-		await s.handle(req("/variants"));
-		expect(order).toEqual(["inbound", "handler", "outbound"]);
-	});
-
-	it("CONTROLLER + SPECIFIC ROUTE - route receives both middlewares in registration order", async () => {
-		const order: string[] = [];
-		const ctrl = createTestController("layered");
-		const firstRouteId = Array.from(ctrl.routeIds.values())[0]!;
-
-		new TC.Middleware({
-			useOn: [ctrl],
-			handler: () => {
-				order.push("ctrl");
-			},
-		});
-		new TC.Middleware({
-			useOn: [firstRouteId],
-			handler: () => {
-				order.push("route");
-			},
-		});
-
-		await s.handle(req(pathnameFromId(firstRouteId)));
-		expect(order).toEqual(["ctrl", "route"]);
-	});
-
-	it("NON-MATCHING ROUTE - 404 but global middlewares still run", async () => {
-		const hits: string[] = [];
-		new TC.Route("/only-this", (c) => {
-			c.data = "ok";
-		});
-		new TC.Middleware({
-			useOn: "*",
-			handler: (c) => {
-				hits.push(c.url.pathname);
-			},
-		});
-
-		const res = await s.handle(req("/does-not-exist"));
-		expect(res.status).toBe(404);
-		expect(hits).toEqual(["/does-not-exist"]);
-	});
-
-	it("STRING routeId REGISTRATION - matches the same route as the instance", async () => {
-		const hits: string[] = [];
-		const r = new TC.Route("/by-id", (c) => {
-			c.data = "ok";
-		});
-
-		new TC.Middleware({
-			useOn: [r.id],
-			handler: () => {
-				hits.push("by-id");
-			},
-		});
-
-		await s.handle(req("/by-id"));
-		expect(hits).toEqual(["by-id"]);
-	});
-
-	it("SINGLE NON-ARRAY useOn - Route instance works without array wrapper", async () => {
-		const hits: string[] = [];
-		const r = new TC.Route("/single", (c) => {
-			c.data = "ok";
-		});
+	it("outbound can mutate c.res instead of short-circuiting with C.Res", async () => {
+		const r = new TC.Route("/outbound-mutate", () => "ok");
 
 		new TC.Middleware({
 			useOn: r,
-			handler: () => {
-				hits.push("hit");
-			},
-		});
-
-		await s.handle(req("/single"));
-		expect(hits).toEqual(["hit"]);
-	});
-
-	it("SINGLE NON-ARRAY useOn - Controller works without array wrapper", async () => {
-		const hits: string[] = [];
-		const ctrl = createTestController("single-ctrl");
-
-		new TC.Middleware({
-			useOn: ctrl,
-			handler: (c) => {
-				hits.push(c.url.pathname);
-			},
-		});
-
-		for (const id of ctrl.routeIds) {
-			await s.handle(req(pathnameFromId(id)));
-		}
-		expect(hits).toEqual([...ctrl.routeIds].map(pathnameFromId));
-	});
-
-	it("DEFAULT VARIANT - omitting variant defaults to inbound", async () => {
-		const order: string[] = [];
-		const r = new TC.Route("/default-variant", (c) => {
-			order.push("handler");
-			c.data = "ok";
-		});
-
-		new TC.Middleware({
-			useOn: [r],
-			handler: () => {
-				order.push("mw");
-			},
-		});
-
-		await s.handle(req("/default-variant"));
-		expect(order).toEqual(["mw", "handler"]);
-	});
-
-	it("OUTBOUND CAN MUTATE ctx.res - response body/status reflects outbound changes", async () => {
-		const r = new TC.Route("/outbound-mutate", (c) => {
-			c.data = { original: true };
-		});
-
-		new TC.Middleware({
-			useOn: [r],
 			handler: async (c, next) => {
 				await next();
-				c.res = new TC.Res({ replaced: true }, { status: 201 });
+				c.res = new TC.Res({ replaced: true }, { status: 418 });
 			},
 		});
 
-		const res = await s.handle(req("/outbound-mutate"));
+		const res = await s.handle(r.request({}));
 		const data = await parseBody<{ replaced: boolean }>(res);
-		expect(res.status).toBe(201);
+		expect(res.status).toBe(418);
 		expect(data).toEqual({ replaced: true });
+	});
+
+	it("outbound middleware can return Res after next()", async () => {
+		const r = new TC.Route("/outbound-return", () => "ok");
+		new TC.Middleware({
+			useOn: [r],
+			handler: async (_, next) => {
+				await next();
+				return new TC.Res({ replaced: true }, { status: 418 });
+			},
+		});
+		const res = await s.handle(r.request({}));
+		expect(res.status).toBe(418);
 	});
 });

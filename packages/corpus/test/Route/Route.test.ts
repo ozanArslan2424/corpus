@@ -8,10 +8,10 @@ beforeEach(() => $registryTesting.reset());
 
 const s = createTestServer();
 
-describe("C.Route", () => {
+describe("Route", () => {
 	const handler = () => "ok";
 
-	it("STRING DEFINITION DEFAULTS TO GET", () => {
+	it("string definition defaults to get", () => {
 		const path = "/r1";
 		const route = new TC.Route(path, handler);
 
@@ -21,7 +21,7 @@ describe("C.Route", () => {
 		expect(route.id).toBe(`${TC.Method.GET} ${path}`);
 	});
 
-	it("OBJECT DEFINITION WITH METHOD", () => {
+	it("object definition with method", () => {
 		const path = "/r2";
 		const route = new TC.Route({ method: TC.Method.POST, path }, handler);
 
@@ -30,7 +30,7 @@ describe("C.Route", () => {
 		expect(route.id).toBe(`${TC.Method.POST} ${path}`);
 	});
 
-	it("REGISTERS TO ROUTER", async () => {
+	it("registers to router", async () => {
 		const path = "/r5";
 		new TC.Route(path, () => "registered");
 
@@ -38,28 +38,28 @@ describe("C.Route", () => {
 		expect(res.status).toBe(200);
 	});
 
-	it("REGISTERS CORRECT METHOD FROM ADDRESS (object)", async () => {
+	it("registers correct method from address (object)", async () => {
 		new TC.Route({ method: TC.Method.POST, path: "/r6" }, () => "posted");
 
 		const res = await s.handle(req("/r6", { method: "POST" }));
 		expect(res.status).toBe(200);
 	});
 
-	it("REGISTERS CORRECT METHOD FROM ADDRESS (inlined)", async () => {
+	it("registers correct method from address (inlined)", async () => {
 		new TC.Route("POST /r7", () => "posted");
 
 		const res = await s.handle(req("/r7", { method: "POST" }));
 		expect(res.status).toBe(200);
 	});
 
-	it("REGISTERS CORRECT METHOD FROM ADDRESS (missing)", async () => {
+	it("registers correct method from address (missing)", async () => {
 		new TC.Route("/r7-g", () => "got");
 
 		const res = await s.handle(req("/r7-g", { method: "GET" }));
 		expect(res.status).toBe(200);
 	});
 
-	it("REGISTERS CORRECT METHOD AND ENDPOINT FROM ADDRESS (no slash)", async () => {
+	it("registers correct method and endpoint from address (no slash)", async () => {
 		new TC.Route("r7-1", () => "got");
 		new TC.Route("POST r7-2", () => "posted");
 
@@ -69,7 +69,7 @@ describe("C.Route", () => {
 		expect(res2.status).toBe(200);
 	});
 
-	it("WITH MODEL", () => {
+	it("with model", () => {
 		const path = "/r8";
 		const model = { response: undefined, body: undefined };
 		const route = new TC.Route(path, handler, model);
@@ -77,14 +77,14 @@ describe("C.Route", () => {
 		expect(route.model).toBe(model);
 	});
 
-	it("WITHOUT MODEL", () => {
+	it("without model", () => {
 		const path = "/r9";
 		const route = new TC.Route(path, handler);
 
 		expect(route.model).toBeUndefined();
 	});
 
-	it.each(Object.values(TC.Method))("METHOD %s RESOLVES CORRECTLY", (method) => {
+	it.each(Object.values(TC.Method))("method %s resolves correctly", (method) => {
 		const path = `/${method.toLowerCase()}-method-test`;
 		const route = new TC.Route({ method, path }, handler);
 
@@ -92,7 +92,7 @@ describe("C.Route", () => {
 		expect(route.id).toBe(`${method} ${path}`);
 	});
 
-	it("USING EXTENDED ABSTRACT METHOD", async () => {
+	it("using extended abstract method", async () => {
 		const path = "/r-extended";
 
 		class MyRoute extends TC.RouteAbstract {

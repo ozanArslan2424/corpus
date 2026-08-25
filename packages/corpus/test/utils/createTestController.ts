@@ -1,8 +1,10 @@
 import { TC } from "../_modules";
 
-export function createTestController(prefix: string) {
-	class TestController extends TC.Controller {
-		prefix?: string | undefined = prefix;
+export function createTestController<Px extends string>(prefix: Px) {
+	class TestController extends TC.Controller<Px> {
+		constructor() {
+			super(prefix);
+		}
 
 		cr1 = this.route("/cr1", (c) => c.data);
 		cr2 = this.route("cr2", (c) => c.data);

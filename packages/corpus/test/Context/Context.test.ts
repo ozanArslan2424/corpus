@@ -1,189 +1,260 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 
+import { createSafeObject } from "@ozanarslan/utils/object";
 import { type } from "arktype";
 
 import { $registryTesting, TC } from "../_modules";
-import { createTestServer } from "../utils/createTestServer";
-import { req } from "../utils/req";
+import { TEST_HOST, TEST_PORT } from "../utils/req";
 
-beforeEach(() => $registryTesting.reset());
+const method = "POST";
+const endpoint = "/hello/:world";
+const body = "body";
 
-const s = createTestServer();
+const params = {
+	world: "test",
+};
+const search = {
+	searchParam: true,
+};
 
-describe("C.Context", () => {
-	it("HAS CORRECT SHAPE", async () => {
-		new TC.Route("/ctx-shape", (c) => {
-			expect(c.req).toBeInstanceOf(Request);
-			expect(c.url).toBeInstanceOf(URL);
-			expect(c.headers).toBeInstanceOf(Headers);
-			expect(c.cookies).toBeInstanceOf(Bun.CookieMap);
-			expect(c.res).toBeInstanceOf(TC.Res);
-			expect(c.body).toBeDefined();
-			expect(c.search).toBeDefined();
-			expect(c.params).toBeDefined();
-			return "ok";
+function applyParams(endpoint: string, params: Record<string, string>): string {
+	for (const [key, val] of Object.entries(params)) {
+		endpoint = endpoint.replace(`:${key}`, val);
+	}
+	return endpoint;
+}
+
+function toCookieHeader(plainCookies: Record<string, string>): string {
+	let result = "";
+	for (const [key, val] of Object.entries(plainCookies)) {
+		result += `${key}=${val};`;
+	}
+	return result;
+}
+
+const url = new URL(`http://${TEST_HOST}:${TEST_PORT}${applyParams(endpoint, params)}`);
+for (const [key, val] of Object.entries(search)) {
+	url.searchParams.set(key, String(val));
+}
+
+const plainCookies = {
+	with: "chocolate-chips",
+};
+
+const cookies = new Bun.CookieMap(plainCookies);
+
+const plainHeaders = {
+	[TC.HeaderKey.Authorization]: "Bearer user",
+	[TC.HeaderKey.Cookie]: toCookieHeader(plainCookies),
+};
+
+const headers = new Headers(plainHeaders);
+
+const request = new Request(url, { method, body, headers });
+
+const server = new TC.Server({ hostname: TEST_HOST, port: TEST_PORT });
+
+// stable context ref to avoid actual request handling
+let context = new TC.Context(request, server.app);
+
+const model = {
+	body: type("string"),
+	response: type("string"),
+	search: type({ "searchParam?": "boolean" }),
+	params: type({ world: "string" }),
+};
+
+beforeEach(() => {
+	// refresh context to avoid stale ref
+	context = new TC.Context(request, server.app);
+});
+
+async function applyParsing(route: TC.Route) {
+	const rawBody = await $registryTesting.bodyParser.parse(request);
+	const parsedBody = await $registryTesting.schemaParser.parse("body", rawBody, route.model?.body);
+	const rawParams = $registryTesting.urlParamsParser.parse(params);
+	const parsedParams = await $registryTesting.schemaParser.parse(
+		"params",
+		rawParams,
+		route.model?.params,
+	);
+	const rawSearch = $registryTesting.searchParamsParser.parse(url.searchParams);
+	const parsedSearch = await $registryTesting.schemaParser.parse(
+		"search",
+		rawSearch,
+		route.model?.search,
+	);
+
+	return {
+		rawBody,
+		parsedBody,
+		rawParams,
+		parsedParams,
+		rawSearch,
+		parsedSearch,
+	};
+}
+
+describe("Context", () => {
+	describe("members - initial", () => {
+		it("rawBody", () => {
+			expect(context.rawBody).toBeUndefined();
 		});
-
-		const res = await s.handle(req("/ctx-shape"));
-		expect(res.status).toBe(TC.Status.OK);
+		it("body", () => {
+			expect(context.body).toEqual(createSafeObject());
+		});
+		it("params", () => {
+			expect(context.params).toEqual(createSafeObject());
+		});
+		it("search", () => {
+			expect(context.search).toEqual(createSafeObject());
+		});
+		it("data", () => {
+			expect(context.data).toEqual(createSafeObject());
+		});
 	});
 
-	it("BODY - JSON", async () => {
-		new TC.Route({ method: TC.Method.POST, path: "/ctx-body-json" }, (c) => {
-			expect(c.body).toEqual({ hello: "world" });
-			return "ok";
-		});
-
-		const res = await s.handle(
-			req("/ctx-body-json", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ hello: "world" }),
-			}),
+	// context is mutated during handle
+	describe("members - after handle - no model", async () => {
+		const route = new TC.Route<unknown, unknown, unknown, unknown>(
+			{ method, path: endpoint },
+			() => "ok",
 		);
-		expect(res.status).toBe(TC.Status.OK);
+
+		const { rawBody, parsedBody, rawParams, parsedParams, rawSearch, parsedSearch } =
+			await applyParsing(route);
+
+		it("rawBody", async () => {
+			await server.handleRoute(context, route, params, (c) => route.handler(c));
+			expect(context.rawBody as unknown).toEqual(rawBody);
+			expect(rawBody).toEqual(parsedBody as any);
+		});
+
+		it("body", async () => {
+			await server.handleRoute(context, route, params, (c) => route.handler(c));
+			expect(context.body).toEqual(parsedBody);
+			expect(rawBody).toEqual(parsedBody as any);
+		});
+
+		it("params", async () => {
+			await server.handleRoute(context, route, params, (c) => route.handler(c));
+			expect(context.params).toEqual(parsedParams);
+			expect(rawParams).toEqual(parsedParams as any);
+		});
+
+		it("search", async () => {
+			await server.handleRoute(context, route, params, (c) => route.handler(c));
+			expect(context.search).toEqual(parsedSearch);
+			expect(rawSearch).toEqual(parsedSearch as any);
+		});
 	});
 
-	it("BODY - FORM URLENCODED", async () => {
-		new TC.Route(
-			{ method: TC.Method.POST, path: "/ctx-body-form" },
-			(c) => {
-				expect(c.body).toEqual({ name: "john", age: 30 });
-				return "ok";
-			},
-			{
-				body: type({
-					name: "string",
-					age: "number",
-				}),
-			},
+	describe("members - after handle - with model", async () => {
+		const route = new TC.Route<unknown, unknown, unknown, unknown>(
+			{ method, path: endpoint },
+			() => "ok",
+			model,
 		);
 
-		const res = await s.handle(
-			req("/ctx-body-form", {
-				method: "POST",
-				headers: { "Content-Type": "application/x-www-form-urlencoded" },
-				body: "name=john&age=30",
-			}),
-		);
-		expect(res.status).toBe(TC.Status.OK);
-	});
+		const { parsedBody, parsedParams, parsedSearch } = await applyParsing(route);
 
-	it("BODY - EMPTY ON GET", async () => {
-		new TC.Route("/ctx-body-empty", (c) => {
-			expect(c.body).toBeEmptyObject();
-			return "ok";
+		it("body", async () => {
+			await server.handleRoute(context, route, params, (c) => route.handler(c));
+			expect(context.body).toEqual(parsedBody);
 		});
 
-		const res = await s.handle(req("/ctx-body-empty"));
-		expect(res.status).toBe(TC.Status.OK);
-	});
-
-	it("SEARCH - STRING VALUE", async () => {
-		new TC.Route("/ctx-search-string", (c) => {
-			expect(c.search).toEqual({ q: "hello" });
-			return "ok";
+		it("params", async () => {
+			await server.handleRoute(context, route, params, (c) => route.handler(c));
+			expect(context.params).toEqual(parsedParams);
 		});
 
-		const res = await s.handle(req("/ctx-search-string?q=hello"));
-		expect(res.status).toBe(TC.Status.OK);
+		it("search", async () => {
+			await server.handleRoute(context, route, params, (c) => route.handler(c));
+			expect(context.search).toEqual(parsedSearch);
+		});
 	});
 
-	it("SEARCH - EMPTY WHEN NO PARAMS", async () => {
-		new TC.Route("/ctx-search-empty", (c) => {
-			expect(c.search).toBeEmptyObject();
-			return "ok";
+	describe("lazy members - initial", () => {
+		it("_res", () => {
+			// @ts-expect-error
+			expect(context._res).toBeNull();
 		});
 
-		const res = await s.handle(req("/ctx-search-empty"));
-		expect(res.status).toBe(TC.Status.OK);
+		it("get res", () => {
+			expect(context.res).toBeInstanceOf(TC.Res);
+		});
+
+		it("set res", () => {
+			expect(context.res.status).toBe(TC.Status.OK);
+			context.res = new TC.Res("", { status: TC.Status.INTERNAL_SERVER_ERROR });
+			expect(context.res.body).toBe("");
+			expect(context.res.status).toBe(TC.Status.INTERNAL_SERVER_ERROR);
+		});
+
+		it("_url", () => {
+			// @ts-expect-error
+			expect(context._url).toBeNull();
+		});
+
+		it("get url", () => {
+			expect(context.url).toBeInstanceOf(URL);
+		});
+
+		it("set url - url is readonly", () => {
+			expect(context.url).toEqual(url);
+			const newUrl = new URL("https://www.example.com");
+			expect(() => {
+				// @ts-expect-error
+				context.url = newUrl;
+			}).toThrow(TypeError);
+			expect(context.url).toEqual(url);
+		});
+
+		it("_cookies", () => {
+			// @ts-expect-error
+			expect(context._cookies).toBeNull();
+		});
+
+		it("get cookies", () => {
+			expect(context.cookies).toBeInstanceOf(Bun.CookieMap);
+			for (const [key, val] of Object.entries(plainCookies)) {
+				expect(context.cookies.get(key)).toBe(val);
+			}
+		});
+
+		it("set cookies - cookies is readonly", () => {
+			expect(context.cookies).toEqual(cookies);
+			const newCookies = new Bun.CookieMap({ something: "new" });
+			expect(() => {
+				// @ts-expect-error
+				context.cookies = newCookies;
+			}).toThrow(TypeError);
+			expect(context.cookies).toEqual(cookies);
+		});
 	});
 
-	it("PARAMS - SINGLE PARAM", async () => {
-		new TC.Route("/ctx-params/:id", (c) => {
-			expect(c.params).toEqual({ id: 123 });
-			return "ok";
+	describe("inferred members - initial", () => {
+		it("headers are from request", () => {
+			expect(context.headers).toEqual(request.headers);
+			expect(context.req.headers).toEqual(request.headers);
+			expect(context.headers).toEqual(context.req.headers);
 		});
 
-		const res = await s.handle(req("/ctx-params/123"));
-		expect(res.status).toBe(TC.Status.OK);
-	});
-
-	it("PARAMS - MULTIPLE PARAMS", async () => {
-		new TC.Route("/ctx-many-params/:org/:repo", (c) => {
-			expect(c.params).toEqual({ org: "acme", repo: "web" });
-			return "ok";
+		it("get headers", () => {
+			expect(context.headers).toBeInstanceOf(Headers);
+			for (const [key, val] of Object.entries(plainHeaders)) {
+				expect(context.headers.get(key)).toBe(val);
+			}
 		});
 
-		const res = await s.handle(req("/ctx-many-params/acme/web"));
-		expect(res.status).toBe(TC.Status.OK);
-	});
-
-	it("PARAMS - EMPTY WHEN NO PARAMS IN PATTERN", async () => {
-		new TC.Route("/ctx-params-none", (c) => {
-			expect(c.params).toBeEmptyObject();
-			return "ok";
+		it("set headers - headers is readonly", () => {
+			expect(context.headers).toEqual(headers);
+			const newHeaders = new Headers({ something: "new" });
+			expect(() => {
+				// @ts-expect-error
+				context.headers = newHeaders;
+			}).toThrow(TypeError);
+			expect(context.headers).toEqual(headers);
 		});
-
-		const res = await s.handle(req("/ctx-params-none"));
-		expect(res.status).toBe(TC.Status.OK);
-	});
-
-	it("RES - SET STATUS", async () => {
-		new TC.Route("/ctx-res-status", (c) => {
-			c.res.status = TC.Status.CREATED;
-			return "created";
-		});
-
-		const res = await s.handle(req("/ctx-res-status"));
-		expect(res.status).toBe(TC.Status.CREATED);
-	});
-
-	it("RES - SET HEADER", async () => {
-		new TC.Route("/ctx-res-header", (c) => {
-			c.res.headers.set("x-custom", "test-value");
-			return "ok";
-		});
-
-		const res = await s.handle(req("/ctx-res-header"));
-		expect(res.headers.get("x-custom")).toBe("test-value");
-	});
-
-	it("RES - SET COOKIE", async () => {
-		new TC.Route("/ctx-res-cookie", (c) => {
-			c.res.cookies.set({ name: "session", value: "abc123" });
-			return "ok";
-		});
-
-		const res = await s.handle(req("/ctx-res-cookie"));
-		expect(res.headers.get(TC.HeaderKey.SetCookie)).toContain("session=abc123");
-	});
-
-	it("REQ - READ COOKIE", async () => {
-		new TC.Route("/ctx-req-cookie", (c) => {
-			expect(c.cookies.get("session")).toBe("abc123");
-			return "ok";
-		});
-
-		const res = await s.handle(
-			req("/ctx-req-cookie", {
-				headers: { cookie: "session=abc123" },
-			}),
-		);
-		expect(res.status).toBe(TC.Status.OK);
-	});
-
-	it("REQ - READ HEADER", async () => {
-		new TC.Route("/ctx-req-header", (c) => {
-			expect(c.headers.get("x-custom")).toBe("test-value");
-			return "ok";
-		});
-
-		const res = await s.handle(
-			req("/ctx-req-header", {
-				headers: { "x-custom": "test-value" },
-			}),
-		);
-		expect(res.status).toBe(TC.Status.OK);
 	});
 });

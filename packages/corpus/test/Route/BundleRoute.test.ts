@@ -31,8 +31,8 @@ afterAll(async () => {
 	await fs.rm(emptyDir, { recursive: true, force: true });
 });
 
-describe("C.BundleRoute", () => {
-	it("PROPERTIES", () => {
+describe("BundleRoute", () => {
+	it("properties", () => {
 		const route = new TC.BundleRoute("/*", dir);
 
 		expect(route.variant).toBe("bundle");
@@ -42,7 +42,7 @@ describe("C.BundleRoute", () => {
 		expect(route.id).toBe(`${TC.Method.GET} /*`);
 	});
 
-	it("SERVES INDEX AT ROOT", async () => {
+	it("serves index at root", async () => {
 		new TC.BundleRoute("/*", dir);
 
 		const res = await s.handle(req("/"));
@@ -50,7 +50,7 @@ describe("C.BundleRoute", () => {
 		expect(await res.text()).toContain("INDEX");
 	});
 
-	it("SERVES EXISTING ASSET", async () => {
+	it("serves existing asset", async () => {
 		new TC.BundleRoute("/*", dir);
 
 		const res = await s.handle(req("/assets/app-abc123.js"));
@@ -58,14 +58,14 @@ describe("C.BundleRoute", () => {
 		expect(await res.text()).toContain("console.log");
 	});
 
-	it("ASSETS DIR GETS IMMUTABLE CACHE HEADER", async () => {
+	it("assets dir gets immutable cache header", async () => {
 		new TC.BundleRoute("/*", dir);
 
 		const res = await s.handle(req("/assets/app-abc123.js"));
 		expect(res.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
 	});
 
-	it("ROOT FILES GET FALLBACK CACHE HEADER", async () => {
+	it("root files get fallback cache header", async () => {
 		new TC.BundleRoute("/*", dir);
 
 		const res = await s.handle(req("/favicon.ico"));
@@ -73,7 +73,7 @@ describe("C.BundleRoute", () => {
 		expect(res.headers.get("cache-control")).toBe("no-cache");
 	});
 
-	it("SPA FALLBACK FOR EXTENSIONLESS ROUTES", async () => {
+	it("spa fallback for extensionless routes", async () => {
 		new TC.BundleRoute("/*", dir);
 
 		const res = await s.handle(req("/settings/profile"));
@@ -81,7 +81,7 @@ describe("C.BundleRoute", () => {
 		expect(await res.text()).toContain("INDEX");
 	});
 
-	it("SPA FALLBACK FOR MISSING NON-HTML FILES", async () => {
+	it("spa fallback for missing non-html files", async () => {
 		// documents current behavior: a missing asset like /missing.png
 		// also falls back to index.html instead of 404
 		new TC.BundleRoute("/*", dir);
@@ -91,21 +91,21 @@ describe("C.BundleRoute", () => {
 		expect(await res.text()).toContain("INDEX");
 	});
 
-	it("MISSING HTML FILE RETURNS 404", async () => {
+	it("missing html file returns 404", async () => {
 		new TC.BundleRoute("/*", dir);
 
 		const res = await s.handle(req("/missing.html"));
 		expect(res.status).toBe(404);
 	});
 
-	it("NO INDEX AND NO FILE RETURNS 404", async () => {
+	it("no index and no file returns 404", async () => {
 		new TC.BundleRoute("/*", emptyDir);
 
 		const res = await s.handle(req("/anything"));
 		expect(res.status).toBe(404);
 	});
 
-	it("CUSTOM CACHE CONFIG REPLACES DEFAULTS", async () => {
+	it("custom cache config replaces defaults", async () => {
 		new TC.BundleRoute("/*", dir, {
 			indexHtml: { noCache: true },
 			assetsDir: { public: true, maxAge: 60 },
@@ -119,7 +119,7 @@ describe("C.BundleRoute", () => {
 		expect(root.headers.get("cache-control")).toBe("no-store");
 	});
 
-	it("INDEX HTML GETS THE indexHtml CACHE DIRECTIVE", async () => {
+	it("index html gets the indexhtml cache directive", async () => {
 		new TC.BundleRoute("/*", dir, {
 			indexHtml: { noStore: true },
 			assetsDir: { public: true, maxAge: 31536000, immutable: true },
@@ -130,7 +130,7 @@ describe("C.BundleRoute", () => {
 		expect(res.headers.get("cache-control")).toBe("no-store");
 	});
 
-	it("IGNORE EXACT MATCH RETURNS 404", async () => {
+	it("ignore exact match returns 404", async () => {
 		class IgnoringBundle extends TC.BundleRoute {
 			protected override ignore: string[] = ["secret.json"];
 		}
@@ -140,7 +140,7 @@ describe("C.BundleRoute", () => {
 		expect(res.status).toBe(404);
 	});
 
-	it("IGNORE PREFIX MATCH WITH LEADING SLASH RETURNS 404", async () => {
+	it("ignore prefix match with leading slash returns 404", async () => {
 		class IgnoringBundle extends TC.BundleRoute {
 			protected override ignore: string[] = ["/internal/*"];
 		}
@@ -150,7 +150,7 @@ describe("C.BundleRoute", () => {
 		expect(res.status).toBe(404);
 	});
 
-	it("IGNORE PREFIX MATCH WITHOUT LEADING SLASH RETURNS 404", async () => {
+	it("ignore prefix match without leading slash returns 404", async () => {
 		class IgnoringBundle extends TC.BundleRoute {
 			protected override ignore: string[] = ["internal/*"];
 		}
@@ -160,7 +160,7 @@ describe("C.BundleRoute", () => {
 		expect(res.status).toBe(404);
 	});
 
-	it("SUB-PATH MOUNT SERVES ASSETS RELATIVE TO THE MOUNT", async () => {
+	it("sub-path mount serves assets relative to the mount", async () => {
 		new TC.BundleRoute("/app/*", dir);
 
 		const res = await s.handle(req("/app/assets/app-abc123.js"));
@@ -168,7 +168,7 @@ describe("C.BundleRoute", () => {
 		expect(await res.text()).toContain("console.log");
 	});
 
-	it("PATH TRAVERSAL DOES NOT ESCAPE THE BUNDLE DIR", async () => {
+	it("path traversal does not escape the bundle dir", async () => {
 		// sibling of `dir` inside the same tmp parent, reachable via a single ../
 		const parent = path.dirname(dir);
 		const outsideName = `outside-${path.basename(dir)}.txt`;

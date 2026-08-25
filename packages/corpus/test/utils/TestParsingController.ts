@@ -4,7 +4,9 @@ import { TC } from "../_modules";
 import { TestModel } from "./TestModel";
 
 export class TestParsingController extends TC.Controller {
-	prefix = "/controller";
+	constructor() {
+		super("/controller");
+	}
 
 	arkRoute = this.route(
 		{ method: "POST", path: "/arkRoute/:hello" },

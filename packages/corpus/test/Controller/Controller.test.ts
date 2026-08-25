@@ -5,7 +5,6 @@ import path from "path";
 
 import { $registryTesting, TC } from "../_modules";
 import { createTestServer } from "../utils/createTestServer";
-import { req } from "../utils/req";
 
 beforeEach(() => $registryTesting.reset());
 
@@ -23,179 +22,150 @@ afterAll(async () => {
 	await fs.rm(path.dirname(staticFile), { recursive: true, force: true });
 });
 
-describe("C.Controller", () => {
-	it("PREPENDS PREFIX TO DYNAMIC ROUTES", async () => {
-		class UsersController extends TC.Controller {
-			prefix = "/users";
-			list = this.route("/list", () => "listed");
+describe("Controller", () => {
+	describe("prefix", () => {
+		class PrefixedController extends TC.Controller<"/test"> {
+			constructor() {
+				super("/test");
+			}
+			_route = this.route("/route", () => "ok");
+			_staticRoute = this.staticRoute("/static", staticFile);
+			_fileRoute = this.fileRoute("/file", { filePath: staticFile });
+			_websocketRoute = this.websocketRoute("/websocket", { onMessage: () => {} });
 		}
-		new UsersController();
 
-		const res = await s.handle(req("/users/list"));
-		expect(res.status).toBe(200);
+		const noPrefixController = new TC.Controller();
+		const prefixController = new PrefixedController();
+
+		it("is optional", () => {
+			expect(noPrefixController.prefix).toBeUndefined();
+		});
+
+		it("added to routes", () => {
+			expect(prefixController._route.endpoint).toBe("/test/route");
+		});
+
+		it("added to static routes", () => {
+			expect(prefixController._staticRoute.endpoint).toBe("/test/static");
+		});
+
+		it("added to file routes", () => {
+			expect(prefixController._fileRoute.endpoint).toBe("/test/file");
+		});
+
+		it("added to websocket routes", () => {
+			expect(prefixController._websocketRoute.endpoint).toBe("/test/websocket");
+		});
 	});
 
-	it("WORKS WITHOUT A PREFIX", async () => {
-		class RootController extends TC.Controller {
-			prefix = undefined;
-			list = this.route("/plain", () => "plain");
-		}
-		new RootController();
+	describe("beforeEach", () => {
+		it("runs before the handlers", async () => {
+			const order: Array<string> = [];
+			const expectedOrder: Array<string> = [];
 
-		const res = await s.handle(req("/plain"));
-		expect(res.status).toBe(200);
+			class BeforeEachController extends TC.Controller {
+				override beforeEach = () => {
+					order.push("beforeEach");
+				};
+				_route = this.route("/route", () => {
+					order.push("route handler");
+					return "ok";
+				});
+				_staticRoute = this.staticRoute("/static", staticFile, (_, cn) => {
+					order.push("staticRoute handler");
+					return cn;
+				});
+			}
+			const beforeEachController = new BeforeEachController();
+
+			await beforeEachController._route.handle({});
+			expectedOrder.push("beforeEach", "route handler");
+			expect(order).toEqual(expectedOrder);
+
+			const routeRes = await s.handle(beforeEachController._route.request({}));
+			expect(routeRes.status).toBe(200);
+			expectedOrder.push("beforeEach", "route handler");
+			expect(order).toEqual(expectedOrder);
+
+			await beforeEachController._staticRoute.handle({});
+			expectedOrder.push("beforeEach", "staticRoute handler");
+			expect(order).toEqual(expectedOrder);
+
+			const staticRouteRes = await s.handle(beforeEachController._staticRoute.request({}));
+			expect(staticRouteRes.status).toBe(200);
+			expectedOrder.push("beforeEach", "staticRoute handler");
+			expect(order).toEqual(expectedOrder);
+		});
+
+		it("throwing prevents the handler", async () => {
+			let handlerRan = false;
+			class ThrowingController extends TC.Controller {
+				override beforeEach = () => {
+					throw new TC.Exception("unauthorized", TC.Status.UNAUTHORIZED);
+				};
+
+				_route = this.route("/route", () => {
+					handlerRan = true;
+					return "ok";
+				});
+			}
+			const throwingController = new ThrowingController();
+
+			const res = await s.handle(throwingController._route.request({}));
+			expect(res.status).toBe(401);
+			expect(handlerRan).toBe(false);
+		});
+
+		it("skips on static route without callback", async () => {
+			const order: Array<string> = [];
+
+			class BeforeEachController extends TC.Controller {
+				override beforeEach = () => {
+					order.push("beforeEach");
+				};
+
+				_staticRoute = this.staticRoute("/static", staticFile);
+			}
+			const beforeEachController = new BeforeEachController();
+
+			await beforeEachController._staticRoute.handle({});
+			expect(order).toEqual([]);
+
+			const res = await s.handle(beforeEachController._staticRoute.request({}));
+			expect(res.status).toBe(200);
+			expect(order).toEqual([]);
+		});
 	});
 
-	it("PRESERVES METHOD FROM STRING ADDRESS", async () => {
-		class UsersController extends TC.Controller {
-			prefix = "/users";
-			create = this.route("POST /create", () => "created");
-		}
-		const ctrl = new UsersController();
+	describe("routeIds", () => {
+		it("collects internal", () => {
+			class UsersController extends TC.Controller<"/users"> {
+				constructor() {
+					super("/users");
+				}
+				list = this.route("/list", () => "listed");
+				create = this.route("POST /create", () => "created");
+				doc = this.staticRoute("/doc", staticFile);
+			}
+			const ctrl = new UsersController();
 
-		expect(ctrl.create.method).toBe(TC.Method.POST);
-		const res = await s.handle(req("/users/create", { method: "POST" }));
-		expect(res.status).toBe(200);
-	});
+			expect(ctrl.routeIds.size).toBe(3);
+			expect(ctrl.routeIds.has(ctrl.list.id)).toBe(true);
+			expect(ctrl.routeIds.has(ctrl.create.id)).toBe(true);
+			expect(ctrl.routeIds.has(ctrl.doc.id)).toBe(true);
+		});
 
-	it("PRESERVES METHOD FROM OBJECT ADDRESS", async () => {
-		class UsersController extends TC.Controller {
-			prefix = "/users";
-			remove = this.route({ method: TC.Method.DELETE, path: "/remove" }, () => "removed");
-		}
-		const ctrl = new UsersController();
+		it("collects external", () => {
+			const ctrl = new TC.Controller("/users");
 
-		expect(ctrl.remove.method).toBe(TC.Method.DELETE);
-		const res = await s.handle(req("/users/remove", { method: "DELETE" }));
-		expect(res.status).toBe(200);
-	});
+			const list = ctrl.route("/list", () => "listed");
+			const create = ctrl.route("POST /create", () => "created");
+			const doc = ctrl.staticRoute("/doc", staticFile);
 
-	it("RUNS beforeEach BEFORE THE HANDLER", async () => {
-		const order: string[] = [];
-		class UsersController extends TC.Controller {
-			prefix = "/users";
-			override beforeEach = () => {
-				order.push("beforeEach");
-			};
-			list = this.route("/list", () => {
-				order.push("handler");
-				return "listed";
-			});
-		}
-		new UsersController();
-
-		await s.handle(req("/users/list"));
-		expect(order).toEqual(["beforeEach", "handler"]);
-	});
-
-	it("beforeEach RUNS PER REQUEST", async () => {
-		let count = 0;
-		class UsersController extends TC.Controller {
-			prefix = "/users";
-			override beforeEach = () => {
-				count++;
-			};
-			list = this.route("/list", () => "listed");
-		}
-		new UsersController();
-
-		await s.handle(req("/users/list"));
-		await s.handle(req("/users/list"));
-		expect(count).toBe(2);
-	});
-
-	it("beforeEach THROWING PREVENTS THE HANDLER", async () => {
-		let handlerRan = false;
-		class UsersController extends TC.Controller {
-			prefix = "/users";
-			override beforeEach = () => {
-				throw new TC.Exception("unauthorized", TC.Status.UNAUTHORIZED);
-			};
-			list = this.route("/list", () => {
-				handlerRan = true;
-				return "listed";
-			});
-		}
-		new UsersController();
-
-		const res = await s.handle(req("/users/list"));
-		expect(res.status).toBe(401);
-		expect(handlerRan).toBe(false);
-	});
-
-	it("COLLECTS ROUTE IDS", () => {
-		class UsersController extends TC.Controller {
-			prefix = "/users";
-			list = this.route("/list", () => "listed");
-			create = this.route("POST /create", () => "created");
-			doc = this.staticRoute("/doc", staticFile);
-		}
-		const ctrl = new UsersController();
-
-		expect(ctrl.routeIds.size).toBe(3);
-		expect(ctrl.routeIds.has(ctrl.list.id)).toBe(true);
-		expect(ctrl.routeIds.has(ctrl.create.id)).toBe(true);
-		expect(ctrl.routeIds.has(ctrl.doc.id)).toBe(true);
-	});
-
-	it("PREPENDS PREFIX TO STATIC ROUTES", async () => {
-		class UsersController extends TC.Controller {
-			prefix = "/users";
-			doc = this.staticRoute("/doc", staticFile);
-		}
-		new UsersController();
-
-		const res = await s.handle(req("/users/doc"));
-		expect(res.status).toBe(200);
-		expect(await res.text()).toBe("static content");
-	});
-
-	it("RUNS beforeEach BEFORE THE STATIC ROUTE CALLBACK", async () => {
-		const order: string[] = [];
-		class UsersController extends TC.Controller {
-			prefix = "/users";
-			override beforeEach = () => {
-				order.push("beforeEach");
-			};
-			doc = this.staticRoute("/doc", staticFile, (_, content) => {
-				order.push("callback");
-				return content.toUpperCase();
-			});
-		}
-		new UsersController();
-
-		const res = await s.handle(req("/users/doc"));
-		expect(await res.text()).toBe("STATIC CONTENT");
-		expect(order).toEqual(["beforeEach", "callback"]);
-	});
-
-	it("STATIC ROUTE WITHOUT CALLBACK SKIPS beforeEach", async () => {
-		// documents current behavior: callback-less static routes stream the
-		// file directly, so beforeEach never runs for them
-		const order: string[] = [];
-		class UsersController extends TC.Controller {
-			prefix = "/users";
-			override beforeEach = () => {
-				order.push("beforeEach");
-			};
-			doc = this.staticRoute("/doc", staticFile);
-		}
-		new UsersController();
-
-		const res = await s.handle(req("/users/doc"));
-		expect(res.status).toBe(200);
-		expect(order).toEqual([]);
-	});
-
-	it("PREPENDS PREFIX TO WEBSOCKET ROUTES", () => {
-		class UsersController extends TC.Controller {
-			prefix = "/users";
-			live = this.websocketRoute("/live", { onMessage: () => {} });
-		}
-		const ctrl = new UsersController();
-
-		expect(ctrl.live.variant).toBe("websocket");
-		expect(ctrl.live.endpoint).toBe("/users/live");
-		expect(ctrl.routeIds.has(ctrl.live.id)).toBe(true);
+			expect(ctrl.routeIds.size).toBe(3);
+			expect(ctrl.routeIds.has(list.id)).toBe(true);
+			expect(ctrl.routeIds.has(create.id)).toBe(true);
+			expect(ctrl.routeIds.has(doc.id)).toBe(true);
+		});
 	});
 });

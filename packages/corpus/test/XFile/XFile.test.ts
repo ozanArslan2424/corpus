@@ -24,53 +24,53 @@ describe("X.File", () => {
 	};
 
 	describe("getters", () => {
-		it("EXTENSION - FROM PATH", () => {
+		it("extension - from path", () => {
 			expect(new TX.File("assets/document.txt").extension).toBe("txt");
 		});
 
-		it("EXTENSION - FALLBACK WHEN NO DOT", () => {
+		it("extension - fallback when no dot", () => {
 			expect(new TX.File("assets/data", "json").extension).toBe("json");
 		});
 
-		it("EXTENSION - DEFAULT TO TXT WHEN NO DOT AND NO FALLBACK", () => {
+		it("extension - default to txt when no dot and no fallback", () => {
 			expect(new TX.File("assets/data").extension).toBe("txt");
 		});
 
-		it("NAME - STRIPS EXTENSION", () => {
+		it("name - strips extension", () => {
 			expect(new TX.File("assets/document.txt").name).toBe("document");
 		});
 
-		it("NAME - HANDLES PATH WITH NO DIRECTORY", () => {
+		it("name - handles path with no directory", () => {
 			expect(new TX.File("readme.md").name).toBe("readme");
 		});
 
-		it("FULLNAME - INCLUDES EXTENSION", () => {
+		it("fullname - includes extension", () => {
 			expect(new TX.File("assets/document.txt").fullname).toBe("document.txt");
 		});
 
-		it("DIR - RETURNS PARENT DIRECTORY", () => {
+		it("dir - returns parent directory", () => {
 			expect(new TX.File("assets/sub/document.txt").dir).toBe("assets/sub");
 		});
 
-		it("DIR - ROOT LEVEL FILE", () => {
+		it("dir - root level file", () => {
 			expect(new TX.File("document.txt").dir).toBe(".");
 		});
 
-		it("PARENT_DIRS - ORDERED IMMEDIATE TO ROOT", () => {
+		it("parent_dirs - ordered immediate to root", () => {
 			expect(new TX.File("a/b/c/file.txt").parentDirs).toEqual(["c", "b", "a"]);
 		});
 
-		it("PARENT_DIRS - EMPTY FOR ROOT-LEVEL FILE", () => {
+		it("parent_dirs - empty for root-level file", () => {
 			expect(new TX.File("file.txt").parentDirs).toEqual([]);
 		});
 
-		it("PARENT_DIRS - FILTERS EMPTY SEGMENTS FROM LEADING SLASH", () => {
+		it("parent_dirs - filters empty segments from leading slash", () => {
 			expect(new TX.File("/a/b/file.txt").parentDirs).toEqual(["b", "a"]);
 		});
 	});
 
 	describe("mimeType", () => {
-		it("KNOWN EXTENSIONS", () => {
+		it("known extensions", () => {
 			expect(new TX.File("a.html").mimeType).toInclude("text/html");
 			expect(new TX.File("a.css").mimeType).toInclude("text/css");
 			expect(new TX.File("a.js").mimeType).toInclude("text/javascript");
@@ -85,22 +85,22 @@ describe("X.File", () => {
 			expect(new TX.File("a.xyz").mimeType).toBe("chemical/x-xyz");
 		});
 
-		it("UNKNOWN EXTENSION FALLS BACK TO OCTET-STREAM", () => {
+		it("unknown extension falls back to octet-stream", () => {
 			expect(new TX.File("a.what").mimeType).toBe("application/octet-stream");
 		});
 
-		it("USES FALLBACK EXTENSION WHEN PATH HAS NONE", () => {
+		it("uses fallback extension when path has none", () => {
 			expect(new TX.File("data", "json").mimeType).toBe("application/json");
 		});
 	});
 
 	describe("sibling", () => {
-		it("RETURNS FILE IN SAME DIRECTORY", () => {
+		it("returns file in same directory", () => {
 			const file = new TX.File("assets/sub/document.txt");
 			expect(file.sibling("other.txt").path).toBe(path.join("assets/sub", "other.txt"));
 		});
 
-		it("INHERITS FALLBACK EXTENSION", () => {
+		it("inherits fallback extension", () => {
 			const file = new TX.File("assets/data", "json");
 			// @ts-expect-error
 			expect(file.sibling("other").fallbackExtension).toBe("json");
@@ -108,81 +108,81 @@ describe("X.File", () => {
 	});
 
 	describe("withExtension", () => {
-		it("RETURNS FILE WITH NEW EXTENSION", () => {
+		it("returns file with new extension", () => {
 			const file = new TX.File("assets/document.txt");
 			expect(file.withExtension("md").fullname).toBe("document.md");
 		});
 
-		it("STAYS IN SAME DIRECTORY", () => {
+		it("stays in same directory", () => {
 			const file = new TX.File("assets/sub/document.txt");
 			expect(file.withExtension("html").dir).toBe(file.dir);
 		});
 	});
 
 	describe("exists", () => {
-		it("RETURNS TRUE FOR EXISTING FILE", async () => {
+		it("returns true for existing file", async () => {
 			const file = new TX.File(await writeFile("present.txt", "hello"));
 			expect(await file.exists()).toBeTrue();
 		});
 
-		it("RETURNS FALSE FOR MISSING FILE", async () => {
+		it("returns false for missing file", async () => {
 			expect(await new TX.File(path.join(tmpDir, "missing.txt")).exists()).toBeFalse();
 		});
 	});
 
 	describe("text", () => {
-		it("READS UTF8 BY DEFAULT", async () => {
+		it("reads utf8 by default", async () => {
 			const file = new TX.File(await writeFile("text.txt", "hello world"));
 			expect(await file.text()).toBe("hello world");
 		});
 
-		it("READS NON-ASCII CONTENT", async () => {
+		it("reads non-ascii content", async () => {
 			const file = new TX.File(await writeFile("unicode.txt", "merhaba 🌍"));
 			expect(await file.text()).toBe("merhaba 🌍");
 		});
 
-		it("READS EMPTY FILE", async () => {
+		it("reads empty file", async () => {
 			const file = new TX.File(await writeFile("empty.txt", ""));
 			expect(await file.text()).toBe("");
 		});
 
-		it("THROWS WHEN FILE MISSING", () => {
+		it("throws when file missing", () => {
 			expect(new TX.File(path.join(tmpDir, "nope.txt")).text()).rejects.toThrow();
 		});
 	});
 
 	describe("bytes", () => {
-		it("RETURNS UINT8ARRAY", async () => {
+		it("returns uint8array", async () => {
 			const file = new TX.File(await writeFile("bytes.txt", "hello"));
 			expect(await file.bytes()).toBeInstanceOf(Uint8Array);
 		});
 
-		it("CONTENT MATCHES FILE", async () => {
+		it("content matches file", async () => {
 			const filePath = path.join(tmpDir, "bytes-bin.bin");
 			const data = new Uint8Array([0x00, 0x01, 0x02, 0xff]);
 			await fs.writeFile(filePath, data);
 			expect(await new TX.File(filePath).bytes()).toEqual(data);
 		});
 
-		it("THROWS WHEN FILE MISSING", () => {
+		it("throws when file missing", () => {
 			expect(new TX.File(path.join(tmpDir, "nope.bin")).bytes()).rejects.toThrow();
 		});
 	});
 
 	describe("stream", () => {
-		it("RETURNS A READABLE STREAM", async () => {
+		it("returns a readable stream", async () => {
 			const file = new TX.File(await writeFile("stream.txt", "streamed contents"));
 			expect(await file.stream()).toBeInstanceOf(ReadableStream);
 		});
 
-		it("STREAM CONTENTS MATCH FILE CONTENTS", async () => {
+		it("stream contents match file contents", async () => {
 			const contents = "streamed contents";
 			const file = new TX.File(await writeFile("stream-read.txt", contents));
 			const text = await new Response(await file.stream()).text();
 			expect(text).toBe(contents);
 		});
 
-		it("HANDLES BINARY CONTENT", async () => {
+		it("handles binary content", async () => {
 			const filePath = path.join(tmpDir, "binary.bin");
 			const bytes = new Uint8Array([0x00, 0x01, 0x02, 0xff, 0xfe]);
 			await fs.writeFile(filePath, bytes);
@@ -190,12 +190,12 @@ describe("X.File", () => {
 			expect(new Uint8Array(buffer)).toEqual(bytes);
 		});
 
-		it("HANDLES EMPTY FILE", async () => {
+		it("handles empty file", async () => {
 			const file = new TX.File(await writeFile("empty-stream.txt", ""));
 			expect(await new Response(await file.stream()).text()).toBe("");
 		});
 
-		it("THROWS WHEN FILE MISSING", async () => {
+		it("throws when file missing", async () => {
 			const file = new TX.File(path.join(tmpDir, "missing-stream.txt"));
 			const stream = await file.stream();
 			expect(new Response(stream).text()).rejects.toThrow();
@@ -203,76 +203,76 @@ describe("X.File", () => {
 	});
 
 	describe("stat", () => {
-		it("RETURNS STATS OBJECT", async () => {
+		it("returns stats object", async () => {
 			const file = new TX.File(await writeFile("stat.txt", "data"));
 			const s = await file.stat();
 			expect(s.isFile()).toBeTrue();
 		});
 
-		it("SIZE MATCHES CONTENT LENGTH", async () => {
+		it("size matches content length", async () => {
 			const content = "hello world";
 			const file = new TX.File(await writeFile("stat-size.txt", content));
 			const s = await file.stat();
 			expect(s.size).toBe(Buffer.byteLength(content, "utf8"));
 		});
 
-		it("THROWS WHEN FILE MISSING", () => {
+		it("throws when file missing", () => {
 			expect(new TX.File(path.join(tmpDir, "missing-stat.txt")).stat()).rejects.toThrow();
 		});
 	});
 
 	describe("size", () => {
-		it("RETURNS SIZE IN BYTES", async () => {
+		it("returns size in bytes", async () => {
 			const content = "hello";
 			const file = new TX.File(await writeFile("size.txt", content));
 			expect(await file.size()).toBe(Buffer.byteLength(content, "utf8"));
 		});
 
-		it("RETURNS NULL FOR MISSING FILE", async () => {
+		it("returns null for missing file", async () => {
 			expect(await new TX.File(path.join(tmpDir, "missing-size.txt")).size()).toBeNull();
 		});
 	});
 
 	describe("write", () => {
-		it("WRITES STRING CONTENT", async () => {
+		it("writes string content", async () => {
 			const filePath = path.join(tmpDir, "written.txt");
 			await new TX.File(filePath).write("hello world");
 			expect(await fs.readFile(filePath, "utf8")).toBe("hello world");
 		});
 
-		it("WRITES UINT8ARRAY CONTENT", async () => {
+		it("writes uint8array content", async () => {
 			const filePath = path.join(tmpDir, "written.bin");
 			const bytes = new Uint8Array([0x00, 0x01, 0xff]);
 			await new TX.File(filePath).write(bytes);
 			expect(new Uint8Array(await fs.readFile(filePath))).toEqual(bytes);
 		});
 
-		it("WRITES ARRAYBUFFER CONTENT", async () => {
+		it("writes arraybuffer content", async () => {
 			const filePath = path.join(tmpDir, "written-ab.bin");
 			const buffer = new Uint8Array([0xde, 0xad, 0xbe, 0xef]).buffer;
 			await new TX.File(filePath).write(buffer);
 			expect(new Uint8Array(await fs.readFile(filePath))).toEqual(new Uint8Array(buffer));
 		});
 
-		it("OVERWRITES EXISTING FILE", async () => {
+		it("overwrites existing file", async () => {
 			const file = new TX.File(await writeFile("overwrite.txt", "original"));
 			await file.write("replaced");
 			expect(await file.text()).toBe("replaced");
 		});
 
-		it("CREATES PARENT DIRECTORIES", async () => {
+		it("creates parent directories", async () => {
 			const filePath = path.join(tmpDir, "nested", "deeply", "file.txt");
 			await new TX.File(filePath).write("nested content");
 			expect(await fs.readFile(filePath, "utf8")).toBe("nested content");
 		});
 
-		it("WRITES EMPTY STRING", async () => {
+		it("writes empty string", async () => {
 			const filePath = path.join(tmpDir, "empty-write.txt");
 			await new TX.File(filePath).write("");
 			expect(await fs.readFile(filePath, "utf8")).toBe("");
 		});
 
-		it("ROUND-TRIPS THROUGH TEXT()", async () => {
+		it("round-trips through text()", async () => {
 			const filePath = path.join(tmpDir, "roundtrip.txt");
 			const file = new TX.File(filePath);
 			await file.write("merhaba 🌍");
@@ -281,20 +281,20 @@ describe("X.File", () => {
 	});
 
 	describe("append", () => {
-		it("APPENDS TO EXISTING FILE", async () => {
+		it("appends to existing file", async () => {
 			const file = new TX.File(await writeFile("append.txt", "hello"));
 			await file.append(" world");
 			expect(await file.text()).toBe("hello world");
 		});
 
-		it("APPENDS UINT8ARRAY", async () => {
+		it("appends uint8array", async () => {
 			const filePath = path.join(tmpDir, "append-bin.bin");
 			await fs.writeFile(filePath, new Uint8Array([0x01]));
 			await new TX.File(filePath).append(new Uint8Array([0x02]));
 			expect(new Uint8Array(await fs.readFile(filePath))).toEqual(new Uint8Array([0x01, 0x02]));
 		});
 
-		it("MULTIPLE APPENDS ACCUMULATE", async () => {
+		it("multiple appends accumulate", async () => {
 			const file = new TX.File(await writeFile("multi-append.txt", "a"));
 			await file.append("b");
 			await file.append("c");
@@ -303,20 +303,20 @@ describe("X.File", () => {
 	});
 
 	describe("copyTo", () => {
-		it("CREATES A COPY AT DESTINATION", async () => {
+		it("creates a copy at destination", async () => {
 			const file = new TX.File(await writeFile("copy-src.txt", "copy me"));
 			const dest = path.join(tmpDir, "copy-dest.txt");
 			await file.copyTo(dest);
 			expect(await fs.readFile(dest, "utf8")).toBe("copy me");
 		});
 
-		it("ORIGINAL STILL EXISTS", async () => {
+		it("original still exists", async () => {
 			const file = new TX.File(await writeFile("copy-original.txt", "still here"));
 			await file.copyTo(path.join(tmpDir, "copy-original-dest.txt"));
 			expect(await file.exists()).toBeTrue();
 		});
 
-		it("RETURNS XFILE POINTING TO DESTINATION", async () => {
+		it("returns xfile pointing to destination", async () => {
 			const file = new TX.File(await writeFile("copy-ret.txt", "data"));
 			const dest = path.join(tmpDir, "copy-ret-dest.txt");
 			const result = await file.copyTo(dest);
@@ -324,7 +324,7 @@ describe("X.File", () => {
 			expect(await result.text()).toBe("data");
 		});
 
-		it("CREATES PARENT DIRECTORIES", async () => {
+		it("creates parent directories", async () => {
 			const file = new TX.File(await writeFile("copy-mkdir.txt", "data"));
 			const dest = path.join(tmpDir, "copy-nested", "dir", "file.txt");
 			await file.copyTo(dest);
@@ -333,21 +333,21 @@ describe("X.File", () => {
 	});
 
 	describe("moveTo", () => {
-		it("FILE EXISTS AT DESTINATION", async () => {
+		it("file exists at destination", async () => {
 			const file = new TX.File(await writeFile("move-src.txt", "move me"));
 			const dest = path.join(tmpDir, "move-dest.txt");
 			await file.moveTo(dest);
 			expect(await fs.readFile(dest, "utf8")).toBe("move me");
 		});
 
-		it("ORIGINAL NO LONGER EXISTS", async () => {
+		it("original no longer exists", async () => {
 			const srcPath = await writeFile("move-gone.txt", "bye");
 			const file = new TX.File(srcPath);
 			await file.moveTo(path.join(tmpDir, "move-gone-dest.txt"));
 			expect(await fs.exists(srcPath)).toBeFalse();
 		});
 
-		it("RETURNS XFILE POINTING TO DESTINATION", async () => {
+		it("returns xfile pointing to destination", async () => {
 			const file = new TX.File(await writeFile("move-ret.txt", "data"));
 			const dest = path.join(tmpDir, "move-ret-dest.txt");
 			const result = await file.moveTo(dest);
@@ -355,7 +355,7 @@ describe("X.File", () => {
 			expect(await result.text()).toBe("data");
 		});
 
-		it("CREATES PARENT DIRECTORIES", async () => {
+		it("creates parent directories", async () => {
 			const file = new TX.File(await writeFile("move-mkdir.txt", "data"));
 			const dest = path.join(tmpDir, "move-nested", "dir", "file.txt");
 			await file.moveTo(dest);
@@ -364,25 +364,25 @@ describe("X.File", () => {
 	});
 
 	describe("unlink", () => {
-		it("REMOVES EXISTING FILE", async () => {
+		it("removes existing file", async () => {
 			const filePath = await writeFile("to-delete.txt", "bye");
 			const file = new TX.File(filePath);
 			await file.unlink();
 			expect(await fs.exists(filePath)).toBeFalse();
 		});
 
-		it("THROWS WHEN FILE MISSING", () => {
+		it("throws when file missing", () => {
 			expect(new TX.File(path.join(tmpDir, "never-existed.txt")).unlink()).rejects.toThrow();
 		});
 
-		it("EXISTS RETURNS FALSE AFTER UNLINK", async () => {
+		it("exists returns false after unlink", async () => {
 			const file = new TX.File(await writeFile("check-after.txt", "data"));
 			expect(await file.exists()).toBeTrue();
 			await file.unlink();
 			expect(await file.exists()).toBeFalse();
 		});
 
-		it("WRITE AFTER UNLINK RECREATES FILE", async () => {
+		it("write after unlink recreates file", async () => {
 			const file = new TX.File(await writeFile("recreate.txt", "first"));
 			await file.unlink();
 			await file.write("second");
@@ -391,49 +391,49 @@ describe("X.File", () => {
 	});
 
 	describe("fromBunFile", () => {
-		it("ACCEPTS BUNFILE AS INPUT", async () => {
+		it("accepts bunfile as input", async () => {
 			const filePath = await writeFile("bunfile.txt", "from bun");
 			const file = new TX.File(Bun.file(filePath));
 			expect(await file.text()).toBe("from bun");
 		});
 
-		it("PATH IS DERIVED FROM BUNFILE NAME", async () => {
+		it("path is derived from bunfile name", async () => {
 			const filePath = await writeFile("bunfile-path.txt", "data");
 			const file = new TX.File(Bun.file(filePath));
 			expect(file.path).toBe(filePath);
 		});
 
-		it("EXTENSION IS DERIVED FROM BUNFILE PATH", async () => {
+		it("extension is derived from bunfile path", async () => {
 			const filePath = await writeFile("bunfile-ext.json", "{}");
 			const file = new TX.File(Bun.file(filePath));
 			expect(file.extension).toBe("json");
 		});
 
-		it("MIMETYPE IS CORRECT FROM BUNFILE", async () => {
+		it("mimetype is correct from bunfile", async () => {
 			const filePath = await writeFile("bunfile-mime.png", "");
 			const file = new TX.File(Bun.file(filePath));
 			expect(file.mimeType).toInclude("image/png");
 		});
 
-		it("EXISTS WORKS FROM BUNFILE", async () => {
+		it("exists works from bunfile", async () => {
 			const filePath = await writeFile("bunfile-exists.txt", "hi");
 			expect(await new TX.File(Bun.file(filePath)).exists()).toBeTrue();
 		});
 
-		it("MISSING BUNFILE RETURNS FALSE FOR EXISTS", async () => {
+		it("missing bunfile returns false for exists", async () => {
 			expect(
 				await new TX.File(Bun.file(path.join(tmpDir, "bunfile-missing.txt"))).exists(),
 			).toBeFalse();
 		});
 
-		it("WRITE AND READ ROUND-TRIPS FROM BUNFILE", async () => {
+		it("write and read round-trips from bunfile", async () => {
 			const filePath = path.join(tmpDir, "bunfile-roundtrip.txt");
 			const file = new TX.File(Bun.file(filePath));
 			await file.write("round trip");
 			expect(await file.text()).toBe("round trip");
 		});
 
-		it("FALLBACK EXTENSION STILL APPLIES FROM BUNFILE WITH NO EXTENSION", async () => {
+		it("fallback extension still applies from bunfile with no extension", async () => {
 			const filePath = path.join(tmpDir, "bunfile-noext");
 			await fs.writeFile(filePath, "data");
 			const file = new TX.File(Bun.file(filePath), "json");

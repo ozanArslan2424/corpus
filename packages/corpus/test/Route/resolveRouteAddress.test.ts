@@ -4,59 +4,59 @@ import { Method } from "@/enums/Method";
 import { resolveRouteAddress } from "@/Route/resolveRouteAddress";
 
 describe("resolveRouteAddress", () => {
-	it("PLAIN PATH DEFAULTS TO GET", () => {
+	it("plain path defaults to get", () => {
 		expect(resolveRouteAddress("/users")).toEqual({
 			method: Method.GET,
 			path: "/users",
 		});
 	});
 
-	it("PATH WITHOUT LEADING SLASH DEFAULTS TO GET", () => {
+	it("path without leading slash defaults to get", () => {
 		expect(resolveRouteAddress("users")).toEqual({
 			method: Method.GET,
 			path: "users",
 		});
 	});
 
-	it("OBJECT FORM PASSES THROUGH", () => {
+	it("object form passes through", () => {
 		const address = { method: Method.POST, path: "/users" };
 
 		expect(resolveRouteAddress(address)).toBe(address);
 	});
 
-	it("VERB PREFIXED STRING RESOLVES", () => {
+	it("verb prefixed string resolves", () => {
 		expect(resolveRouteAddress("POST /users")).toEqual({
 			method: Method.POST,
 			path: "/users",
 		});
 	});
 
-	it("LOWERCASE VERB IS UPPERCASED", () => {
+	it("lowercase verb is uppercased", () => {
 		expect(resolveRouteAddress("delete /users/:id")).toEqual({
 			method: Method.DELETE,
 			path: "/users/:id",
 		});
 	});
 
-	it.each(Object.values(Method))("VERB %s RESOLVES", (method) => {
+	it.each(Object.values(Method))("verb %s resolves", (method) => {
 		expect(resolveRouteAddress(`${method} /x`)).toEqual({ method, path: "/x" });
 	});
 
-	it("THROWS ON NON VERB PREFIX", () => {
+	it("throws on non verb prefix", () => {
 		expect(() => resolveRouteAddress("FOO /users")).toThrow();
 	});
 
-	it("THROWS ON PATH WITH INNER WHITESPACE", () => {
+	it("throws on path with inner whitespace", () => {
 		expect(() => resolveRouteAddress("/users list")).toThrow();
 	});
 
-	it("THROWS ON VERB WITHOUT PATH", () => {
+	it("throws on verb without path", () => {
 		// "GET " splits into ["GET", ""], "GET" alone has no space and is
 		// treated as a plain path, so the trailing-space form is the throw case
 		expect(() => resolveRouteAddress("GET ")).toThrow();
 	});
 
-	it("EXTRA SEGMENTS AFTER THE PATH ARE DROPPED", () => {
+	it("extra segments after the path are dropped", () => {
 		// documents current behavior: split(" ") + destructuring keeps only
 		// the first two parts, "GET /a /b" resolves to path "/a"
 		expect(resolveRouteAddress("GET /a /b")).toEqual({

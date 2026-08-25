@@ -4,7 +4,7 @@ import { $registryTesting, TC } from "../_modules";
 
 beforeEach(() => $registryTesting.reset());
 
-describe("C.Res", () => {
+describe("Res", () => {
 	const ctHeader = TC.HeaderKey.ContentType;
 	const locHeader = TC.HeaderKey.Location;
 	const locUrl = "/hello";
