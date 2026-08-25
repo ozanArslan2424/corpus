@@ -51,6 +51,7 @@ function makeLogger(): Logger {
 		debug() {},
 		warn() {},
 		step() {},
+		// oxlint-disable-next-line no-unused-vars
 		section(_) {},
 		// do not suppress errors
 		error: (...a: any[]) => console.error(`${col.red}✗${col.reset}`, ...a),

@@ -167,10 +167,6 @@ export function isObjectWithKeys<T>(item: unknown, ...keys: string[]): item is T
 	return true;
 }
 
-export function isPlainObject(input: unknown): input is Record<string, unknown> {
-	return typeof input === "object" && input?.constructor === Object;
-}
-
 export function isObject(input: unknown): input is Record<string, unknown> {
 	if (isNil(input) || typeof input !== "object" || Array.isArray(input)) return false;
 	return Object.getPrototypeOf(input) === Object.prototype;

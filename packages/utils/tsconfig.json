@@ -1,14 +1,9 @@
 {
-    "extends": "../../tsconfig.json",
-    "exclude": [
-        "dist",
-        "node_modules"
-    ],
-    "compilerOptions": {
-        "paths": {
-            "@/*": [
-                "./src/*"
-            ]
-        }
-    }
+	"extends": "../../tsconfig.json",
+	"exclude": ["dist", "node_modules"],
+	"compilerOptions": {
+		"paths": {
+			"@/*": ["./src/*"]
+		}
+	}
 }
