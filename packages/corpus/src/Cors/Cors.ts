@@ -1,5 +1,4 @@
-import { isSomeArray } from "@ozanarslan/utils";
-import { boolToString } from "@ozanarslan/utils";
+import { isSomeArray, boolToString } from "@ozanarslan/utils";
 
 import type { CorsOptions } from "@/Cors/types";
 import { HeaderKey } from "@/enums/HeaderKey";

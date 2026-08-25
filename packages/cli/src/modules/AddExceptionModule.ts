@@ -1,6 +1,4 @@
-import { assert } from "@ozanarslan/utils/assert";
-import { quote } from "@ozanarslan/utils/lexical";
-import { StringBuilder } from "@ozanarslan/utils/StringBuilder";
+import { assert, StringBuilder, quote } from "@ozanarslan/utils";
 
 import { Importable } from "@/classes/Importable";
 import { EXE_NAME, NAME_FLAG_HELP } from "@/constants";

@@ -1,5 +1,4 @@
-import { assert } from "@ozanarslan/utils/assert";
-import { quote } from "@ozanarslan/utils/lexical";
+import { assert, quote } from "@ozanarslan/utils";
 
 import { MainFileUpdater } from "@/classes/MainFileUpdater";
 import { Resource } from "@/classes/Resource";

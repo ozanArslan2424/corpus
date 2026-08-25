@@ -1,4 +1,4 @@
-import { TestHelper } from "@ozanarslan/utils/TestHelper";
+import { TestHelper } from "@ozanarslan/utils";
 
 import { CorpusApi } from "./apigen/generated";
 import { startServer } from "./apigen/startServer";

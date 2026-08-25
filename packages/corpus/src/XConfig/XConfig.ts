@@ -1,6 +1,4 @@
-import type { Func } from "@ozanarslan/utils";
-import type { OrString } from "@ozanarslan/utils";
-import { isEmpty } from "@ozanarslan/utils";
+import { isEmpty, type Func, type OrString } from "@ozanarslan/utils";
 
 import type { Env } from "@/types";
 

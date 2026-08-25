@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { logFatal } from "@ozanarslan/utils/logger";
+import { logFatal } from "@ozanarslan/utils";
 
 import { MainFileUpdater } from "@/classes/MainFileUpdater";
 import { APP_NAME, EXE_NAME } from "@/constants";

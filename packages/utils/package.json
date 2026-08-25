@@ -2,7 +2,7 @@
 	"$schema": "https://www.schemastore.org/package.json",
 	"name": "@ozanarslan/utils",
 	"version": "0.0.0",
-	"description": "@ozanarslan/utils",
+	"description": "utils",
 	"author": "Ozan Arslan <ozanarslanwork@gmail.com>",
 	"type": "module",
 	"exports": {

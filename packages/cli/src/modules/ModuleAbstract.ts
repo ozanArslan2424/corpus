@@ -3,8 +3,7 @@ import { createInterface } from "node:readline/promises";
 import path from "path";
 import { parseArgs } from "util";
 
-import { logger, setLogger } from "@ozanarslan/utils/logger";
-import { isUndefined, type Nullable } from "@ozanarslan/utils/maybe";
+import { type Nullable, logger, setLogger, isUndefined } from "@ozanarslan/utils";
 
 import type { Config } from "@/config/Config";
 import { getConfig } from "@/config/getConfig";

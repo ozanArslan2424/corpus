@@ -1,5 +1,4 @@
-import { noop } from "@ozanarslan/utils";
-import type { Maybe } from "@ozanarslan/utils";
+import { noop, type Maybe } from "@ozanarslan/utils";
 
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Method } from "@/enums/Method";

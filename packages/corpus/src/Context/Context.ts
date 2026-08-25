@@ -1,5 +1,4 @@
-import { strSplit } from "@ozanarslan/utils";
-import { createSafeObject } from "@ozanarslan/utils";
+import { strSplit, createSafeObject } from "@ozanarslan/utils";
 
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Res } from "@/Res/Res";

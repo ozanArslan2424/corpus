@@ -1,7 +1,6 @@
 import fs from "fs";
 
-import { objGetValues } from "@ozanarslan/utils/object";
-import { StringReader } from "@ozanarslan/utils/StringReader";
+import { objGetValues, StringReader } from "@ozanarslan/utils";
 import { parseSync, type Node, type Program } from "oxc-parser";
 
 export type FileParserCallback = (

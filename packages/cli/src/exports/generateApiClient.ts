@@ -2,13 +2,16 @@ import fs from "node:fs";
 import path from "path";
 
 import type { BaseRoute } from "@ozanarslan/corpus";
-import { isSomeArray } from "@ozanarslan/utils/array";
-import { cache } from "@ozanarslan/utils/cache";
-import { quote, toPascalCase } from "@ozanarslan/utils/lexical";
-import { logger } from "@ozanarslan/utils/logger";
-import { isNil } from "@ozanarslan/utils/maybe";
-import type { Maybe } from "@ozanarslan/utils/maybe";
-import { StringBuilder } from "@ozanarslan/utils/StringBuilder";
+import {
+	type Maybe,
+	cache,
+	toPascalCase,
+	isNil,
+	isSomeArray,
+	logger,
+	StringBuilder,
+	quote,
+} from "@ozanarslan/utils";
 
 import type { Config } from "@/config/Config";
 import type { Schema } from "@/schema/Schema";
@@ -20,7 +23,7 @@ const CT_GENERIC = `CT extends "json" | "formData" = "json"`;
 const schemaPrinter = new SchemaPrinter();
 const typeToNameMap = new Map<string, string>();
 
-type Route = Omit<BaseRoute, "register"> & {
+type Route = Omit<BaseRoute, "register" | "handle" | "request"> & {
 	camelKey: string;
 	pascalKey: string;
 	params: string[];

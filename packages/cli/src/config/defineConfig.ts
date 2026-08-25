@@ -1,5 +1,4 @@
-import { objMerge } from "@ozanarslan/utils/object";
-import type { DeepPartial } from "@ozanarslan/utils/types";
+import { objMerge, type DeepPartial } from "@ozanarslan/utils";
 
 import type { Config } from "@/config/Config";
 import { getDefaultConfig } from "@/config/getConfig";

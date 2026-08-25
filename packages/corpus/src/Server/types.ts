@@ -1,6 +1,4 @@
-import type { Func } from "@ozanarslan/utils";
-import type { OrString } from "@ozanarslan/utils";
-import type { Maybe, Optional } from "@ozanarslan/utils";
+import type { Func, OrString, Maybe, Optional } from "@ozanarslan/utils";
 
 import type { Context } from "@/Context/Context";
 import type { Method } from "@/enums/Method";

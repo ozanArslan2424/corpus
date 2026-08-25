@@ -2,9 +2,7 @@ import { spawnSync } from "child_process";
 import fs from "fs";
 import path from "path";
 
-import { findEnclosingFunctionName } from "@ozanarslan/utils/function";
-import { logFatal, logger } from "@ozanarslan/utils/logger";
-import { StringBuilder } from "@ozanarslan/utils/StringBuilder";
+import { StringBuilder, logger, logFatal, findEnclosingFunctionName } from "@ozanarslan/utils";
 
 import { EXE_NAME, GEN_FUNC, LISTEN_PATTERN } from "@/constants";
 import { resolveCwdPath } from "@/functions/resolveCwdPath";

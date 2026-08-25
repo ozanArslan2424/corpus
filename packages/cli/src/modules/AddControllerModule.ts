@@ -1,10 +1,14 @@
 import fs from "fs";
 
-import { assert } from "@ozanarslan/utils/assert";
-import { isString, quote } from "@ozanarslan/utils/lexical";
-import { isNil } from "@ozanarslan/utils/maybe";
-import { objGetEntries, objGetValues } from "@ozanarslan/utils/object";
-import { StringBuilder } from "@ozanarslan/utils/StringBuilder";
+import {
+	assert,
+	isString,
+	quote,
+	isNil,
+	objGetEntries,
+	objGetValues,
+	StringBuilder,
+} from "@ozanarslan/utils";
 
 import { Importable } from "@/classes/Importable";
 import { MainFileUpdater } from "@/classes/MainFileUpdater";

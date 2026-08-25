@@ -1,9 +1,14 @@
 import fs from "fs";
 import path from "path";
 
-import { toCamelCase, toKebabCase, toPascalCase, type OrString } from "@ozanarslan/utils/lexical";
-import { logFatal } from "@ozanarslan/utils/logger";
-import { objGetEntries } from "@ozanarslan/utils/object";
+import {
+	toCamelCase,
+	toKebabCase,
+	toPascalCase,
+	type OrString,
+	logFatal,
+	objGetEntries,
+} from "@ozanarslan/utils";
 
 import { FileParser, type FileParserCallback } from "@/classes/FileParser";
 import type { Config } from "@/config/Config";

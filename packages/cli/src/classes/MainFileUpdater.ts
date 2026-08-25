@@ -1,10 +1,14 @@
 import fs from "fs";
 
-import { isSomeArray } from "@ozanarslan/utils/array";
-import { logger } from "@ozanarslan/utils/logger";
-import { isEmpty, isNull } from "@ozanarslan/utils/maybe";
-import { objGetKeys, objGetEntries } from "@ozanarslan/utils/object";
-import { StringReader } from "@ozanarslan/utils/StringReader";
+import {
+	isSomeArray,
+	logger,
+	isEmpty,
+	isNull,
+	objGetKeys,
+	objGetEntries,
+	StringReader,
+} from "@ozanarslan/utils";
 import type { Node } from "oxc-parser";
 
 import { FileParser } from "@/classes/FileParser";

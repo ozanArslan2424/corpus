@@ -1,5 +1,4 @@
-import type { Func } from "@ozanarslan/utils";
-import { isNil } from "@ozanarslan/utils";
+import { type Func, isNil } from "@ozanarslan/utils";
 
 import type { Context } from "@/Context/Context";
 import { CacheControlDirective } from "@/Directives/CacheControlDirective";

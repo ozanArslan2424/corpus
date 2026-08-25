@@ -1,5 +1,4 @@
-import { isNumber } from "@ozanarslan/utils";
-import { isObject } from "@ozanarslan/utils";
+import { isNumber, isObject } from "@ozanarslan/utils";
 
 import { Status } from "@/enums/Status";
 import { Res } from "@/Res/Res";
