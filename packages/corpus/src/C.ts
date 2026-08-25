@@ -1,4 +1,5 @@
 export * from "./Directives/CacheControlDirective";
+export * from "./Directives/ContentDispositionDirective";
 
 export * from "./Context/Context";
 
