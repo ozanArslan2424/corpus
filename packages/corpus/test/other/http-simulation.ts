@@ -96,6 +96,12 @@ const bodySchema = type({
 
 // ── global request logger middleware ─────────────────────────────────────────
 
+declare module "../_modules" {
+	interface ContextDataInterface {
+		requestedAt?: number;
+	}
+}
+
 new TC.Middleware({
 	handler: (ctx) => {
 		ctx.data = { requestedAt: Date.now() };

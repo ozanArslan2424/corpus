@@ -14,7 +14,7 @@ beforeEach(() => {
 const s = createTestServer();
 declare module "../_modules" {
 	interface ContextDataInterface {
-		order: Array<string>;
+		order?: Array<string>;
 	}
 }
 s.contextFactory = (request, server) => {
@@ -45,7 +45,7 @@ describe("Middleware", () => {
 		new TC.Middleware({
 			useOn: [r],
 			handler: async (c, next) => {
-				c.data.order.push("a");
+				c.data.order?.push("a");
 				await next();
 			},
 		});
@@ -55,14 +55,14 @@ describe("Middleware", () => {
 			handler: async (c, next) => {
 				// The next middleware will be run before this
 				await next();
-				c.data.order.push("c");
+				c.data.order?.push("c");
 			},
 		});
 
 		new TC.Middleware({
 			useOn: [r],
 			handler: async (c, next) => {
-				c.data.order.push("b");
+				c.data.order?.push("b");
 				await next();
 			},
 		});
@@ -82,7 +82,7 @@ describe("Middleware", () => {
 		new TC.Middleware({
 			useOn: [r1, r2],
 			handler: async (c, next) => {
-				c.data.order.push("a");
+				c.data.order?.push("a");
 				await next();
 			},
 		});
@@ -90,7 +90,7 @@ describe("Middleware", () => {
 		new TC.Middleware({
 			useOn: [r1],
 			handler: async (c, next) => {
-				c.data.order.push("b");
+				c.data.order?.push("b");
 				await next();
 			},
 		});
