@@ -58,7 +58,7 @@ export class XConfig {
 	static require<T = string>(key: EnvKey, parser?: Func<[string], T>): T {
 		const value = this.env[key];
 
-		if (!!isEmpty(value)) {
+		if (isEmpty(value)) {
 			throw new Error(`Required environment variable "${key}" is not set`);
 		}
 
