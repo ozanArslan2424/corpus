@@ -1,10 +1,12 @@
+import type { Optional } from "@ozanarslan/utils/maybe";
+
 import { FileRoute } from "@/Route/FileRoute";
+import { joinPathSegments } from "@/Route/joinPathSegments";
 import { resolveRouteAddress } from "@/Route/resolveRouteAddress";
 import { Route } from "@/Route/Route";
 import { StaticRoute } from "@/Route/StaticRoute";
 import { WebSocketRoute } from "@/Route/WebSocketRoute";
 import type { ContextHandler } from "@/types";
-import { joinPathSegments } from "@ozanarslan/utils/joinPathSegments";
 
 /**
  * Base class for grouping related routes under a shared prefix and optional middleware.
@@ -29,24 +31,31 @@ import { joinPathSegments } from "@ozanarslan/utils/joinPathSegments";
  * new UserController();
  */
 
-export abstract class Controller {
+type WithLeading<E extends string> = E extends `/${string}` ? E : `/${E}`;
+
+type WithPrefix<Px extends Optional<string>, E extends string> = Px extends string
+	? `${WithLeading<Px>}${WithLeading<E>}`
+	: WithLeading<E>;
+
+export class Controller<Px extends Optional<string> = Optional<string>> {
+	constructor(public prefix?: Px) {}
+
 	readonly routeIds: Set<string> = new Set<string>();
 
-	abstract prefix?: string;
 	beforeEach?: ContextHandler;
 
 	/**
 	 * Registers a dynamic route under this controller. Behaves identically to {@link Route}
 	 * but automatically prepends the controller prefix and runs `beforeEach` before the handler.
 	 */
-	protected route<B = unknown, S = unknown, P = unknown, R = unknown, E extends string = string>(
+	route<B = unknown, S = unknown, P = unknown, R = unknown, E extends string = string>(
 		...args: ConstructorParameters<typeof Route<B, S, P, R, E>>
-	): Route<B, S, P, R, E> {
+	): Route<B, S, P, R, WithPrefix<Px, E>> {
 		const [address, handler, model] = args;
 		const resolved = resolveRouteAddress(address);
 		const method = resolved.method;
-		const path = joinPathSegments<E>(this.prefix, resolved.path);
-		const route = new Route<B, S, P, R, E>(
+		const path = joinPathSegments<WithPrefix<Px, E>>(this.prefix, resolved.path);
+		const route = new Route(
 			{ method, path },
 			async (ctx) => {
 				await this.beforeEach?.(ctx);
@@ -62,14 +71,14 @@ export abstract class Controller {
 	 * Registers a static route under this controller. Behaves identically to {@link StaticRoute}
 	 * but automatically prepends the controller prefix.
 	 */
-	protected staticRoute<B = unknown, S = unknown, P = unknown, E extends string = string>(
+	staticRoute<B = unknown, S = unknown, P = unknown, E extends string = string>(
 		...args: ConstructorParameters<typeof StaticRoute<B, S, P, E>>
-	): StaticRoute<B, S, P, E> {
+	): StaticRoute<B, S, P, WithPrefix<Px, E>> {
 		const [address, filePath, callback, model] = args;
 		const resolved = resolveRouteAddress(address);
 		const method = resolved.method;
-		const path = joinPathSegments<E>(this.prefix, resolved.path);
-		const route = new StaticRoute<B, S, P, E>(
+		const path = joinPathSegments<WithPrefix<Px, E>>(this.prefix, resolved.path);
+		const route = new StaticRoute(
 			{ method, path },
 			filePath,
 			callback === undefined
@@ -88,14 +97,14 @@ export abstract class Controller {
 	 * Registers a file route under this controller. Behaves identically to {@link FileRoute}
 	 * but automatically prepends the controller prefix.
 	 */
-	protected fileRoute<E extends string = string>(
+	fileRoute<E extends string = string>(
 		...args: ConstructorParameters<typeof FileRoute<E>>
-	): FileRoute<E> {
+	): FileRoute<WithPrefix<Px, E>> {
 		const [address, definition] = args;
 		const resolved = resolveRouteAddress(address);
 		const method = resolved.method;
-		const path = joinPathSegments<E>(this.prefix, resolved.path);
-		const route = new FileRoute<E>({ method, path }, definition);
+		const path = joinPathSegments<WithPrefix<Px, E>>(this.prefix, resolved.path);
+		const route = new FileRoute({ method, path }, definition);
 		this.routeIds.add(route.id);
 		return route;
 	}
@@ -104,12 +113,12 @@ export abstract class Controller {
 	 * Registers a websocket route under this controller. Behaves identically to {@link WebSocketRoute}
 	 * but automatically prepends the controller prefix.
 	 */
-	protected websocketRoute<E extends string = string>(
+	websocketRoute<E extends string = string>(
 		...args: ConstructorParameters<typeof WebSocketRoute<E>>
 	) {
 		const [path, ...rest] = args;
-		const endpoint = joinPathSegments<E>(this.prefix, path);
-		const route = new WebSocketRoute<E>(endpoint, ...rest);
+		const endpoint = joinPathSegments<WithPrefix<Px, E>>(this.prefix, path);
+		const route = new WebSocketRoute(endpoint, ...rest);
 		this.routeIds.add(route.id);
 		return route;
 	}
