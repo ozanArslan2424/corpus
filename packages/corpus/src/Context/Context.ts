@@ -60,6 +60,7 @@ export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 		return this._url;
 	}
 
+	// TODO: this seems dumb, maybe move cookies and headers to Req again
 	get headers(): Headers {
 		return this.req.headers;
 	}
@@ -73,6 +74,7 @@ export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 			return this._cookies;
 		}
 
+		// req may be Request
 		this._cookies = new Bun.CookieMap();
 
 		const cookieHeader = this.req.headers.get(HeaderKey.Cookie);

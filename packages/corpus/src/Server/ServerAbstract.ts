@@ -14,12 +14,13 @@ import { Res } from "@/Res/Res";
 import type { BaseRoute } from "@/Route/BaseRoute";
 import { RouteVariant, type ContextHandler } from "@/Route/types";
 import { WebSocketRoute } from "@/Route/WebSocketRoute";
-import type { ErrorHandler, ServerApp, ServerOptions } from "@/Server/types";
+import type { ContextFactory, ErrorHandler, ServerApp, ServerOptions } from "@/Server/types";
 import { XConfig } from "@/XConfig/XConfig";
 
 export abstract class ServerAbstract {
 	abstract handle(request: Request, server?: Maybe<ServerApp>): Promise<Response>;
 
+	app: ServerApp | undefined;
 	port: number = 3000;
 	hostname?: OrString<"0.0.0.0" | "127.0.0.1" | "localhost">;
 	idleTimeout?: number;
@@ -47,14 +48,15 @@ export abstract class ServerAbstract {
 
 	protected abstract createApp(): ServerApp;
 
-	protected app: ServerApp | undefined;
-
 	protected init(opts?: ServerOptions) {
 		if (opts?.port) this.port = opts.port;
 		if (opts?.hostname) this.hostname = opts.hostname;
 		if (opts?.idleTimeout) this.idleTimeout = opts.idleTimeout;
 		if (opts?.tls) this.tls = opts.tls;
 		if (opts?.globalPrefix) $registry.prefix = opts.globalPrefix;
+		const protocol = this.tls ? "https" : "http";
+		const hostname = this.hostname ?? "localhost";
+		$registry.baseUrl = `${protocol}://${hostname}${this.port ? `:${this.port}` : ""}`;
 	}
 
 	protected async finalize(context: Context, handler: ContextHandler): Promise<Response> {
@@ -66,37 +68,6 @@ export abstract class ServerAbstract {
 		// CORS must come last and be separate from other middlewares
 		await $registry.cors?.handler(context, noop);
 		return context.res.response;
-	}
-
-	protected composeHandlerChain(...handlers: Array<MiddlewareHandler>): MiddlewareHandler {
-		return (c, outerNext) => {
-			let index = -1;
-			const dispatch = (i: number): ReturnType<MiddlewareHandler> => {
-				if (i <= index) {
-					throw new Exception("next() called multiple times", Status.INTERNAL_SERVER_ERROR);
-				}
-				index = i;
-
-				const handler = handlers[i];
-				if (!handler) return outerNext();
-
-				let called = false;
-				let downstream: unknown | undefined;
-				const next = async () => {
-					called = true;
-					downstream = await dispatch(i + 1);
-					return downstream;
-				};
-
-				return (async () => {
-					const result = await handler(c, next);
-					if (result !== undefined) return result; // terminal body OR middleware Res short-circuit
-					if (!called) return next();
-					return downstream;
-				})();
-			};
-			return dispatch(0);
-		};
 	}
 
 	handleRoute = async (
@@ -195,5 +166,9 @@ export abstract class ServerAbstract {
 			return new Res(undefined, { status: Status.NO_CONTENT });
 		}
 		return $registry.cors.handlePreflight(c);
+	};
+
+	contextFactory: ContextFactory = (request, server) => {
+		return new Context(request, server);
 	};
 }

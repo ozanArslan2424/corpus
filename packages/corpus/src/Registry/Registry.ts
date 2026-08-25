@@ -1,3 +1,5 @@
+import { arrIncludes } from "@ozanarslan/utils/array";
+
 import type { Middleware } from "@/Middleware/Middleware";
 import { BodyParser } from "@/Parser/BodyParser";
 import { FormDataParser } from "@/Parser/FormDataParser";
@@ -13,10 +15,9 @@ import type {
 	SchemaParserInterface,
 } from "@/Registry/types";
 import type { BaseRoute } from "@/Route/BaseRoute";
+import { joinPathSegments } from "@/Route/joinPathSegments";
 import { RouteVariant } from "@/Route/types";
 import { InternalRouteRegexpMatcher } from "@/Router/InternalRouteRegexpMatcher";
-import { arrIncludes } from "@ozanarslan/utils/array";
-import { joinPathSegments } from "@ozanarslan/utils/joinPathSegments";
 
 export class Registry implements RegistryInterface {
 	constructor() {
@@ -24,9 +25,10 @@ export class Registry implements RegistryInterface {
 	}
 
 	reset(): void {
+		this.baseUrl = "http://localhost:3000";
+		this.prefix = "";
 		this.router = new InternalRouteRegexpMatcher();
 		this.cors = null;
-		this.prefix = "";
 		this.urlParamsParser = new URLParamsParser();
 		this.searchParamsParser = new SearchParamsParser();
 		this.formDataParser = new FormDataParser();
@@ -34,9 +36,10 @@ export class Registry implements RegistryInterface {
 		this.schemaParser = new SchemaParser();
 	}
 
-	cors!: CorsInterface | null;
-
+	baseUrl!: string;
 	prefix!: string;
+
+	cors!: CorsInterface | null;
 
 	urlParamsParser!: ObjectParserInterface<Record<string, string>>;
 

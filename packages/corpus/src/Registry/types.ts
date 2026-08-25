@@ -1,5 +1,6 @@
 import type { Schema } from "@ozanarslan/utils/schema";
 
+import type { CorsOptions } from "@/Cors/types";
 import type { Method } from "@/enums/Method";
 import type { Middleware } from "@/Middleware/Middleware";
 import type { Res } from "@/Res/Res";
@@ -8,9 +9,10 @@ import type { ContextHandler } from "@/Route/types";
 import type { RouterReturn } from "@/Router/types";
 
 export interface RegistryInterface {
+	baseUrl: string;
+	prefix: string;
 	router: RouterInterface;
 	cors: CorsInterface | null;
-	prefix: string;
 	urlParamsParser: ObjectParserInterface<Record<string, string>>;
 	searchParamsParser: ObjectParserInterface<URLSearchParams>;
 	formDataParser: ObjectParserInterface<FormData>;
@@ -28,6 +30,7 @@ export interface RouterInterface {
 }
 
 export interface CorsInterface extends Middleware {
+	opts: CorsOptions | undefined;
 	/** Preflight handler for OPTIONS requests. */
 	handlePreflight: ContextHandler;
 }

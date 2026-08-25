@@ -1,3 +1,6 @@
+import { isSomeArray } from "@ozanarslan/utils/array";
+import { boolToString } from "@ozanarslan/utils/booleans";
+
 import type { CorsOptions } from "@/Cors/types";
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Status } from "@/enums/Status";
@@ -6,15 +9,13 @@ import { $registry } from "@/registry";
 import type { CorsInterface } from "@/Registry/types";
 import { Res } from "@/Res/Res";
 import type { ContextHandler } from "@/Route/types";
-import { isSomeArray } from "@ozanarslan/utils/array";
-import { boolToString } from "@ozanarslan/utils/booleans";
 
 /**
  * Simple cors helper to set CORS headers. Also provides a preflight handler for the Server.
  * Extend and override to change business logic and keep registration.
  * */
 export class Cors implements CorsInterface {
-	constructor(protected readonly opts: CorsOptions | undefined) {
+	constructor(public opts: CorsOptions | undefined) {
 		this.register();
 	}
 

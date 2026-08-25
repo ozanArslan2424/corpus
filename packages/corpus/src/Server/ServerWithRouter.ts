@@ -1,11 +1,11 @@
 import { noop } from "@ozanarslan/utils/function";
 import type { Maybe } from "@ozanarslan/utils/maybe";
 
-import { Context } from "@/Context/Context";
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Method } from "@/enums/Method";
 import type { MiddlewareHandler } from "@/Middleware/types";
 import { $registry } from "@/registry";
+import { composeHandlerChain } from "@/Server/composeHandlerChain";
 import { ServerAbstract } from "@/Server/ServerAbstract";
 import type { ServerApp, ServerOptionsWithRouter } from "@/Server/types";
 
@@ -19,7 +19,7 @@ export class ServerWithRouter extends ServerAbstract {
 	}
 
 	async handle(request: Request, server?: Maybe<ServerApp>): Promise<Response> {
-		const context = new Context(request, server);
+		const context = this.contextFactory(request, server);
 
 		return this.finalize(context, async (c) => {
 			try {
@@ -41,7 +41,7 @@ export class ServerWithRouter extends ServerAbstract {
 						.findMiddlewares(routeId)
 						.map((m) => m.handler);
 					const terminal = route ? route.handler : this.handleNotFound;
-					handler = this.composeHandlerChain(...middlewareHandlers, terminal);
+					handler = composeHandlerChain(...middlewareHandlers, terminal);
 				}
 				if (!route) {
 					return await handler(c, noop);
@@ -89,14 +89,14 @@ export class ServerWithRouter extends ServerAbstract {
 		for (const route of $registry.router.list()) {
 			this.composedHandlers.set(
 				route.id,
-				this.composeHandlerChain(
+				composeHandlerChain(
 					...$registry.router.findMiddlewares(route.id).map((m) => m.handler),
 					(c) => route.handler(c),
 				),
 			);
 		}
 
-		const notFoundChain = this.composeHandlerChain(
+		const notFoundChain = composeHandlerChain(
 			...$registry.router.findMiddlewares("*").map((m) => m.handler),
 			(c) => this.handleNotFound(c),
 		);

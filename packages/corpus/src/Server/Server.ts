@@ -1,10 +1,12 @@
 import { noop } from "@ozanarslan/utils/function";
+import type { Maybe } from "@ozanarslan/utils/maybe";
 
 import { Context } from "@/Context/Context";
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Method } from "@/enums/Method";
 import { $registry } from "@/registry";
 import type { ContextHandler } from "@/Route/types";
+import { composeHandlerChain } from "@/Server/composeHandlerChain";
 import { ServerAbstract } from "@/Server/ServerAbstract";
 import type { ServerApp, ServerHandler, ServerOptions, ServerRouteMap } from "@/Server/types";
 
@@ -14,8 +16,8 @@ export class Server extends ServerAbstract {
 		this.init(opts);
 	}
 
-	async handle(request: Request, server?: ServerApp | null | undefined): Promise<Response> {
-		const context = new Context(request, server);
+	async handle(request: Request, server?: Maybe<ServerApp>): Promise<Response> {
+		const context = this.contextFactory(request, server);
 		return this.finalize(context, async (c) => {
 			try {
 				const isPreflight =
@@ -27,13 +29,13 @@ export class Server extends ServerAbstract {
 
 				const match = $registry.router.find(c.req.method, c.req.url);
 				if (match) {
-					const composedHandler = this.composeHandlerChain(
+					const composedHandler = composeHandlerChain(
 						...match.middlewares.map((m) => m.handler),
 						match.route.handler,
 					);
 					return await this.handleRoute(c, match.route, match.params, composedHandler);
 				}
-				const notFoundHandler = this.composeHandlerChain(
+				const notFoundHandler = composeHandlerChain(
 					...$registry.router.findMiddlewares("*").map((m) => m.handler),
 					this.handleNotFound,
 				);
@@ -72,7 +74,7 @@ export class Server extends ServerAbstract {
 		const routes: ServerRouteMap = {};
 
 		for (const route of $registry.router.list()) {
-			const handler = this.composeHandlerChain(
+			const handler = composeHandlerChain(
 				...$registry.router.findMiddlewares(route.id).map((m) => m.handler),
 				route.handler,
 			);
@@ -80,7 +82,7 @@ export class Server extends ServerAbstract {
 
 			routes[route.endpoint] ??= {};
 			routes[route.endpoint]![route.method] = (request, server) => {
-				const context = new Context(request, server);
+				const context = this.contextFactory(request, server);
 				return this.finalize(
 					context,
 					this.assignErrorContext((c) => {
@@ -102,13 +104,13 @@ export class Server extends ServerAbstract {
 	}
 
 	protected composeFetch(): ServerHandler {
-		const notFoundChain = this.composeHandlerChain(
+		const notFoundChain = composeHandlerChain(
 			...$registry.router.findMiddlewares("*").map((m) => m.handler),
 			this.handleNotFound,
 		);
 
 		return (request, server) => {
-			const context = new Context(request, server);
+			const context = this.contextFactory(request, server);
 			return this.finalize(
 				context,
 				this.assignErrorContext(async (c) => {

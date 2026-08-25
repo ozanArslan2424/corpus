@@ -1,5 +1,6 @@
 import type { Func } from "@ozanarslan/utils/function";
 import type { OrString } from "@ozanarslan/utils/lexical";
+import type { Maybe, Optional } from "@ozanarslan/utils/maybe";
 
 import type { Context } from "@/Context/Context";
 import type { Method } from "@/enums/Method";
@@ -30,8 +31,13 @@ export type ServerApp = Bun.Server<WebSocketRoute>;
 export type ErrorHandler<R = unknown> = Func<[error: Error, context: Context], Bun.MaybePromise<R>>;
 
 export type ServerHandler<Req extends Request = Request> = Func<
-	[request: Req, server: ServerApp],
-	Bun.MaybePromise<Response | undefined>
+	[request: Req, server: Maybe<ServerApp>],
+	Bun.MaybePromise<Optional<Response>>
+>;
+
+export type ContextFactory<Req extends Request = Request> = Func<
+	[request: Req, server: Maybe<ServerApp>],
+	Context
 >;
 
 export type ServerRouteMap = Record<string, Partial<Record<Method, ServerHandler<Bun.BunRequest>>>>;
