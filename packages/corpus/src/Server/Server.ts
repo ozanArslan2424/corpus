@@ -17,6 +17,17 @@ export class Server extends ServerAbstract {
 	}
 
 	async handle(request: Request, server?: Maybe<ServerApp>): Promise<Response> {
+		// TODO: This is how it should be but Bun.Server.fetch only handles the fetch argument
+		// when it should also handle the routes argument. I'm not sure why this is the case
+		// or if it is the case at all. it just doesn't work. Temporary regex matcher is used.
+		//
+		// const app = this.createApp() ?? server;
+		// // // change the request base url to $registry.baseUrl first
+		// // const url = new URL(new URL(request.url).pathname, $registry.baseUrl);
+		// // request = new Request(url, request);
+		// app.stop();
+		// return await app.fetch(request);
+
 		const context = this.contextFactory(request, server);
 		return this.finalize(context, async (c) => {
 			try {

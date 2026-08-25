@@ -1,11 +1,12 @@
-import { isNil, isUndefined } from "@ozanarslan/utils/maybe";
-import { isPrimitive } from "@ozanarslan/utils/primitive";
+import { isUndefined } from "@ozanarslan/utils/maybe";
 
+import { wrapCookieMap } from "@/Cookies/wrapCookieMap";
 import { ContentDispositionDirective } from "@/Directives/ContentDispositionDirective";
 import { DefaultStatusTexts } from "@/enums/DefaultStatusTexts";
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";
+import { resolveResBody } from "@/Res/resolveResBody";
 import type { ResInit, SseSource, NdjsonSource } from "@/Res/types";
 import { XFile } from "@/XFile/XFile";
 
@@ -37,50 +38,35 @@ import { XFile } from "@/XFile/XFile";
 
 export class Res<R = unknown> {
 	constructor(
-		public body?: BodyInit | R | null | undefined,
+		body?: BodyInit | R | null | undefined,
 		protected readonly init?: ResInit | Res,
 	) {
 		if (init?.status) this.status = init.status;
 		if (init?.statusText) this.statusText = init.statusText;
+		this.body = body; // runs through the setter below
+	}
+
+	private _body: BodyInit | R | null | undefined;
+	private _resolvedBody: BodyInit | null | undefined;
+
+	public get body(): BodyInit | R | null | undefined {
+		return this._body;
+	}
+	public set body(value: BodyInit | R | null | undefined) {
+		this._body = value;
+		const [resolved, contentType] = resolveResBody(value);
+		this._resolvedBody = resolved;
+		if (!isUndefined(contentType) && !this.headers.has(HeaderKey.ContentType)) {
+			this.headers.set(HeaderKey.ContentType, contentType);
+		}
 	}
 
 	get response(): Response {
-		const [body, contentType] = this.resolve();
-		const response = new Response(body, {
+		return new Response(this._resolvedBody, {
 			status: this.status,
 			statusText: this.statusText,
 			headers: this._headers,
 		});
-
-		if (!isUndefined(contentType) && !response.headers.has(HeaderKey.ContentType)) {
-			response.headers.set(HeaderKey.ContentType, contentType);
-		}
-
-		const setCookieHeaders = this._cookies?.toSetCookieHeaders();
-		if (!isUndefined(setCookieHeaders) && setCookieHeaders.length > 0) {
-			for (const setCookieHeader of setCookieHeaders) {
-				response.headers.append(HeaderKey.SetCookie, setCookieHeader);
-			}
-		}
-
-		this.headers = response.headers;
-		return response;
-	}
-
-	// Single pass: body + content-type together, no double instanceof walk.
-	private resolve(): [BodyInit | null | undefined, string | undefined] {
-		const b = this.body;
-		if (isNil(b)) return [b, undefined];
-		if (isPrimitive(b)) return [String(b), "text/plain"];
-		if (typeof b !== "object") return [String(b), undefined];
-		if (b instanceof ArrayBuffer) return [b, "application/octet-stream"];
-		if (b instanceof Blob) return [b, b.type || undefined];
-		if (b instanceof FormData) return [b, "multipart/form-data"];
-		if (b instanceof URLSearchParams) return [b, "application/x-www-form-urlencoded"];
-		if (b instanceof ReadableStream) return [b, undefined];
-		if (b instanceof Date) return [b.toISOString(), "text/plain"];
-		// plain object or array
-		return [JSON.stringify(b), "application/json"];
 	}
 
 	private _statusText: string | undefined;
@@ -129,16 +115,24 @@ export class Res<R = unknown> {
 	private _cookies: Bun.CookieMap | undefined;
 	public get cookies(): Bun.CookieMap {
 		if (!isUndefined(this._cookies)) return this._cookies;
-		if (this.init?.cookies instanceof Bun.CookieMap) {
-			this._cookies = this.init.cookies;
-			return this._cookies;
-		}
-		this._cookies = new Bun.CookieMap(this.init?.cookies);
+		const map =
+			this.init?.cookies instanceof Bun.CookieMap
+				? this.init.cookies
+				: new Bun.CookieMap(this.init?.cookies);
+		this._cookies = wrapCookieMap(map, this.syncCookieHeaders);
 		return this._cookies;
 	}
 	public set cookies(value: Bun.CookieMap) {
-		this._cookies = value;
+		this._cookies = wrapCookieMap(value, this.syncCookieHeaders);
+		this.syncCookieHeaders(this._cookies);
 	}
+
+	private syncCookieHeaders = (target: Bun.CookieMap): void => {
+		this.headers.delete(HeaderKey.SetCookie);
+		for (const header of target.toSetCookieHeaders()) {
+			this.headers.append(HeaderKey.SetCookie, header);
+		}
+	};
 
 	static redirect(url: string | URL, init?: ResInit): Res {
 		const res = new Res(undefined, {
