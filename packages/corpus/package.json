@@ -45,10 +45,10 @@
 	"devDependencies": {
 		"@ozanarslan/utils": "workspace:*",
 		"@standard-schema/spec": "^1.1.0",
-		"@types/bun": "^1.3.14",
+		"@types/bun": "^1.4.0",
 		"arktype": "^2.2.3",
 		"bun-plugin-dts": "^0.4.0",
-		"memoirist": "^1.2.1",
+		"memoirist": "^1.2.2",
 		"zod": "^4.4.3"
 	},
 	"peerDependencies": {

@@ -13,7 +13,6 @@
 		"./class": "./dist/class.mjs",
 		"./enum": "./dist/enum.mjs",
 		"./function": "./dist/function.mjs",
-		"./joinPathSegments": "./dist/joinPathSegments.mjs",
 		"./lazy": "./dist/lazy.mjs",
 		"./lexical": "./dist/lexical.mjs",
 		"./logger": "./dist/logger.mjs",
@@ -33,11 +32,10 @@
 	"scripts": {
 		"build": "tsdown"
 	},
-	"dependencies": {},
 	"devDependencies": {
 		"@standard-schema/spec": "^1.1.0",
-		"@types/bun": "^1.3.14",
-		"tsdown": "^0.22.9"
+		"@types/bun": "^1.4.0",
+		"tsdown": "^0.22.14"
 	},
 	"peerDependencies": {
 		"typescript": "^6.0.2"
