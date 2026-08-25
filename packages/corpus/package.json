@@ -35,7 +35,7 @@
 		"access": "public"
 	},
 	"scripts": {
-		"build": "bun run build.ts",
+		"build": "tsdown",
 		"test:serve": "bun run test/other/test-server.ts",
 		"test:http": "bun run test/other/http-simulation.ts",
 		"test:ws": "bun run test/other/ws-simulation.ts",
@@ -49,9 +49,10 @@
 		"arktype": "^2.2.3",
 		"bun-plugin-dts": "^0.4.0",
 		"memoirist": "^1.2.2",
+		"tsdown": "^0.22.14",
 		"zod": "^4.4.3"
 	},
 	"peerDependencies": {
-		"typescript": "^6.0.2"
+		"typescript": "^7.0.2"
 	}
 }

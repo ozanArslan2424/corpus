@@ -1,5 +1,5 @@
-import { strSplit } from "@ozanarslan/utils/lexical";
-import { createSafeObject } from "@ozanarslan/utils/object";
+import { strSplit } from "@ozanarslan/utils";
+import { createSafeObject } from "@ozanarslan/utils";
 
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Res } from "@/Res/Res";
@@ -40,9 +40,9 @@ export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	) {}
 
 	rawBody: RawBody;
-	body = createSafeObject<B>();
-	params = createSafeObject<P>();
-	search = createSafeObject<S>();
+	body: B = createSafeObject<B>();
+	params: P = createSafeObject<P>();
+	search: S = createSafeObject<S>();
 	data: ContextDataInterface = createSafeObject();
 
 	private _res: Res<R> | null = null;

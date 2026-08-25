@@ -6,27 +6,7 @@
 	"author": "Ozan Arslan <ozanarslanwork@gmail.com>",
 	"type": "module",
 	"exports": {
-		"./array": "./dist/array.mjs",
-		"./assert": "./dist/assert.mjs",
-		"./booleans": "./dist/booleans.mjs",
-		"./cache": "./dist/cache.mjs",
-		"./class": "./dist/class.mjs",
-		"./enum": "./dist/enum.mjs",
-		"./function": "./dist/function.mjs",
-		"./lazy": "./dist/lazy.mjs",
-		"./lexical": "./dist/lexical.mjs",
-		"./logger": "./dist/logger.mjs",
-		"./maybe": "./dist/maybe.mjs",
-		"./numerical": "./dist/numerical.mjs",
-		"./object": "./dist/object.mjs",
-		"./primitive": "./dist/primitive.mjs",
-		"./schema": "./dist/schema.mjs",
-		"./StringBuilder": "./dist/StringBuilder.mjs",
-		"./StringReader": "./dist/StringReader.mjs",
-		"./TestHelper": "./dist/TestHelper.mjs",
-		"./Timer": "./dist/Timer.mjs",
-		"./tuple": "./dist/tuple.mjs",
-		"./types": "./dist/types.mjs",
+		".": "./dist/index.mjs",
 		"./package.json": "./package.json"
 	},
 	"scripts": {
@@ -38,7 +18,7 @@
 		"tsdown": "^0.22.14"
 	},
 	"peerDependencies": {
-		"typescript": "^6.0.2"
+		"typescript": "^7.0.2"
 	},
 	"inlinedDependencies": {
 		"@standard-schema/spec": "1.1.0"

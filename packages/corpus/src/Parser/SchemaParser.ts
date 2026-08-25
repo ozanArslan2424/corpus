@@ -1,5 +1,5 @@
-import { isObjectWith } from "@ozanarslan/utils/object";
-import type { Schema, ValidationIssues } from "@ozanarslan/utils/schema";
+import { isObjectWith } from "@ozanarslan/utils";
+import type { Schema, ValidationIssues } from "@ozanarslan/utils";
 
 import { Status } from "@/enums/Status";
 import { Exception } from "@/Exception/Exception";

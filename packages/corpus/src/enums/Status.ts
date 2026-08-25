@@ -1,7 +1,6 @@
+import { enumerate, type ValueOf } from "@ozanarslan/utils";
+
 /** Commonly used HTTP status codes. */
-
-import { enumerate, type ValueOf } from "@ozanarslan/utils/enum";
-
 export const Status = enumerate({
 	/** --- 1xx Informational --- */
 	/** Continue: Request received, please continue */

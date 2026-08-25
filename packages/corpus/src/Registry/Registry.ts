@@ -1,4 +1,4 @@
-import { arrIncludes } from "@ozanarslan/utils/array";
+import { arrIncludes } from "@ozanarslan/utils";
 
 import type { Middleware } from "@/Middleware/Middleware";
 import { BodyParser } from "@/Parser/BodyParser";

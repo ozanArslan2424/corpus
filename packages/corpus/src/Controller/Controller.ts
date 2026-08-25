@@ -1,4 +1,4 @@
-import type { Optional } from "@ozanarslan/utils/maybe";
+import type { Optional } from "@ozanarslan/utils";
 
 import { FileRoute } from "@/Route/FileRoute";
 import { joinPathSegments } from "@/Route/joinPathSegments";
@@ -115,7 +115,7 @@ export class Controller<Px extends Optional<string> = Optional<string>> {
 	 */
 	websocketRoute<E extends string = string>(
 		...args: ConstructorParameters<typeof WebSocketRoute<E>>
-	) {
+	): WebSocketRoute<WithPrefix<Px, E>> {
 		const [path, ...rest] = args;
 		const endpoint = joinPathSegments<WithPrefix<Px, E>>(this.prefix, path);
 		const route = new WebSocketRoute(endpoint, ...rest);

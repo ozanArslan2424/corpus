@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 
-import { createSafeObject } from "@ozanarslan/utils/object";
+import { createSafeObject } from "@ozanarslan/utils";
 import { type } from "arktype";
 
 import { $registryTesting, TC } from "../_modules";

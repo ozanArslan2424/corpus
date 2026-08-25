@@ -1,6 +1,6 @@
 import path from "path";
 
-import type { Func } from "@ozanarslan/utils/function";
+import type { Func } from "@ozanarslan/utils";
 
 import type { Context } from "@/Context/Context";
 import { CacheControlDirective } from "@/Directives/CacheControlDirective";

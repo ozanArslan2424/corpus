@@ -1,12 +1,15 @@
+# File System Adapter Example
+
+This example uses the file system.
+
+```ts
 import crypto from "crypto";
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
 
-import { Status } from "@/enums/Status";
-import { Exception } from "@/Exception/Exception";
-import type { RateLimitEntry } from "@/XRateLimiter/RateLimitEntry";
-import type { RateLimitStoreInterface } from "@/XRateLimiter/RateLimitStoreInterface";
+import { C } from "@ozanarslan/corpus";
+import type { RateLimitEntry, RateLimitStoreInterface } from "@ozanarslan/corpus";
 
 export class RateLimiterFileStore implements RateLimitStoreInterface {
 	private readonly storeDir: string;
@@ -19,9 +22,9 @@ export class RateLimiterFileStore implements RateLimitStoreInterface {
 
 	private ensureStoreDir() {
 		fs.mkdir(this.storeDir, { recursive: true }).catch((err) => {
-			throw new Exception(
+			throw new C.Exception(
 				"Rate Limit File Store Directory could not be created",
-				Status.INTERNAL_SERVER_ERROR,
+				C.Status.INTERNAL_SERVER_ERROR,
 				err,
 			);
 		});
@@ -104,3 +107,4 @@ export class RateLimiterFileStore implements RateLimitStoreInterface {
 		return files.filter((f) => f.endsWith(".json")).length;
 	}
 }
+```

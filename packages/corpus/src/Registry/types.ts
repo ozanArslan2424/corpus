@@ -1,4 +1,4 @@
-import type { Schema } from "@ozanarslan/utils/schema";
+import type { Schema } from "@ozanarslan/utils";
 
 import type { CorsOptions } from "@/Cors/types";
 import type { Method } from "@/enums/Method";

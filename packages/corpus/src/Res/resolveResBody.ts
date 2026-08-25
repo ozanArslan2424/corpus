@@ -1,5 +1,5 @@
-import { isNil } from "@ozanarslan/utils/maybe";
-import { isPrimitive } from "@ozanarslan/utils/primitive";
+import { isNil } from "@ozanarslan/utils";
+import { isPrimitive } from "@ozanarslan/utils";
 
 export function resolveResBody(b: unknown): [BodyInit | null | undefined, string | undefined] {
 	if (isNil(b)) return [b as BodyInit | null | undefined, undefined];

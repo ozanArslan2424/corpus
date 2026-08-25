@@ -12,5 +12,7 @@ export * from "./Router/types";
 
 export * from "./Server/types";
 
+export * from "./XRateLimiter/types";
+
 export interface ContextDataInterface {}
 export interface Env {}

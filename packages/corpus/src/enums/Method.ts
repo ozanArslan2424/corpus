@@ -1,5 +1,5 @@
-import { enumerate, type ValueOf } from "@ozanarslan/utils/enum";
-import type { OrString } from "@ozanarslan/utils/lexical";
+import { enumerate, type ValueOf } from "@ozanarslan/utils";
+import type { OrString } from "@ozanarslan/utils";
 
 /** Commonly used HTTP verbs. */
 

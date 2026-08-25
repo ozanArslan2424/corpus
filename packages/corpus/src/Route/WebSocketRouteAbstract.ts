@@ -1,4 +1,4 @@
-import type { Func } from "@ozanarslan/utils/function";
+import type { Func } from "@ozanarslan/utils";
 
 import type { Context } from "@/Context/Context";
 import { Method } from "@/enums/Method";

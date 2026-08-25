@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach } from "bun:test";
 
-import { objGetValues } from "@ozanarslan/utils/object";
+import { objGetValues } from "@ozanarslan/utils";
 
 import { $registryTesting, BaseRoute, Context, TC, type MiddlewareHandler } from "../_modules";
 import { createTestController } from "../utils/createTestController";

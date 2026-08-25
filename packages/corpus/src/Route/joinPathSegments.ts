@@ -1,5 +1,5 @@
-import { isEmpty } from "@ozanarslan/utils/maybe";
-import { isNumber } from "@ozanarslan/utils/numerical";
+import { isEmpty } from "@ozanarslan/utils";
+import { isNumber } from "@ozanarslan/utils";
 
 export function joinPathSegments<P extends string>(
 	...segments: Array<string | undefined | number>

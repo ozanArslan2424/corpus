@@ -1,8 +1,8 @@
 import crypto from "crypto";
 
-import { logFatal } from "@ozanarslan/utils/logger";
-import { isEmpty } from "@ozanarslan/utils/maybe";
-import { objGetEntries, objGetValues } from "@ozanarslan/utils/object";
+import { isNil } from "@ozanarslan/utils";
+import { isEmpty } from "@ozanarslan/utils";
+import { objGetEntries, objGetValues } from "@ozanarslan/utils";
 
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Status } from "@/enums/Status";
@@ -11,11 +11,12 @@ import { MiddlewareAbstract } from "@/Middleware/MiddlewareAbstract";
 import type { MiddlewareUseOn, MiddlewareHandler } from "@/Middleware/types";
 import { $registry } from "@/registry";
 import { RouteVariant } from "@/Route/types";
-import type { RateLimitConfig } from "@/XRateLimiter/RateLimitConfig";
-import { RateLimiterFileStore } from "@/XRateLimiter/RateLimiterFileStore";
 import { RateLimiterMemoryStore } from "@/XRateLimiter/RateLimiterMemoryStore";
-import type { RateLimitIdPrefix } from "@/XRateLimiter/RateLimitIdPrefix";
-import type { RateLimitStoreInterface } from "@/XRateLimiter/RateLimitStoreInterface";
+import type {
+	RateLimitConfig,
+	RateLimitStoreInterface,
+	RateLimitIdPrefix,
+} from "@/XRateLimiter/types";
 
 export class XRateLimiter extends MiddlewareAbstract {
 	constructor(config: Partial<RateLimitConfig> = {}) {
@@ -215,7 +216,6 @@ export class XRateLimiter extends MiddlewareAbstract {
 		saltRotateMs: 24 * 3600 * 1000, // Daily
 		cleanProbability: 0.005, // ~0.5% chance per request
 		maxStoreSize: 50_000, // Trigger forced cleanup above
-		storeType: "memory", // Default to memory store
 		limits: { u: 120, i: 60, f: 20 },
 		headerNames: {
 			limit: "RateLimit-Limit",
@@ -226,29 +226,9 @@ export class XRateLimiter extends MiddlewareAbstract {
 	};
 
 	private resolveStore(): RateLimitStoreInterface {
-		switch (this.config.storeType) {
-			case "file":
-				return new RateLimiterFileStore(this.config.storeDir);
-
-			case "redis": {
-				const store = this.config.store;
-				if (!store) {
-					logFatal("store required for redis store type");
-				}
-				return store;
-			}
-
-			case "custom": {
-				const store = this.config.store;
-				if (!store) {
-					logFatal("store required for custom store type");
-				}
-				return store;
-			}
-
-			case "memory":
-			default:
-				return new RateLimiterMemoryStore();
+		if (isNil(this.config.store)) {
+			return new RateLimiterMemoryStore();
 		}
+		return this.config.store;
 	}
 }

@@ -1,4 +1,4 @@
-import { isObject, objGetEntries } from "@ozanarslan/utils/object";
+import { isObject, objGetEntries } from "@ozanarslan/utils";
 
 import { Context } from "@/Context/Context";
 import { HeaderKey } from "@/enums/HeaderKey";

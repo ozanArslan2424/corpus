@@ -1,5 +1,5 @@
-import { isString } from "@ozanarslan/utils/lexical";
-import { isNil } from "@ozanarslan/utils/maybe";
+import { isString } from "@ozanarslan/utils";
+import { isNil } from "@ozanarslan/utils";
 
 import { FileRouteAbstract } from "@/Route/FileRouteAbstract";
 import { resolveRouteAddress } from "@/Route/resolveRouteAddress";

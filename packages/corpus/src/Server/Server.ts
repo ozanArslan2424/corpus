@@ -1,5 +1,5 @@
-import { noop } from "@ozanarslan/utils/function";
-import type { Maybe } from "@ozanarslan/utils/maybe";
+import { noop } from "@ozanarslan/utils";
+import type { Maybe } from "@ozanarslan/utils";
 
 import { Context } from "@/Context/Context";
 import { HeaderKey } from "@/enums/HeaderKey";

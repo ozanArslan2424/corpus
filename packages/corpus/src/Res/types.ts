@@ -1,4 +1,4 @@
-import type { Func } from "@ozanarslan/utils/function";
+import type { Func } from "@ozanarslan/utils";
 
 import type { Status } from "@/enums/Status";
 

@@ -1,4 +1,4 @@
-import { isNil } from "@ozanarslan/utils/maybe";
+import { isNil } from "@ozanarslan/utils";
 
 import { MiddlewareAbstract } from "@/Middleware/MiddlewareAbstract";
 import type { MiddlewareOptions } from "@/Middleware/types";

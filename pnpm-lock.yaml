@@ -36,7 +36,7 @@ importers:
         specifier: ^5.2.1
         version: 5.2.1
       typescript:
-        specifier: ^6.0.2
+        specifier: ^7.0.2
         version: 7.0.2
     devDependencies:
       '@types/bun':
@@ -80,8 +80,8 @@ importers:
   packages/corpus:
     dependencies:
       typescript:
-        specifier: ^6.0.2
-        version: 6.0.2
+        specifier: ^7.0.2
+        version: 7.0.2
     devDependencies:
       '@ozanarslan/utils':
         specifier: workspace:*
@@ -101,6 +101,9 @@ importers:
       memoirist:
         specifier: ^1.2.2
         version: 1.2.2
+      tsdown:
+        specifier: ^0.22.14
+        version: 0.22.14(oxc-resolver@11.24.2)(typescript@7.0.2)
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -133,7 +136,7 @@ importers:
   packages/utils:
     dependencies:
       typescript:
-        specifier: ^6.0.2
+        specifier: ^7.0.2
         version: 7.0.2
     devDependencies:
       '@standard-schema/spec':
@@ -2141,11 +2144,6 @@ packages:
     resolution: {integrity: sha512-faYHw0anBbc/kWF3zFTEnxSFOAGUX9GFbOBthvDdLsIlEoWOFOtS0zgCiQYwIskL9iGXZL3kAXD8OoZ4GmMATA==}
     engines: {node: '>= 18'}
 
-  typescript@6.0.2:
-    resolution: {integrity: sha512-bGdAIrZ0wiGDo5l8c++HWtbaNCWTS4UTv7RaTH/ThVIgjkveJt83m74bBHMJkuCbslY8ixgLBVZJIOiQlQTjfQ==}
-    engines: {node: '>=14.17'}
-    hasBin: true
-
   typescript@7.0.2:
     resolution: {integrity: sha512-8FYau96o3NKOhbjKi/qNvG/W5jhzxkbdm5sj9AbZ/5T5sWqn3hJgLfGx27sRKZWTvyzCP8dLRBTf5tBTSRVUNA==}
     engines: {node: '>=16.20.0'}
@@ -3147,7 +3145,7 @@ snapshots:
 
   dts-bundle-generator@9.5.1:
     dependencies:
-      typescript: 6.0.2
+      typescript: 7.0.2
       yargs: 17.7.3
 
   dts-resolver@3.0.0(oxc-resolver@11.24.2):
@@ -3831,8 +3829,6 @@ snapshots:
       content-type: 2.1.0
       media-typer: 1.1.1
       mime-types: 3.0.2
-
-  typescript@6.0.2: {}
 
   typescript@7.0.2:
     optionalDependencies:

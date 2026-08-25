@@ -1,6 +1,6 @@
-import { arrIncludes } from "@ozanarslan/utils/array";
-import { assert } from "@ozanarslan/utils/assert";
-import { objGetValues } from "@ozanarslan/utils/object";
+import { arrIncludes } from "@ozanarslan/utils";
+import { assert } from "@ozanarslan/utils";
+import { objGetValues } from "@ozanarslan/utils";
 
 import { Method } from "@/enums/Method";
 import type { RouteAddress } from "@/Route/types";

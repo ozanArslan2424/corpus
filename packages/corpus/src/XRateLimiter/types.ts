@@ -1,5 +1,19 @@
-import type { RateLimitIdPrefix } from "@/XRateLimiter/RateLimitIdPrefix";
-import type { RateLimitStoreInterface } from "@/XRateLimiter/RateLimitStoreInterface";
+export type RateLimitIdPrefix = "u" | "i" | "f";
+
+export type RateLimitEntry = {
+	hits: number;
+	resetAt: number;
+};
+
+// Storage interface for pluggable backends
+export interface RateLimitStoreInterface {
+	get(id: string): Bun.MaybePromise<RateLimitEntry | undefined>;
+	set(id: string, entry: RateLimitEntry): Bun.MaybePromise<void>;
+	delete(id: string): Bun.MaybePromise<void>;
+	cleanup(now: number): Bun.MaybePromise<void>;
+	clear(): Bun.MaybePromise<void>;
+	size(): Bun.MaybePromise<number>;
+}
 
 export type RateLimitConfig = {
 	/**
@@ -10,28 +24,30 @@ export type RateLimitConfig = {
 	 * */
 	limits: Record<RateLimitIdPrefix, number>;
 
-	/** Time window in milliseconds during which the rate limit applies (default: 60,000ms = 1 minute) */
+	/**
+	 * Time window in milliseconds during which the rate limit applies (default: 60,000ms = 1 minute)
+	 * */
 	windowMs: number;
 
-	/** How often to rotate the salt used for hashing identifiers (default: 24h)
-	 * Prevents long-term tracking and adds an extra layer of privacy */
+	/**
+	 * How often to rotate the salt used for hashing identifiers (default: 24h)
+	 * Prevents long-term tracking and adds an extra layer of privacy
+	 * */
 	saltRotateMs: number;
 
-	/** Probability (0-1) of triggering a cleanup of expired entries on each request
-	 * Balances memory usage against performance (default: 0.005 = 0.5%) */
+	/**
+	 * Probability (0-1) of triggering a cleanup of expired entries on each request
+	 * Balances memory usage against performance (default: 0.005 = 0.5%)
+	 * */
 	cleanProbability: number;
 
-	/** Maximum number of entries before forcing a cleanup
-	 * Prevents unbounded memory growth (default: 50,000) */
+	/**
+	 * Maximum number of entries before forcing a cleanup
+	 * Prevents unbounded memory growth (default: 50,000)
+	 * */
 	maxStoreSize: number;
 
-	/** Storage backend type:
-	 * - memory: Fastest, but resets on server restart (default)
-	 * - file: Persistent across restarts, good for single instance
-	 * - redis: Distributed, for multi-instance deployments
-	 * - custom: Bring your own store implementation
-	 */
-	storeType: "memory" | "file" | "redis" | "custom";
+	/** Bring your own store implementation */
 	store?: RateLimitStoreInterface;
 
 	/** Directory path for file-based storage (required when storeType = "file") */

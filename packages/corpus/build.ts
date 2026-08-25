@@ -1,7 +1,6 @@
 import fs from "fs/promises";
 
-import { logger } from "@ozanarslan/utils/logger";
-import { Timer } from "@ozanarslan/utils/Timer";
+import { logger, Timer } from "@ozanarslan/utils";
 import dts from "bun-plugin-dts";
 
 async function clean(outdir: string) {
@@ -10,9 +9,9 @@ async function clean(outdir: string) {
 	await fs.rm(outdir, { recursive: true, force: true });
 }
 
-async function build(outdir: string, tsconfig: string) {
+async function build(entrypoints: Array<string>, outdir: string, tsconfig: string) {
 	const res = await Bun.build({
-		entrypoints: ["./src/index.ts"],
+		entrypoints,
 		external: [],
 		format: "esm",
 		target: "bun",
@@ -28,12 +27,15 @@ async function build(outdir: string, tsconfig: string) {
 		],
 	});
 
-	if (!res.success) res.logs.forEach((l) => logger.error(l));
-	if (!res.success) process.exit(1);
+	if (!res.success) {
+		res.logs.forEach((l) => logger.error(l));
+		process.exit(1);
+	}
 }
 
 try {
 	const t = new Timer();
+	const entrypoints = ["./src/index.ts"];
 	const outdir = "./dist";
 	const tsconfig = "./tsconfig.json";
 
@@ -42,7 +44,7 @@ try {
 	t.done("cleaned dist");
 
 	t.step("building esm");
-	await build(outdir, tsconfig);
+	await build(entrypoints, outdir, tsconfig);
 	t.done("built esm");
 } catch (err) {
 	logger.error(err);

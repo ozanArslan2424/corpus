@@ -1,5 +1,5 @@
-import type { InferSchemaOut, Schema } from "@ozanarslan/utils/schema";
-import type { Prettify } from "@ozanarslan/utils/types";
+import type { InferSchemaOut, Schema } from "@ozanarslan/utils";
+import type { Prettify } from "@ozanarslan/utils";
 
 import type { RouteModel } from "@/Route/types";
 

@@ -1,4 +1,4 @@
-import { createSafeObject } from "@ozanarslan/utils/object";
+import { createSafeObject } from "@ozanarslan/utils";
 
 import { HeaderKey } from "@/enums/HeaderKey";
 import { Status } from "@/enums/Status";

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 
-import type { Schema, ValidationIssues } from "@ozanarslan/utils/schema";
+import type { Schema, ValidationIssues } from "@ozanarslan/utils";
 
 import type { SchemaParser } from "@/Parser/SchemaParser";
 
