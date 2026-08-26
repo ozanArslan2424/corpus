@@ -1,11 +1,11 @@
 import { noop, type Maybe } from "@ozanarslan/utils";
 
-import { HeaderKey } from "@/C/HeaderKey";
-import { Method } from "@/C/Method";
-import type { MiddlewareHandler } from "@/C/MiddlewareAbstract/types";
+import { HeaderKey } from "@/C/HeaderKey/HeaderKey";
+import { Method } from "@/C/Method/Method";
+import type { MiddlewareHandler } from "@/C/Middleware/Middleware.types";
 import { composeHandlerChain } from "@/C/Server/composeHandlerChain";
-import type { ServerApp, ServerOptionsWithRouter } from "@/C/Server/types";
-import { ServerAbstract } from "@/C/ServerAbstract";
+import { ServerAbstract } from "@/C/Server/Server.abstract";
+import type { ServerApp, ServerOptionsWithRouter } from "@/C/Server/Server.types";
 import { $registry } from "@/Registry/$registry";
 
 // TODO: this is a temporary solution

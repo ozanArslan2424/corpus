@@ -1,6 +1,10 @@
 import Memoirist from "memoirist";
 
-import type { RouterInterface, BaseRoute, RouterReturn, C } from "#corpus";
+import type { Method } from "@/C/Method/Method";
+import type { Middleware } from "@/C/Middleware/Middleware";
+import type { RouteBase } from "@/C/RouteBase/RouteBase";
+import type { RouterReturn } from "@/C/Router/Router.types";
+import type { RouterInterface } from "@/Registry/Registry.types";
 
 /**
  * Router adapter wrapping the "memoirist" package.
@@ -23,14 +27,14 @@ import type { RouterInterface, BaseRoute, RouterReturn, C } from "#corpus";
  * RPS:        19849324
  */
 export class MemoiristAdapter implements RouterInterface {
-	addMiddleware(_middleware: C.Middleware): void {}
-	findMiddlewares(_routeId: string): Array<C.Middleware> {
+	addMiddleware(_middleware: Middleware): void {}
+	findMiddlewares(_routeId: string): Array<Middleware> {
 		return [];
 	}
 	readonly __brand: string = "MemoiristAdapter";
-	private readonly router = new Memoirist<BaseRoute>();
+	private readonly router = new Memoirist<RouteBase>();
 
-	find(method: C.Method, url: string | URL): RouterReturn | null {
+	find(method: Method, url: string | URL): RouterReturn | null {
 		const pathname = this.getPathname(url);
 		const result = this.router.find(method, pathname);
 		if (!result) return null;
@@ -39,13 +43,13 @@ export class MemoiristAdapter implements RouterInterface {
 		return { route, params, middlewares: [] };
 	}
 
-	list(): Array<BaseRoute> {
+	list(): Array<RouteBase> {
 		return Object.values(this.router.root)
 			.map((node) => node.store)
 			.filter((store) => store !== null);
 	}
 
-	add(data: BaseRoute): void {
+	add(data: RouteBase): void {
 		this.router.add(data.method, data.endpoint, data);
 	}
 

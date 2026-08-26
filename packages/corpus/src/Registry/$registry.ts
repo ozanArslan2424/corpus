@@ -1,4 +1,4 @@
-import { Registry } from "@/Registry";
+import { Registry } from "@/Registry/Registry";
 
 let instance: Registry | undefined;
 

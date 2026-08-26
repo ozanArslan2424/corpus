@@ -1,4 +1,4 @@
-import type { RateLimitEntry, RateLimitStoreInterface } from "@/X/RateLimiter/types";
+import type { RateLimitEntry, RateLimitStoreInterface } from "@/X/RateLimiter/RateLimiter.types";
 
 export class RateLimiterMemoryStore implements RateLimitStoreInterface {
 	private readonly store = new Map<string, RateLimitEntry>();

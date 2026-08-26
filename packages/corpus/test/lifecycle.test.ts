@@ -1,45 +1,46 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 
-import { $registry, C } from "#corpus";
-import { createTestServer } from "./utils/createTestServer";
-import { parseBody } from "./utils/parse";
-import { req } from "./utils/req";
+import { createTestServer, req, parseBody } from "#testutils";
+import { Middleware } from "@/C/Middleware/Middleware";
+import { Res } from "@/C/Res/Res";
+import { Route } from "@/C/Route/Route";
+import { $registry } from "@/Registry/$registry";
 
 beforeEach(() => {
 	$registry.reset();
 
 	// ── routes ────────────────────────────────────────────────────────────────
 
-	const authRoute = new C.Route("/protected", (c) => ({
+	const authRoute = new Route("/protected", (c) => ({
 		user: (c.data as any).user,
 	}));
-	const throwRoute = new C.Route("/throw-guarded", (c) => ({
+	const throwRoute = new Route("/throw-guarded", (c) => ({
 		user: (c.data as any).user,
 	}));
-	const outboundHeaders = new C.Route("/outbound-headers", () => ({
+	const outboundHeaders = new Route("/outbound-headers", () => ({
 		ok: true,
 	}));
-	const outboundCookies = new C.Route("/outbound-cookies", () => ({
+	const outboundCookies = new Route("/outbound-cookies", () => ({
 		ok: true,
 	}));
-	new C.Route("/global-one", (c) => ({ traced: (c.data as any).traced }));
-	new C.Route("/global-two", (c) => ({ traced: (c.data as any).traced }));
-	const inboundHeaders = new C.Route("/inbound-headers", (c) => ({
+	new Route("/global-one", (c) => ({ traced: (c.data as any).traced }));
+	new Route("/global-two", (c) => ({ traced: (c.data as any).traced }));
+	const inboundHeaders = new Route("/inbound-headers", (c) => ({
 		receivedToken: (c.data as any).token,
 	}));
-	const inboundCookies = new C.Route("/inbound-cookies", (c) => ({
+	const inboundCookies = new Route("/inbound-cookies", (c) => ({
 		sessionId: (c.data as any).sessionId,
 	}));
 
 	// ── 1) return-response guard ───────────────────────────────────────────────
 	// Simulates an auth guard: if the Authorization header is missing/wrong,
 	// short-circuit with 401 before the route handler runs.
-	new C.Middleware({
+	new Middleware({
 		useOn: [authRoute],
 		handler: (c) => {
 			const token = c.req.headers.get("authorization");
 			if (token !== "Bearer secret") {
-				return new C.Res({ error: "unauthorized" }, { status: 401 });
+				return new Res({ error: "unauthorized" }, { status: 401 });
 			}
 			(c.data as any).user = "alice";
 		},
@@ -48,7 +49,7 @@ beforeEach(() => {
 	// ── 2) throw guard ────────────────────────────────────────────────────────
 	// Simulates a guard that throws (e.g. JWT verification failure).
 	// The framework should catch it and respond with 500 (or your error shape).
-	new C.Middleware({
+	new Middleware({
 		useOn: [throwRoute],
 		handler: () => {
 			throw new Error("token signature invalid");
@@ -57,7 +58,7 @@ beforeEach(() => {
 
 	// ── 3a) outbound — append response headers ────────────────────────────────
 	// Simulates a CORS or cache-control interceptor running after the handler.
-	new C.Middleware({
+	new Middleware({
 		useOn: [outboundHeaders],
 		handler: async (c, next) => {
 			await next();
@@ -68,7 +69,7 @@ beforeEach(() => {
 
 	// ── 3b) outbound — set cookies ────────────────────────────────────────────
 	// Simulates a session middleware that stamps a cookie on every response.
-	new C.Middleware({
+	new Middleware({
 		useOn: [outboundCookies],
 		handler: async (c, next) => {
 			await next();
@@ -82,7 +83,7 @@ beforeEach(() => {
 
 	// ── 4) global middleware via useOn: "*" ───────────────────────────────────
 	// Simulates a request-id / tracing interceptor applied to every route.
-	new C.Middleware({
+	new Middleware({
 		useOn: "*",
 		handler: (c) => {
 			(c.data as any).traced = true;
@@ -91,7 +92,7 @@ beforeEach(() => {
 
 	// ── 5a) inbound — read request header ─────────────────────────────────────
 	// Simulates an API-key extractor that normalises the token into (c.data as any).
-	new C.Middleware({
+	new Middleware({
 		useOn: [inboundHeaders],
 		handler: (c) => {
 			(c.data as any).token = c.req.headers.get("x-api-key") ?? null;
@@ -100,7 +101,7 @@ beforeEach(() => {
 
 	// ── 5b) inbound — read request cookie ─────────────────────────────────────
 	// Simulates a session resolver that reads a cookie and exposes the id.
-	new C.Middleware({
+	new Middleware({
 		useOn: [inboundCookies],
 		handler: (c) => {
 			(c.data as any).sessionId = c.cookies.get("session-id") ?? null;
@@ -108,7 +109,7 @@ beforeEach(() => {
 	});
 });
 
-describe("C.Middleware — lifecycle", () => {
+describe("Middleware — lifecycle", () => {
 	const s = createTestServer();
 
 	// ── tests ─────────────────────────────────────────────────────────────────

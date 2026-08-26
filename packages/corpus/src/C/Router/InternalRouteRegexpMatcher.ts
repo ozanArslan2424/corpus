@@ -1,9 +1,9 @@
-import type { BaseRoute } from "@/C/BaseRouteAbstract";
-import type { Method } from "@/C/Method";
-import type { Middleware } from "@/C/Middleware";
-import type { MiddlewareUseOn } from "@/C/MiddlewareAbstract/types";
-import type { RouterReturn } from "@/C/Router/types";
-import type { RouterInterface } from "@/Registry/types";
+import type { Method } from "@/C/Method/Method";
+import type { Middleware } from "@/C/Middleware/Middleware";
+import type { MiddlewareUseOn } from "@/C/Middleware/Middleware.types";
+import type { RouteBase } from "@/C/RouteBase/RouteBase";
+import type { RouterReturn } from "@/C/Router/Router.types";
+import type { RouterInterface } from "@/Registry/Registry.types";
 
 // TODO: This is a temporary solution because Bun.serve.fetch doesn't work properly
 
@@ -11,7 +11,7 @@ type Entry = {
 	regexp: RegExp;
 	paramNames: string[];
 	method: Method;
-	route: BaseRoute;
+	route: RouteBase;
 };
 
 export class InternalRouteRegexpMatcher implements RouterInterface {
@@ -41,12 +41,12 @@ export class InternalRouteRegexpMatcher implements RouterInterface {
 		return null;
 	}
 
-	add(data: BaseRoute): void {
+	add(data: RouteBase): void {
 		const { regexp, paramNames } = this.compile(data.endpoint);
 		this.entries.push({ regexp, paramNames, method: data.method, route: data });
 	}
 
-	list(): Array<BaseRoute> {
+	list(): Array<RouteBase> {
 		return this.entries.map((entry) => entry.route);
 	}
 

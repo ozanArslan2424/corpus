@@ -1,12 +1,14 @@
 import { logFatal, logger, objGetValues } from "@ozanarslan/utils";
 
-import { C, type RouterInterface } from "#corpus";
+import { Method } from "@/C/Method/Method";
+import { Route } from "@/C/Route/Route";
+import type { RouterInterface } from "@/Registry/Registry.types";
 
 import { BranchRouter } from "./BranchRouter";
 import { MemoiristAdapter } from "./MemoiristAdapter";
 
 class RouterBenchmark {
-	private readonly routes: C.Route<any, any, any, any, any>[] = [];
+	private readonly routes: Route<any, any, any, any, any>[] = [];
 	private requests: Array<{ request: Request; expectedId: string }> = [];
 
 	private readonly usedStaticPaths = new Set<string>();
@@ -21,13 +23,13 @@ class RouterBenchmark {
 	}
 
 	private buildStaticRoute() {
-		const methods = objGetValues(C.Method);
+		const methods = objGetValues(Method);
 		let key: string;
 		let path: string;
-		let method: C.Method;
+		let method: Method;
 		let methodIndex: number;
 		do {
-			method = methods[Math.floor(Math.random() * methods.length)] as C.Method;
+			method = methods[Math.floor(Math.random() * methods.length)] as Method;
 			methodIndex = methods.findIndex((m) => m === method);
 			const depth = 2 + Math.floor(Math.random() * 3);
 			path = "/" + Array.from({ length: depth }, () => this.rand()).join("/");
@@ -35,10 +37,10 @@ class RouterBenchmark {
 		} while (this.usedStaticPaths.has(key));
 		this.usedStaticPaths.add(key);
 		return [
-			new C.Route({ method, path }, () => ({ ok: true })),
-			new C.Route(
+			new Route({ method, path }, () => ({ ok: true })),
+			new Route(
 				{
-					method: methods[methodIndex + 1] ?? methods[methodIndex - 1] ?? C.Method.GET,
+					method: methods[methodIndex + 1] ?? methods[methodIndex - 1] ?? Method.GET,
 					path,
 				},
 				() => ({ ok: true }),
@@ -47,13 +49,13 @@ class RouterBenchmark {
 	}
 
 	private buildDynamicRoute() {
-		const methods = [C.Method.GET, C.Method.POST, C.Method.PUT, C.Method.DELETE, C.Method.PATCH];
+		const methods = [Method.GET, Method.POST, Method.PUT, Method.DELETE, Method.PATCH];
 		let shape: string;
 		let path: string;
-		let method: C.Method;
+		let method: Method;
 		let methodIndex: number;
 		do {
-			method = methods[Math.floor(Math.random() * methods.length)] as C.Method;
+			method = methods[Math.floor(Math.random() * methods.length)] as Method;
 			methodIndex = methods.findIndex((m) => m === method);
 			const depth = 2 + Math.floor(Math.random() * 3);
 			const segments: string[] = [];
@@ -76,10 +78,10 @@ class RouterBenchmark {
 		} while (this.usedDynamicShapes.has(shape));
 		this.usedDynamicShapes.add(shape);
 		return [
-			new C.Route({ method, path }, () => ({ ok: true })),
-			new C.Route(
+			new Route({ method, path }, () => ({ ok: true })),
+			new Route(
 				{
-					method: methods[methodIndex + 1] ?? methods[methodIndex - 1] ?? C.Method.GET,
+					method: methods[methodIndex + 1] ?? methods[methodIndex - 1] ?? Method.GET,
 					path,
 				},
 				() => ({ ok: true }),

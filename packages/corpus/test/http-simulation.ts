@@ -1,7 +1,11 @@
 import { TestHelper } from "@ozanarslan/utils";
 import { type } from "arktype";
 
-import { C } from "#corpus";
+import { Exception } from "@/C/Exception/Exception";
+import { Method } from "@/C/Method/Method";
+import { Middleware } from "@/C/Middleware/Middleware";
+import { Route } from "@/C/Route/Route";
+import { Server } from "@/C/Server/Server";
 
 // ── config ────────────────────────────────────────────────────────────────────
 
@@ -9,7 +13,7 @@ const PORT = 9876;
 const BASE_URL = `http://localhost:${PORT}`;
 const SILENT = process.argv[2] === "-s";
 const T = new TestHelper(SILENT);
-const server = new C.Server({ port: PORT });
+const server = new Server({ port: PORT });
 
 // ── http client ───────────────────────────────────────────────────────────────
 
@@ -96,13 +100,13 @@ const bodySchema = type({
 
 // ── global request logger middleware ─────────────────────────────────────────
 
-declare module "#corpus" {
+declare module "../src/types" {
 	interface ContextDataInterface {
 		requestedAt?: number;
 	}
 }
 
-new C.Middleware({
+new Middleware({
 	handler: (ctx) => {
 		ctx.data = { requestedAt: Date.now() };
 	},
@@ -110,17 +114,17 @@ new C.Middleware({
 
 // ── health ────────────────────────────────────────────────────────────────────
 
-new C.Route("/health", (c) => {
+new Route("/health", (c) => {
 	c.res.status = 200;
 	return { status: "ok", uptime: process.uptime() };
 });
 
 // ── users CRUD ────────────────────────────────────────────────────────────────
 
-new C.Route("/users", () => [...db.values()]);
+new Route("/users", () => [...db.values()]);
 
-new C.Route(
-	{ method: C.Method.POST, path: "/users" },
+new Route(
+	{ method: Method.POST, path: "/users" },
 	(c) => {
 		const id = idCounter++;
 		const user = {
@@ -136,24 +140,24 @@ new C.Route(
 	{ body: bodySchema },
 );
 
-new C.Route(
+new Route(
 	"/users/:id",
 	(ctx) => {
 		const user = db.get(ctx.params.id);
 		if (!user) {
-			throw new C.Exception("not found", 404);
+			throw new Exception("not found", 404);
 		}
 		return user;
 	},
 	{ params: idParam },
 );
 
-new C.Route(
-	{ method: C.Method.PUT, path: "/users/:id" },
+new Route(
+	{ method: Method.PUT, path: "/users/:id" },
 	(ctx) => {
 		const user = db.get(ctx.params.id);
 		if (!user) {
-			throw new C.Exception("not found", 404);
+			throw new Exception("not found", 404);
 		}
 		const body = ctx.body as any;
 		const updated = { ...user, ...body, id: user.id };
@@ -163,12 +167,12 @@ new C.Route(
 	{ params: idParam },
 );
 
-new C.Route(
-	{ method: C.Method.PATCH, path: "/users/:id" },
+new Route(
+	{ method: Method.PATCH, path: "/users/:id" },
 	(ctx) => {
 		const user = db.get(ctx.params.id);
 		if (!user) {
-			throw new C.Exception("not found", 404);
+			throw new Exception("not found", 404);
 		}
 		const body = ctx.body;
 		const patched = { ...user, ...body, id: user.id };
@@ -178,12 +182,12 @@ new C.Route(
 	{ body: bodySchema.partial(), params: idParam },
 );
 
-new C.Route(
-	{ method: C.Method.DELETE, path: "/users/:id" },
+new Route(
+	{ method: Method.DELETE, path: "/users/:id" },
 	(ctx) => {
 		const existed = db.delete(ctx.params.id);
 		if (!existed) {
-			throw new C.Exception("not found", 404);
+			throw new Exception("not found", 404);
 		}
 		return { deleted: ctx.params.id };
 	},
@@ -192,24 +196,24 @@ new C.Route(
 
 // ── auth-protected routes ─────────────────────────────────────────────────────
 
-const adminRoute = new C.Route("/admin/dashboard", (ctx) => ({
+const adminRoute = new Route("/admin/dashboard", (ctx) => ({
 	secret: "admin area",
 	user: (ctx.data as any)?.user,
 }));
 
-const meRoute = new C.Route("/me", (c) => {
+const meRoute = new Route("/me", (c) => {
 	if ((c.data as any)?.user) {
 		return (c.data as any).user;
 	}
-	throw new C.Exception("unauthorized", 401);
+	throw new Exception("unauthorized", 401);
 });
 
-new C.Middleware({
+new Middleware({
 	useOn: [adminRoute, meRoute],
 	handler: (c) => {
 		const token = c.headers.get("authorization");
 		if (token !== "Bearer secret-token") {
-			throw new C.Exception("unauthorized", 401);
+			throw new Exception("unauthorized", 401);
 		}
 		(c.data as any).user = { id: "0", name: "Admin", role: "admin" };
 	},
@@ -217,7 +221,7 @@ new C.Middleware({
 
 // ── wildcard ──────────────────────────────────────────────────────────────────
 
-new C.Route(
+new Route(
 	"/files/*",
 	(ctx) => ({
 		path: ctx.params["*"],
@@ -228,7 +232,7 @@ new C.Route(
 
 // ── echo ──────────────────────────────────────────────────────────────────────
 
-new C.Route({ method: C.Method.POST, path: "/echo" }, (ctx) => ({
+new Route({ method: Method.POST, path: "/echo" }, (ctx) => ({
 	echoed: ctx.body,
 	headers: {
 		contentType: ctx.headers.get("content-type"),
@@ -238,7 +242,7 @@ new C.Route({ method: C.Method.POST, path: "/echo" }, (ctx) => ({
 
 // ── search with query params ──────────────────────────────────────────────────
 
-new C.Route(
+new Route(
 	"/search",
 	(ctx) => {
 		const q = ctx.search.q;

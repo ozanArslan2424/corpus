@@ -1,16 +1,19 @@
 import { TestHelper, type Logger } from "@ozanarslan/utils";
 
-import { C, type WebSocketRouteCallbacks } from "#corpus";
+import { Server } from "@/C/Server/Server";
+import { WebSocketRoute } from "@/C/WebSocketRoute/WebSocketRoute";
+import { WebSocketRouteAbstract } from "@/C/WebSocketRoute/WebSocketRoute.abstract";
+import type { WebSocketRouteDefinition } from "@/C/WebSocketRoute/WebSocketRoute.types";
 
 const PORT = 9876;
 const BASE_URL = `ws://localhost:${PORT}`;
 const SILENT = process.argv[2] === "-s";
 const T = new TestHelper(SILENT);
-const server = new C.Server({ port: PORT });
+const server = new Server({ port: PORT });
 
 export function createTestWebSocketRoute(log: Logger, withAbstract: boolean) {
 	if (withAbstract) {
-		class WSR extends C.WebSocketRouteAbstract {
+		class WSR extends WebSocketRouteAbstract {
 			constructor() {
 				super();
 				this.register();
@@ -18,7 +21,7 @@ export function createTestWebSocketRoute(log: Logger, withAbstract: boolean) {
 
 			endpoint: string = "/ws";
 
-			onOpen?: WebSocketRouteCallbacks["onOpen"] | undefined = (ws) => {
+			onOpen?: WebSocketRouteDefinition["onOpen"] | undefined = (ws) => {
 				log.info(`[ws] New connection opened — remoteAddress: ${ws.remoteAddress}`);
 				ws.send(
 					JSON.stringify({
@@ -29,11 +32,11 @@ export function createTestWebSocketRoute(log: Logger, withAbstract: boolean) {
 				log.debug(`[ws] Sent connected greeting to ${ws.remoteAddress}`);
 			};
 
-			onClose?: WebSocketRouteCallbacks["onClose"] | undefined = (_ws, code, reason) => {
+			onClose?: WebSocketRouteDefinition["onClose"] | undefined = (_ws, code, reason) => {
 				log.info(`[ws] Connection closed — code=${code} reason=${reason ?? "no reason provided"}`);
 			};
 
-			onMessage: WebSocketRouteCallbacks["onMessage"] = (ws, message) => {
+			onMessage: WebSocketRouteDefinition["onMessage"] = (ws, message) => {
 				// oxlint-disable-next-line typescript/restrict-template-expressions
 				log.debug(`[ws] Received message: ${message}`);
 				const msg = JSON.parse(message as string) as {
@@ -110,7 +113,7 @@ export function createTestWebSocketRoute(log: Logger, withAbstract: boolean) {
 
 		new WSR();
 	} else {
-		new C.WebSocketRoute("/ws", {
+		new WebSocketRoute("/ws", {
 			onOpen: (ws) => {
 				log.info(`[ws] New connection opened — remoteAddress: ${ws.remoteAddress}`);
 				ws.send(

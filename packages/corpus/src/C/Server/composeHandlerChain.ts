@@ -1,6 +1,6 @@
-import { Exception } from "@/C/Exception";
-import type { MiddlewareHandler } from "@/C/MiddlewareAbstract/types";
-import { Status } from "@/C/Status";
+import { Exception } from "@/C/Exception/Exception";
+import type { MiddlewareHandler } from "@/C/Middleware/Middleware.types";
+import { Status } from "@/C/Status/Status";
 
 export function composeHandlerChain(...handlers: Array<MiddlewareHandler>): MiddlewareHandler {
 	return (c, outerNext) => {
