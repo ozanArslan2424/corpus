@@ -1,10 +1,13 @@
-import { describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "bun:test";
 
 import { createTestServer } from "#testutils";
 import { Cors } from "@/C/Cors/Cors";
 import { Route } from "@/C/Route/Route";
+import { $registry } from "@/Registry";
 
 const s = createTestServer();
+
+afterEach(() => $registry.reset());
 
 describe("Cors", () => {
 	const allowedOrigin = "https://example.com";

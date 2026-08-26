@@ -1,11 +1,11 @@
-import { beforeEach, describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "bun:test";
 
 import { HeaderKey } from "@/C/HeaderKey/HeaderKey";
 import { Res } from "@/C/Res/Res";
 import { Status } from "@/C/Status/Status";
 import { $registry } from "@/Registry/$registry";
 
-beforeEach(() => $registry.reset());
+afterEach(() => $registry.reset());
 
 describe("Res", () => {
 	const ctHeader = HeaderKey.ContentType;

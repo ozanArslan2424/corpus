@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "bun:test";
+import { describe, expect, it, afterEach } from "bun:test";
 
 import { objGetValues } from "@ozanarslan/utils";
 
@@ -11,12 +11,10 @@ import { Route } from "@/C/Route/Route";
 import { RouteBase } from "@/C/RouteBase/RouteBase";
 import { $registry } from "@/Registry/$registry";
 
-beforeEach(() => {
-	$registry.reset();
-});
+afterEach(() => $registry.reset());
 
 const s = createTestServer();
-declare module "@/types" {
+declare module "@/index" {
 	interface ContextDataInterface {
 		order?: Array<string>;
 	}

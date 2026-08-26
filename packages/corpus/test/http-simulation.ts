@@ -100,7 +100,7 @@ const bodySchema = type({
 
 // ── global request logger middleware ─────────────────────────────────────────
 
-declare module "../src/types" {
+declare module "@/index" {
 	interface ContextDataInterface {
 		requestedAt?: number;
 	}

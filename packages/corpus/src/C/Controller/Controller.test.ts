@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "bun:test";
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
@@ -9,8 +9,6 @@ import { Exception } from "@/C/Exception/Exception";
 import { Status } from "@/C/Status/Status";
 import { $registry } from "@/Registry/$registry";
 
-beforeEach(() => $registry.reset());
-
 const s = createTestServer();
 
 let staticFile: string;
@@ -19,6 +17,10 @@ beforeAll(async () => {
 	const dir = await fs.mkdtemp(path.join(os.tmpdir(), "controller-"));
 	staticFile = path.join(dir, "doc.txt");
 	await fs.writeFile(staticFile, "static content");
+});
+
+afterEach(() => {
+	$registry.reset();
 });
 
 afterAll(async () => {

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "bun:test";
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
@@ -7,8 +7,6 @@ import { createTestServer, req } from "#testutils";
 import { BundleRoute } from "@/C/BundleRoute/BundleRoute";
 import { Method } from "@/C/Method/Method";
 import { $registry } from "@/Registry/$registry";
-
-beforeEach(() => $registry.reset());
 
 const s = createTestServer();
 
@@ -26,6 +24,8 @@ beforeAll(async () => {
 	await fs.mkdir(path.join(dir, "internal"), { recursive: true });
 	await fs.writeFile(path.join(dir, "internal", "data.json"), "{}");
 });
+
+afterEach(() => $registry.reset());
 
 afterAll(async () => {
 	await fs.rm(dir, { recursive: true, force: true });

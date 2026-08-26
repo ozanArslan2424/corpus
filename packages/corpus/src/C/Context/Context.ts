@@ -3,7 +3,7 @@ import { strSplit, createSafeObject } from "@ozanarslan/utils";
 import { HeaderKey } from "@/C/HeaderKey/HeaderKey";
 import { Res } from "@/C/Res/Res";
 import type { ServerApp } from "@/C/Server/Server.types";
-import type { ContextDataInterface } from "@/types";
+import type { ContextDataInterface } from "@/index";
 
 /**
  * The context object used in Route "callback" parameter.

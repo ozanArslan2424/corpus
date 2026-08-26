@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 
 import { createSafeObject } from "@ozanarslan/utils";
 import { type } from "arktype";
@@ -74,6 +74,8 @@ beforeEach(() => {
 	// refresh context to avoid stale ref
 	context = new Context(request, server.app);
 });
+
+afterEach(() => $registry.reset());
 
 async function applyParsing(route: Route) {
 	const rawBody = await $registry.bodyParser.parse(request);

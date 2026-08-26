@@ -1,11 +1,14 @@
-import { describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "bun:test";
 import path from "path";
 
 import { createTestServer, req } from "#testutils";
 import { Res } from "@/C/Res/Res";
 import { Route } from "@/C/Route/Route";
 import { StaticRoute } from "@/C/StaticRoute/StaticRoute";
+import { $registry } from "@/Registry";
 import { XFile } from "@/X/XFile/XFile";
+
+afterEach(() => $registry.reset());
 
 const s = createTestServer();
 const f = (file: string) => path.resolve("test", "fixtures", file);

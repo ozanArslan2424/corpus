@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "bun:test";
+import { describe, expect, it, afterEach } from "bun:test";
 import net from "net";
 
 import { createTestServer, parseBody, req } from "#testutils";
@@ -10,27 +10,28 @@ import { Route } from "@/C/Route/Route";
 import { Status } from "@/C/Status/Status";
 import { $registry } from "@/Registry/$registry";
 
-beforeEach(() => $registry.reset());
+let s = createTestServer();
+
+afterEach(() => {
+	$registry.reset();
+});
 
 describe("Server", () => {
 	// ─── handle() - routing ───────────────────────────────────────
 
 	describe("handle", () => {
 		it("returns 200 for registered route", async () => {
-			const s = createTestServer();
 			new Route("/srv-200", () => "ok");
 			const res = await s.handle(req("/srv-200"));
 			expect(res.status).toBe(200);
 		});
 
 		it("returns 404 for unregistered route", async () => {
-			const s = createTestServer();
 			const res = await s.handle(req("/srv-does-not-exist"));
 			expect(res.status).toBe(404);
 		});
 
 		it("returns handler result as body", async () => {
-			const s = createTestServer();
 			new Route("/srv-body", () => ({ hello: "world" }));
 			const res = await s.handle(req("/srv-body"));
 			const data = await parseBody<{ hello: string }>(res);
@@ -38,7 +39,6 @@ describe("Server", () => {
 		});
 
 		it("returns res instance directly when handler returns res", async () => {
-			const s = createTestServer();
 			new Route("/srv-res-direct", () => {
 				return new Res({ direct: true }, { status: 201 });
 			});
@@ -49,14 +49,12 @@ describe("Server", () => {
 		});
 
 		it("wraps plain handler result in res with 200", async () => {
-			const s = createTestServer();
 			new Route("/srv-plain", () => "plain text");
 			const res = await s.handle(req("/srv-plain"));
 			expect(res.status).toBe(200);
 		});
 
 		it("passes parsed params to context", async () => {
-			const s = createTestServer();
 			new Route<never, never, { id: number }>("/srv-user/:id", (ctx) => ({ id: ctx.params.id }));
 			const res = await s.handle(req("/srv-user/42"));
 			const data = await parseBody<{ id: number }>(res);
@@ -64,7 +62,6 @@ describe("Server", () => {
 		});
 
 		it("passes search params to context", async () => {
-			const s = createTestServer();
 			new Route<never, { q: string }>("/srv-search", (ctx) => ({ q: ctx.search.q }));
 			const res = await s.handle(req("/srv-search?q=hello"));
 			const data = await parseBody<{ q: string }>(res);
@@ -76,7 +73,6 @@ describe("Server", () => {
 
 	describe("method routing", () => {
 		it("get and post on same path are distinct", async () => {
-			const s = createTestServer();
 			new Route("/srv-methods", () => "got");
 			new Route({ method: "POST", path: "/srv-methods" }, () => "posted");
 
@@ -90,7 +86,6 @@ describe("Server", () => {
 		});
 
 		it("unregistered method on registered path returns 404", async () => {
-			const s = createTestServer();
 			new Route("/srv-only-get", () => "ok");
 			const res = await s.handle(req("/srv-only-get", { method: "DELETE" }));
 			expect(res.status).toBe(404);
@@ -100,7 +95,6 @@ describe("Server", () => {
 	// ─── preflight ────────────────────────────────────────────────
 	describe("preflight", () => {
 		it("returns no_content without cors", async () => {
-			const s = createTestServer();
 			const res = await s.handle(
 				req("/srv-preflight", {
 					method: "OPTIONS",
@@ -113,7 +107,6 @@ describe("Server", () => {
 		});
 
 		it("uses cors preflight handler when cors is set", async () => {
-			const s = createTestServer();
 			new Cors({ allowedOrigins: ["https://example.com"] });
 			const res = await s.handle(
 				req("/srv-preflight-cors", {
@@ -133,7 +126,6 @@ describe("Server", () => {
 
 	describe("handleError", () => {
 		it("custom handler is called on error", async () => {
-			const s = createTestServer();
 			const defaultErrorHandler = s.handleError;
 			s.handleError = () => {
 				return new Res({ error: true, message: "custom error" }, { status: 500 });
@@ -150,7 +142,6 @@ describe("Server", () => {
 		});
 
 		it("default handler returns 500", async () => {
-			const s = createTestServer();
 			new Route("/srv-error-default", () => {
 				throw new Error("unexpected");
 			});
@@ -159,7 +150,6 @@ describe("Server", () => {
 		});
 
 		it("http error is handled by default handler", async () => {
-			const s = createTestServer();
 			new Route("/srv-httperror", () => {
 				throw new Exception("bad input", Status.BAD_REQUEST);
 			});
@@ -170,7 +160,6 @@ describe("Server", () => {
 		});
 
 		it("custom handler receives error and context", async () => {
-			const s = createTestServer();
 			const defaultErrorHandler = s.handleError;
 			let receivedErrMessage: string | undefined;
 			let receivedReqUrl: string | undefined;
@@ -190,7 +179,6 @@ describe("Server", () => {
 		});
 
 		it("error thrown in middleware is handled", async () => {
-			const s = createTestServer();
 			new Middleware({
 				useOn: "*",
 				handler: () => {
@@ -207,7 +195,6 @@ describe("Server", () => {
 
 	describe("handleNotFound", () => {
 		it("custom handler is called", async () => {
-			const s = createTestServer();
 			const defaultNotFoundHandler = s.handleNotFound;
 			s.handleNotFound = () => {
 				return new Res({ error: true, message: "custom not found" }, { status: 404 });
@@ -221,7 +208,6 @@ describe("Server", () => {
 		});
 
 		it("default handler includes method and url", async () => {
-			const s = createTestServer();
 			const res = await s.handle(req("/srv-default-404"));
 			expect(res.status).toBe(404);
 			const data = await parseBody<{ message: string }>(res);
@@ -263,7 +249,6 @@ describe("Server", () => {
 
 	describe("CORS integration", () => {
 		it("sets origin header on allowed origin", async () => {
-			const s = createTestServer();
 			new Cors({ allowedOrigins: ["https://example.com"] });
 			new Route("/srv-cors", () => "ok");
 			const res = await s.handle(req("/srv-cors", { headers: { origin: "https://example.com" } }));
@@ -272,7 +257,6 @@ describe("Server", () => {
 		});
 
 		it("does not set origin header on disallowed origin", async () => {
-			const s = createTestServer();
 			new Cors({ allowedOrigins: ["https://example.com"] });
 			new Route("/srv-cors-blocked", () => "ok");
 			const res = await s.handle(
@@ -283,7 +267,6 @@ describe("Server", () => {
 		});
 
 		it("is not applied when not set", async () => {
-			const s = createTestServer();
 			new Route("/srv-no-cors", () => "ok");
 			const res = await s.handle(
 				req("/srv-no-cors", { headers: { origin: "https://example.com" } }),
@@ -292,7 +275,6 @@ describe("Server", () => {
 		});
 
 		it("is applied to error responses", async () => {
-			const s = createTestServer();
 			new Cors({ allowedOrigins: ["https://example.com"] });
 			new Route("/srv-cors-error", () => {
 				throw new Error("boom");
@@ -306,7 +288,6 @@ describe("Server", () => {
 		});
 
 		it("is applied to 404 responses", async () => {
-			const s = createTestServer();
 			new Cors({ allowedOrigins: ["https://example.com"] });
 			const res = await s.handle(
 				req("/srv-cors-404", { headers: { origin: "https://example.com" } }),

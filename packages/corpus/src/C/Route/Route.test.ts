@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "bun:test";
 
 import { createTestServer, req } from "#testutils";
 import { Method } from "@/C/Method/Method";
@@ -6,7 +6,7 @@ import { Route } from "@/C/Route/Route";
 import { RouteAbstract } from "@/C/Route/Route.abstract";
 import { $registry } from "@/Registry/$registry";
 
-beforeEach(() => $registry.reset());
+afterEach(() => $registry.reset());
 
 const s = createTestServer();
 

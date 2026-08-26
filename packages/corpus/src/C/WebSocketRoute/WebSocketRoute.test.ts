@@ -1,11 +1,11 @@
-import { beforeEach, describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "bun:test";
 
 import { createTestServer } from "#testutils";
 import { Method } from "@/C/Method/Method";
 import { WebSocketRoute } from "@/C/WebSocketRoute/WebSocketRoute";
 import { $registry } from "@/Registry/$registry";
 
-beforeEach(() => $registry.reset());
+afterEach(() => $registry.reset());
 
 describe("WebSocketRoute", () => {
 	createTestServer();

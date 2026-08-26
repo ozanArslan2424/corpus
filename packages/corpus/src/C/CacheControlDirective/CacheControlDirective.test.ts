@@ -1,6 +1,9 @@
-import { describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "bun:test";
 
 import { CacheControlDirective } from "@/C/CacheControlDirective/CacheControlDirective";
+import { $registry } from "@/Registry";
+
+afterEach(() => $registry.reset());
 
 describe("CacheControlDirective", () => {
 	describe("createHeaderString", () => {

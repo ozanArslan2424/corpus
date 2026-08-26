@@ -1,6 +1,9 @@
-import { describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "bun:test";
 
 import { ContentDispositionDirective } from "@/C/ContentDispositionDirective/ContentDispositionDirective";
+import { $registry } from "@/Registry";
+
+afterEach(() => $registry.reset());
 
 describe("ContentDispositionDirective", () => {
 	describe("createHeaderString", () => {
