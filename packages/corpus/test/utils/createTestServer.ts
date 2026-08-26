@@ -1,6 +1,6 @@
 import { logger } from "@ozanarslan/utils";
 
-import { $registryTesting, TC, type RouterInterface, type ServerOptions } from "../_modules";
+import { $registry, C, type RouterInterface, type ServerOptions } from "#corpus";
 import { TEST_PORT } from "./req";
 
 export function createTestServer(
@@ -12,10 +12,10 @@ export function createTestServer(
 	};
 
 	if (router) {
-		$registryTesting.router = router;
+		$registry.router = router;
 	}
 
-	const s = router ? new TC.ServerWithRouter({ ...serverOpts, router }) : new TC.Server(serverOpts);
+	const s = router ? new C.ServerWithRouter({ ...serverOpts, router }) : new C.Server(serverOpts);
 
 	if (withLogging === true) {
 		const defaultErrorHandler = s.handleError;

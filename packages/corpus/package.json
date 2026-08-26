@@ -25,6 +25,9 @@
 	"type": "module",
 	"module": "dist/index.js",
 	"types": "dist/index.d.ts",
+	"imports": {
+		"#corpus": "./src/index.ts"
+	},
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
@@ -36,10 +39,10 @@
 	},
 	"scripts": {
 		"build": "bun run ./build.ts",
-		"test:serve": "bun run test/other/test-server.ts",
-		"test:http": "bun run test/other/http-simulation.ts",
-		"test:ws": "bun run test/other/ws-simulation.ts",
-		"test:benchmark": "bun run test/other/adapter-benchmark.ts",
+		"test:serve": "bun run test/test-server.ts",
+		"test:http": "bun run test/http-simulation.ts",
+		"test:ws": "bun run test/ws-simulation.ts",
+		"test:benchmark": "bun run test/RouterBenchmark.ts",
 		"test:all": "bun test --only-failures && bun run test:http -s && bun run test:ws -s && bun run test:benchmark"
 	},
 	"devDependencies": {

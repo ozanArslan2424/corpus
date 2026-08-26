@@ -1,12 +1,12 @@
 import type { Schema } from "@ozanarslan/utils";
 
-import type { CorsOptions } from "@/Cors/types";
-import type { Method } from "@/enums/Method";
-import type { Middleware } from "@/Middleware/Middleware";
-import type { Res } from "@/Res/Res";
-import type { BaseRoute } from "@/Route/BaseRoute";
-import type { ContextHandler } from "@/Route/types";
-import type { RouterReturn } from "@/Router/types";
+import type { BaseRoute } from "@/C/BaseRouteAbstract";
+import type { CorsOptions } from "@/C/Cors/types";
+import type { Method } from "@/C/Method";
+import type { Middleware } from "@/C/Middleware";
+import type { Res } from "@/C/Res";
+import type { ContextHandler } from "@/C/Route/types";
+import type { RouterReturn } from "@/C/Router/types";
 
 export interface RegistryInterface {
 	baseUrl: string;

@@ -1,6 +1,5 @@
-import { joinPathSegments } from "@/Route/joinPathSegments";
-
-import { $registryTesting } from "../_modules";
+import { $registry } from "#corpus";
+import { joinPathSegments } from "@/C/BaseRouteAbstract/joinPathSegments";
 
 export const TEST_HOST = "localhost";
 export const TEST_PORT = 4444;
@@ -10,5 +9,5 @@ export function req(addr: string, init?: RequestInit) {
 }
 
 export function reqPath(addr: string): string {
-	return `http://${TEST_HOST}:${TEST_PORT}${joinPathSegments($registryTesting.prefix, addr)}`;
+	return `http://${TEST_HOST}:${TEST_PORT}${joinPathSegments($registry.prefix, addr)}`;
 }
