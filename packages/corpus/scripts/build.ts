@@ -26,26 +26,11 @@ async function buildJs(entrypoints: Array<string>, outdir: string, tsconfig: str
 	}
 }
 
-async function buildDts(tsconfig: string, outdir: string) {
-	const proc = Bun.spawn(
-		[
-			"bun",
-			"x",
-			"tsc",
-			"-p",
-			tsconfig,
-			"--emitDeclarationOnly",
-			"--declaration",
-			"--declarationMap",
-			"--rootDir",
-			"./src",
-			"--outDir",
-			outdir,
-			"--declarationDir",
-			outdir,
-		],
-		{ stdout: "inherit", stderr: "inherit" },
-	);
+async function buildDts(tsconfig: string) {
+	const proc = Bun.spawn(["bunx", "tsc", "-p", tsconfig], {
+		stdout: "inherit",
+		stderr: "inherit",
+	});
 	const code = await proc.exited;
 	if (code !== 0) process.exit(code);
 }
@@ -55,6 +40,7 @@ try {
 	const entrypoints = ["./src/utils/index.ts", "./src/index.ts"];
 	const outdir = "./dist";
 	const tsconfig = "./tsconfig.json";
+	const tsconfigDts = "./tsconfig.dts.json";
 
 	t.step("cleaning dist");
 	await clean(outdir);
@@ -65,7 +51,7 @@ try {
 	t.done("built esm");
 
 	t.step("building dts");
-	await buildDts(tsconfig);
+	await buildDts(tsconfigDts);
 	t.done("built dts");
 } catch (err) {
 	logger.error(err);
