@@ -1,4 +1,4 @@
-import type { Func } from "@ozanarslan/utils";
+import type { Func } from "@/utils";
 
 export function wrapCookieMap(
 	map: Bun.CookieMap,

@@ -1,4 +1,4 @@
-import { isNil } from "@ozanarslan/utils";
+import { isNil } from "@/utils";
 
 import { MiddlewareAbstract } from "@/C/Middleware/Middleware.abstract";
 import type {

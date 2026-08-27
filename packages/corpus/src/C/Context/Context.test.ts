@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 
-import { createSafeObject } from "@ozanarslan/utils";
+import { createSafeObject } from "@/utils";
 import { type } from "arktype";
 
 import { TEST_HOST, TEST_PORT } from "#testutils";

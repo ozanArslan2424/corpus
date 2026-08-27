@@ -1,4 +1,4 @@
-import { noop, type Maybe } from "@ozanarslan/utils";
+import { noop, type Maybe } from "@/utils";
 
 import { HeaderKey } from "@/C/HeaderKey/HeaderKey";
 import { Method } from "@/C/Method/Method";

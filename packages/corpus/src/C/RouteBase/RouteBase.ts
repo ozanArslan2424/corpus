@@ -1,4 +1,4 @@
-import { isObject, objGetEntries } from "@ozanarslan/utils";
+import { isObject, objGetEntries } from "@/utils";
 
 import { Context } from "@/C/Context/Context";
 import { HeaderKey } from "@/C/HeaderKey/HeaderKey";

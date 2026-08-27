@@ -1,6 +1,6 @@
 import path from "path";
 
-import type { Func } from "@ozanarslan/utils";
+import type { Func } from "@/utils";
 
 import type { BundleRouteCacheConfig } from "@/C/BundleRoute/BundleRoute.types";
 import { CacheControlDirective } from "@/C/CacheControlDirective/CacheControlDirective";

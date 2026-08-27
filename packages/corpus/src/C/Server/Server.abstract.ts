@@ -6,7 +6,7 @@ import {
 	logger,
 	isEmpty,
 	type Maybe,
-} from "@ozanarslan/utils";
+} from "@/utils";
 
 import { Context } from "@/C/Context/Context";
 import { Exception } from "@/C/Exception/Exception";

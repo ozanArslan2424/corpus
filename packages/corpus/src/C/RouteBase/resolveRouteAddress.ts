@@ -1,4 +1,4 @@
-import { arrIncludes, assert, objGetValues } from "@ozanarslan/utils";
+import { arrIncludes, assert, objGetValues } from "@/utils";
 
 import { Method } from "@/C/Method/Method";
 import type { RouteAddress } from "@/C/RouteBase/RouteBase.types";

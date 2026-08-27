@@ -1,4 +1,4 @@
-import type { Func } from "@ozanarslan/utils";
+import type { Func } from "@/utils";
 
 import type { Method } from "@/C/Method/Method";
 import type { Middleware } from "@/C/Middleware/Middleware";

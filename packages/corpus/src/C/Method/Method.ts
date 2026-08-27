@@ -1,4 +1,4 @@
-import { enumerate, type ValueOf, type OrString } from "@ozanarslan/utils";
+import { enumerate, type ValueOf, type OrString } from "@/utils";
 
 /** Commonly used HTTP verbs. */
 export const Method = enumerate({

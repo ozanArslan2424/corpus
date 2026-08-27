@@ -1,4 +1,4 @@
-import { isString, isNil } from "@ozanarslan/utils";
+import { isString, isNil } from "@/utils";
 
 import { FileRouteAbstract } from "@/C/FileRoute/FileRoute.abstract";
 import type { FileRouteDefinition } from "@/C/FileRoute/FileRoute.types";

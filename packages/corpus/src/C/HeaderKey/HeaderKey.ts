@@ -1,4 +1,4 @@
-import { enumerate, type ValueOf, type OrString } from "@ozanarslan/utils";
+import { enumerate, type ValueOf, type OrString } from "@/utils";
 
 /** Just some common headers. */
 export const HeaderKey = enumerate({

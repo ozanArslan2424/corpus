@@ -1,4 +1,4 @@
-import { logFatal, logger, objGetValues } from "@ozanarslan/utils";
+import { logFatal, logger, objGetValues } from "@/utils";
 
 import { Method } from "@/C/Method/Method";
 import { Route } from "@/C/Route/Route";

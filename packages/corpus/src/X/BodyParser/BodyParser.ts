@@ -1,4 +1,4 @@
-import { createSafeObject } from "@ozanarslan/utils";
+import { createSafeObject } from "@/utils";
 
 import { Exception } from "@/C/Exception/Exception";
 import { HeaderKey } from "@/C/HeaderKey/HeaderKey";

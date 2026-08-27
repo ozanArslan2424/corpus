@@ -1,4 +1,4 @@
-import { arrIncludes } from "@ozanarslan/utils";
+import { arrIncludes } from "@/utils";
 
 import type { Middleware } from "@/C/Middleware/Middleware";
 import { joinPathSegments } from "@/C/RouteBase/joinPathSegments";

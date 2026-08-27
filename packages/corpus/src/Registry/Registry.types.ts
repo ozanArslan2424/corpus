@@ -1,4 +1,4 @@
-import type { Schema } from "@ozanarslan/utils";
+import type { Schema } from "@/utils";
 
 import type { CorsOptions } from "@/C/Cors/Cors.types";
 import type { Method } from "@/C/Method/Method";

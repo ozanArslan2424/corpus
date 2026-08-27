@@ -1,4 +1,4 @@
-import { logger } from "@ozanarslan/utils";
+import { logger } from "@/utils";
 
 import type { Res } from "@/C/Res/Res";
 import { joinPathSegments } from "@/C/RouteBase/joinPathSegments";

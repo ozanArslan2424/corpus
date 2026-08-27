@@ -1,4 +1,4 @@
-import { enumerate, type ValueOf, type Schema } from "@ozanarslan/utils";
+import { enumerate, type ValueOf, type Schema } from "@/utils";
 
 import type { Method } from "@/C/Method/Method";
 

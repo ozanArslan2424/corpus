@@ -1,4 +1,4 @@
-import { enumerate, type ValueOf } from "@ozanarslan/utils";
+import { enumerate, type ValueOf } from "@/utils";
 
 /** Commonly used HTTP status codes. */
 export const Status = enumerate({

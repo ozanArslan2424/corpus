@@ -1,6 +1,6 @@
 import crypto from "crypto";
 
-import { isNil, isEmpty, objGetEntries, objGetValues } from "@ozanarslan/utils";
+import { isNil, isEmpty, objGetEntries, objGetValues } from "@/utils";
 
 import { Exception } from "@/C/Exception/Exception";
 import { HeaderKey } from "@/C/HeaderKey/HeaderKey";

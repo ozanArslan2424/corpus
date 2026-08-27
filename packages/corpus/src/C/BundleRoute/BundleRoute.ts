@@ -1,4 +1,4 @@
-import { isNil } from "@ozanarslan/utils";
+import { isNil } from "@/utils";
 
 import { BundleRouteAbstract } from "@/C/BundleRoute/BundleRoute.abstract";
 import type { BundleRouteCacheConfig } from "@/C/BundleRoute/BundleRoute.types";

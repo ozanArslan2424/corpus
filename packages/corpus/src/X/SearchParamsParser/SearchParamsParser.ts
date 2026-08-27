@@ -1,4 +1,4 @@
-import { createSafeObject } from "@ozanarslan/utils";
+import { createSafeObject } from "@/utils";
 
 import { ObjectParserAbstract } from "@/X/ObjectParserAbstract/ObjectParserAbstract";
 

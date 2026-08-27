@@ -1,6 +1,6 @@
 import { describe, expect, it, afterEach } from "bun:test";
 
-import { objGetValues } from "@ozanarslan/utils";
+import { objGetValues } from "@/utils";
 
 import { createTestServer, parseBody } from "#testutils";
 import { Context } from "@/C/Context/Context";

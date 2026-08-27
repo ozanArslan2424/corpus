@@ -1,4 +1,4 @@
-import type { Optional } from "@ozanarslan/utils";
+import type { Optional } from "@/utils";
 
 import { FileRoute } from "@/C/FileRoute/FileRoute";
 import { Route } from "@/C/Route/Route";

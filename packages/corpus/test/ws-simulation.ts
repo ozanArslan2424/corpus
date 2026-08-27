@@ -1,4 +1,4 @@
-import { TestHelper, type Logger } from "@ozanarslan/utils";
+import { TestHelper, type Logger } from "@/utils";
 
 import { Server } from "@/C/Server/Server";
 import { WebSocketRoute } from "@/C/WebSocketRoute/WebSocketRoute";

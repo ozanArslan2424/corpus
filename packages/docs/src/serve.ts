@@ -44,7 +44,6 @@ export async function serve(outdir: string) {
 	walk(outdir, outdir);
 	new X.RateLimiter();
 	new C.Middleware({
-		variant: "outbound",
 		handler: (c) => {
 			console.log(
 				`[${new Date().toISOString()}] ${c.req.method} ${c.url.pathname} -> ${c.res.status}`,

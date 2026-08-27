@@ -1,4 +1,4 @@
-import { TestHelper } from "@ozanarslan/utils";
+import { TestHelper } from "@/utils";
 import { type } from "arktype";
 
 import { Exception } from "@/C/Exception/Exception";

@@ -23,22 +23,21 @@
 		"LICENSE.txt"
 	],
 	"type": "module",
-	"module": "dist/index.js",
 	"types": "dist/index.d.ts",
 	"imports": {
 		"#testutils": "./test/utils.ts"
 	},
 	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js"
-		}
+		".": "./dist/index.mjs",
+		"./utils": "./dist/utils/index.mjs",
+		"./package.json": "./package.json"
 	},
 	"publishConfig": {
 		"access": "public"
 	},
 	"scripts": {
-		"build": "bun run ./build.ts",
+		"build": "bun run ./scripts/build.ts",
+		"tsdown": "tsdown",
 		"test:serve": "bun run test/test-server.ts",
 		"test:http": "bun run test/http-simulation.ts",
 		"test:ws": "bun run test/ws-simulation.ts",
@@ -46,15 +45,18 @@
 		"test:all": "bun test --only-failures && bun run test:http -s && bun run test:ws -s && bun run test:benchmark"
 	},
 	"devDependencies": {
-		"@ozanarslan/utils": "workspace:*",
 		"@standard-schema/spec": "^1.1.0",
 		"@types/bun": "^1.4.0",
 		"arktype": "^2.2.3",
 		"bun-plugin-dts": "^0.4.0",
 		"memoirist": "^1.2.2",
+		"tsdown": "^0.22.14",
 		"zod": "^4.4.3"
 	},
 	"peerDependencies": {
 		"typescript": "6.0.2"
+	},
+	"inlinedDependencies": {
+		"@standard-schema/spec": "1.1.0"
 	}
 }

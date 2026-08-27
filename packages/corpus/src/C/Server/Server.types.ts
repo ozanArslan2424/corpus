@@ -1,4 +1,4 @@
-import type { Func, OrString, Maybe, Optional } from "@ozanarslan/utils";
+import type { Func, OrString, Maybe, Optional } from "@/utils";
 
 import type { Context } from "@/C/Context/Context";
 import type { Method } from "@/C/Method/Method";

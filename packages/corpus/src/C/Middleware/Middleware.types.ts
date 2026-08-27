@@ -1,4 +1,4 @@
-import type { Func } from "@ozanarslan/utils";
+import type { Func } from "@/utils";
 
 import type { Context } from "@/C/Context/Context";
 import type { Controller } from "@/C/Controller/Controller";

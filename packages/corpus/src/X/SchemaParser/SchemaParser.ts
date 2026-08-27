@@ -1,4 +1,4 @@
-import { isObjectWith, type Schema, type ValidationIssues } from "@ozanarslan/utils";
+import { isObjectWith, type Schema, type ValidationIssues } from "@/utils";
 
 import { Exception } from "@/C/Exception/Exception";
 import { Status } from "@/C/Status/Status";

@@ -1,4 +1,4 @@
-import { isEmpty, type Func, type OrString } from "@ozanarslan/utils";
+import { isEmpty, type Func, type OrString } from "@/utils";
 
 import type { Env } from "@/index";
 

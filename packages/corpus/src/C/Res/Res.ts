@@ -1,4 +1,4 @@
-import { isUndefined } from "@ozanarslan/utils";
+import { isUndefined } from "@/utils";
 
 import { ContentDispositionDirective } from "@/C/ContentDispositionDirective/ContentDispositionDirective";
 import { wrapCookieMap } from "@/C/Cookies/wrapCookieMap";

@@ -1,4 +1,4 @@
-import { type Func, isNil } from "@ozanarslan/utils";
+import { type Func, isNil } from "@/utils";
 
 import { CacheControlDirective } from "@/C/CacheControlDirective/CacheControlDirective";
 import { ContentDispositionDirective } from "@/C/ContentDispositionDirective/ContentDispositionDirective";

@@ -1,4 +1,4 @@
-import { isNumber, isObject } from "@ozanarslan/utils";
+import { isNumber, isObject } from "@/utils";
 
 import { Res } from "@/C/Res/Res";
 import { Status } from "@/C/Status/Status";

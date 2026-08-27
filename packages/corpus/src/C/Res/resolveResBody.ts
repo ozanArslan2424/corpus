@@ -1,4 +1,4 @@
-import { isNil, isPrimitive } from "@ozanarslan/utils";
+import { isNil, isPrimitive } from "@/utils";
 
 export function resolveResBody(b: unknown): [BodyInit | null | undefined, string | undefined] {
 	if (isNil(b)) return [b as BodyInit | null | undefined, undefined];

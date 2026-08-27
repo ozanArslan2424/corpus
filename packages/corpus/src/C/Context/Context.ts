@@ -1,4 +1,4 @@
-import { strSplit, createSafeObject } from "@ozanarslan/utils";
+import { strSplit, createSafeObject } from "@/utils";
 
 import { HeaderKey } from "@/C/HeaderKey/HeaderKey";
 import { Res } from "@/C/Res/Res";

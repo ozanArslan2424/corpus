@@ -1,4 +1,4 @@
-import { isSomeArray, boolToString } from "@ozanarslan/utils";
+import { isSomeArray, boolToString } from "@/utils";
 
 import type { CorsOptions } from "@/C/Cors/Cors.types";
 import { HeaderKey } from "@/C/HeaderKey/HeaderKey";

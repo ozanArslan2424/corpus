@@ -1,4 +1,4 @@
-import type { InferSchemaOut, Schema, Prettify } from "@ozanarslan/utils";
+import type { InferSchemaOut, Schema, Prettify } from "@/utils";
 
 import type { RouteModel } from "@/C/RouteBase/RouteBase.types";
 
