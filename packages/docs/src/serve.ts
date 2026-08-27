@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 
-import { C, X } from "@ozanarslan/corpus";
+import { $registry, C, X } from "@ozanarslan/corpus";
 
 function getMaxAge(addr: string) {
 	// CSS/JS: unhashed but low-churn, safe to cache for an hour between deploys
@@ -21,8 +21,8 @@ function getMaxAge(addr: string) {
 	return 300;
 }
 
-function registerStatic(addr: string, filePath: string) {
-	new C.StaticRoute(addr, { filePath, cache: { public: true, maxAge: getMaxAge(addr) } });
+function regiserFileRoute(addr: string, filePath: string) {
+	new C.FileRoute(addr, { filePath, cache: { public: true, maxAge: getMaxAge(addr) } });
 }
 
 function walk(dir: string, outdir: string) {
@@ -33,15 +33,17 @@ function walk(dir: string, outdir: string) {
 			continue;
 		}
 		const addr = `/${path.relative(outdir, full).split(path.sep).map(encodeURIComponent).join("/")}`;
-		registerStatic(addr, full);
+		regiserFileRoute(addr, full);
 		// root index.html is also reachable at "/"
-		if (addr === "/index.html") registerStatic("/", full);
+		if (addr === "/index.html") regiserFileRoute("/", full);
 	}
 }
 
 export async function serve(outdir: string) {
-	const server = new C.Server();
+	const server = new C.Server({ port: 3000 });
+
 	walk(outdir, outdir);
+
 	new X.RateLimiter();
 	new C.Middleware({
 		handler: (c) => {
@@ -51,9 +53,9 @@ export async function serve(outdir: string) {
 		},
 	});
 
-	server.setOnBeforeListen(() => {
-		console.table(server.routes.map(({ method, endpoint }) => ({ method, endpoint })));
-	});
+	server.handleBeforeListen = () => {
+		console.table($registry.router.list().map(({ method, endpoint }) => ({ method, endpoint })));
+	};
 
-	await server.listen(3000);
+	await server.listen();
 }

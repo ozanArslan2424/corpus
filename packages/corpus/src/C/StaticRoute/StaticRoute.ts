@@ -1,10 +1,9 @@
-import type { Func } from "@/utils";
-
 import type { Context } from "@/C/Context/Context";
 import { resolveRouteAddress } from "@/C/RouteBase/resolveRouteAddress";
 import type { RouteAddress, RouteModel } from "@/C/RouteBase/RouteBase.types";
 import { StaticRouteAbstract } from "@/C/StaticRoute/StaticRoute.abstract";
 import type { StaticRouteRes } from "@/C/StaticRoute/StaticRoute.types";
+import type { Func } from "@/utils";
 
 /**
  * Defines a route that serves a static file. Accepts a path and a {@link StaticRouteDefinition}

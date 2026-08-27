@@ -1,35 +1,11 @@
-import type { Func } from "@/utils";
-
 import type { Context } from "@/C/Context/Context";
 import type { Method } from "@/C/Method/Method";
 import { RouteAbstract } from "@/C/Route/Route.abstract";
 import type { ContextHandler } from "@/C/Route/Route.types";
 import { resolveRouteAddress } from "@/C/RouteBase/resolveRouteAddress";
 import type { RouteAddress, RouteModel } from "@/C/RouteBase/RouteBase.types";
+import type { Func } from "@/utils";
 
-/**
- * Defines an HTTP endpoint. Accepts a {@link RouteAddress} which can either be a plain
- * path string (defaults to GET) or an object with a `method` and `path` for other HTTP methods.
- *
- * The handler receives a {@link Context} and can return any data, a {@link Res} directly,
- * or a plain web `Response` for cases where full control over the response is needed.
- * Returned data is automatically serialized by {@link Res} — plain objects become JSON,
- * primitives become plain text, and so on.
- *
- * An optional {@link RouteModel} can be provided to validate and parse the request body,
- * URL params, and search params — the parsed results are typed and available on the context.
- *
- * Route instantiation automatically registers to the router.
- *
- * @example
- * // GET /users
- * new Route("/users", () => [{ id: 1 }]);
- *
- * // POST /users with typed body
- * new Route({ method: C.Method.POST, path: "/users" }, (c) => {
- *     return { created: c.body.name };
- * }, { body: UserModel });
- */
 export class Route<
 	B = unknown,
 	S = unknown,
