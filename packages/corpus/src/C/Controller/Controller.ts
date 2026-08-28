@@ -1,5 +1,3 @@
-import type { Optional } from "@/utils";
-
 import { FileRoute } from "@/C/FileRoute/FileRoute";
 import { Route } from "@/C/Route/Route";
 import type { ContextHandler } from "@/C/Route/Route.types";
@@ -7,6 +5,7 @@ import { joinPathSegments } from "@/C/RouteBase/joinPathSegments";
 import { resolveRouteAddress } from "@/C/RouteBase/resolveRouteAddress";
 import { StaticRoute } from "@/C/StaticRoute/StaticRoute";
 import { WebSocketRoute } from "@/C/WebSocketRoute/WebSocketRoute";
+import type { Optional, WithPrefix } from "@/utils";
 
 /**
  * Base class for grouping related routes under a shared prefix and optional middleware.
@@ -30,12 +29,6 @@ import { WebSocketRoute } from "@/C/WebSocketRoute/WebSocketRoute";
  *
  * new UserController();
  */
-
-type WithLeading<E extends string> = E extends `/${string}` ? E : `/${E}`;
-
-type WithPrefix<Px extends Optional<string>, E extends string> = Px extends string
-	? `${WithLeading<Px>}${WithLeading<E>}`
-	: WithLeading<E>;
 
 export class Controller<Px extends Optional<string> = Optional<string>> {
 	constructor(public prefix?: Px) {}

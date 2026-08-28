@@ -297,6 +297,9 @@ importers:
       memoirist:
         specifier: ^1.2.2
         version: 1.2.2
+      oxc-parser:
+        specifier: ^0.147.0
+        version: 0.147.0
       tsc-alias:
         specifier: ^1.9.2
         version: 1.9.2

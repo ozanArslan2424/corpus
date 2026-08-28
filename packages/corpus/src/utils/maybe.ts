@@ -24,7 +24,7 @@ export function isEmpty<T>(input: T): input is Extract<T, null | undefined | "" 
 	if (isNil(input)) return true;
 	if (isString(input)) return input.trim() === "";
 	if (isNumber(input)) return input === 0;
-	if (isObject(input)) return JSON.stringify(input) === JSON.stringify({});
+	if (isObject(input)) return Object.keys(input).length === 0;
 	if (Array.isArray(input)) return input.length === 0;
 	return false;
 }

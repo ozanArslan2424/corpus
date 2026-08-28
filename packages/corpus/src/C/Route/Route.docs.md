@@ -1,7 +1,5 @@
 ---
 toc:
-  - title: Extends
-    url: "#extends"
   - title: Usage
     url: "#usage"
   - title: Parameters
@@ -14,9 +12,9 @@ toc:
 
 The `Route` class (variant `dynamic` internally) defines an HTTP endpoint with automatic registration to the global router. It accepts a flexible address (a path string, a `"VERB /path"` string, or an object with `method` and `path`) and a handler that receives the request context. Routes can optionally include a model for request/response validation and type safety.
 
-## Extends
+## Extends RouteAbstract, BaseRoute
 
-This object extends [BaseRoute](/BaseRoute).
+This object extends [RouteAbstract](/RouteAbstract) which itself extends [BaseRoute](/BaseRoute).
 
 ## Usage
 
@@ -107,9 +105,16 @@ The route handler function. Receives the Context object with parsed data, req, a
 
 Optional validation model for the request body, search params, URL params, and response. When provided, the context properties are typed and validated automatically. You can pass generics if you don't want to bother with validation but still typecast your data: `Route<B, S, P, R, E extends string>`
 
-## Properties
+#### Route Models can have mixed validators
 
-Inherits all properties of [BaseRoute](/BaseRoute).
+```ts
+{
+	body: z.object({ name: z.string(), email: z.email() }),
+	response: type({ id: "number", name: "string" }),
+}
+```
+
+## Properties
 
 ### endpoint
 

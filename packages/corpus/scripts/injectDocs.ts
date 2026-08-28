@@ -1,278 +1,38 @@
 import fs from "fs/promises";
 import path from "path";
 
-import ts from "typescript";
+import type * as oxc from "oxc-parser";
 
-import { arrIncludes, createSafeObject, isEmpty } from "@/utils";
+import {
+	isEmpty,
+	isNil,
+	isNull,
+	isUndefined,
+	StringReader,
+	type Maybe,
+	type Nullable,
+} from "@/utils";
+import { FileParser } from "@/utils/FileParser";
 
-const DOCS_MD_EXT = ".docs.md";
-const SECTIONS = ["extends", "usage", "parameters", "properties"] as const;
+import { replaceMarkdownLinks } from "./replaceMarkdownLinks";
 
-type SectionKey = (typeof SECTIONS)[number];
+type SectionKind = "plain" | "example" | "param" | "property" | "extends";
 
 interface Section {
-	intro: string;
-	items: Record<string, string>;
+	id: string;
+	kind: SectionKind;
+	parent: string;
+	title: string;
+	lines: Array<string>;
+	extendsName?: string;
 }
-
-interface DocNode {
-	doc: string;
-	sections: Partial<Record<SectionKey, Section>>;
-}
-
-type DocMap = Record<string, DocNode>;
 
 interface Insertion {
-	pos: number;
-	text: string;
+	line: number;
+	jsdoc: string;
 }
 
-function getOwn<T>(dict: Record<string, T>, key: string): T | undefined {
-	return Object.prototype.hasOwnProperty.call(dict, key) ? dict[key] : undefined;
-}
-
-function stripFrontmatter(md: string): string {
-	const match = /^---\r?\n[\s\S]*?\r?\n---\r?\n?/.exec(md);
-	return match ? md.slice(match[0].length) : md;
-}
-
-function parseDocsMarkdown(raw: string): DocMap {
-	const md = stripFrontmatter(raw);
-	const lines = md.split(/\r?\n/);
-	const docMap = createSafeObject<DocMap>();
-
-	let currentTop: string | null = null;
-	let inIntro = true;
-	let currentSectionKey: SectionKey | null = null;
-	let currentItemTitle: string | null = null;
-	let buffer: Array<string> = [];
-
-	function flush() {
-		const text = buffer.join("\n").trim();
-		buffer = [];
-		if (!text || currentTop === null) return;
-
-		const entry = getOwn(docMap, currentTop);
-		if (!entry) return;
-
-		if (inIntro) {
-			entry.doc = text;
-			return;
-		}
-		if (!currentSectionKey) return;
-
-		const section =
-			getOwn(entry.sections, currentSectionKey) ??
-			(entry.sections[currentSectionKey] = { intro: "", items: createSafeObject() });
-		if (currentItemTitle) {
-			section.items[currentItemTitle] = text;
-		} else {
-			section.intro = text;
-		}
-	}
-
-	for (const line of lines) {
-		const h1 = /^#\s+(.+)$/.exec(line);
-		const h2 = /^##\s+(.+)$/.exec(line);
-		const h3 = /^###\s+(.+)$/.exec(line);
-
-		if (h1) {
-			flush();
-			currentTop = h1[1]!.trim();
-			inIntro = true;
-			currentSectionKey = null;
-			currentItemTitle = null;
-			docMap[currentTop] = {
-				doc: "",
-				sections: createSafeObject<Partial<Record<SectionKey, Section>>>(),
-			};
-			continue;
-		}
-
-		if (h2 && currentTop) {
-			flush();
-			inIntro = false;
-			currentItemTitle = null;
-			const key = h2[1]!.trim().toLowerCase();
-			currentSectionKey = arrIncludes(key, SECTIONS) ? key : null;
-			continue;
-		}
-
-		if (h3 && currentTop) {
-			flush();
-			currentItemTitle = h3[1]!.trim();
-			continue;
-		}
-		buffer.push(line);
-	}
-	flush();
-	return docMap;
-}
-
-function buildTopLevelDoc(entry: DocNode): string {
-	const parts: Array<string> = [];
-	if (entry.doc) parts.push(entry.doc);
-
-	const extends_ = entry.sections.extends;
-	if (extends_?.intro) parts.push(extends_.intro);
-
-	const usage = entry.sections.usage;
-	if (usage) {
-		if (usage.intro) parts.push(usage.intro);
-		for (const [title, content] of Object.entries(usage.items)) {
-			parts.push(`@example\n${title ? `**${title}**\n` : ""}${content}`);
-		}
-	}
-	return parts.join("\n\n");
-}
-
-function buildParamsDoc(entry: DocNode, paramNames: Array<string>): string {
-	const params = entry.sections.parameters;
-	if (!params) return "";
-	const parts: Array<string> = [];
-	if (params.intro) parts.push(params.intro);
-	for (const name of paramNames) {
-		const desc = getOwn(params.items, name);
-		if (desc) parts.push(`@param ${name} ${desc}`);
-	}
-	return parts.join("\n");
-}
-
-function toJsDoc(text: string, indent: string): string {
-	const body = text
-		.split("\n")
-		.map((l) => `${indent} * ${l}`.trimEnd())
-		.join("\n");
-	return `${indent}/**\n${body}\n${indent} */\n`;
-}
-
-function getParamName(p: ts.ParameterDeclaration): string | undefined {
-	return ts.isIdentifier(p.name) ? p.name.text : undefined;
-}
-
-function isString(x: string | undefined): x is string {
-	return typeof x === "string";
-}
-
-function getName(node: ts.Node): string | undefined {
-	if (
-		ts.isClassDeclaration(node) ||
-		ts.isFunctionDeclaration(node) ||
-		ts.isInterfaceDeclaration(node) ||
-		ts.isTypeAliasDeclaration(node) ||
-		ts.isEnumDeclaration(node)
-	) {
-		return node.name?.text;
-	}
-	if (ts.isVariableStatement(node)) {
-		const decl = node.declarationList.declarations[0];
-		if (decl && ts.isIdentifier(decl.name)) return decl.name.text;
-	}
-	return undefined;
-}
-
-function getMemberName(member: ts.ClassElement | ts.TypeElement): string | undefined {
-	if (ts.isConstructorDeclaration(member)) return "constructor";
-	if (
-		(ts.isMethodDeclaration(member) ||
-			ts.isPropertyDeclaration(member) ||
-			ts.isGetAccessorDeclaration(member) ||
-			ts.isSetAccessorDeclaration(member) ||
-			ts.isPropertySignature(member) ||
-			ts.isMethodSignature(member)) &&
-		member.name &&
-		ts.isIdentifier(member.name)
-	) {
-		return member.name.text;
-	}
-	return undefined;
-}
-
-async function injectDocsIntoDts(dtsPath: string, docs: DocMap) {
-	const source = await fs.readFile(dtsPath, "utf8");
-	const sourceFile = ts.createSourceFile(
-		dtsPath,
-		source,
-		ts.ScriptTarget.Latest,
-		true,
-		ts.ScriptKind.TS,
-	);
-
-	const insertions: Array<Insertion> = [];
-
-	function getLineStart(pos: number): number {
-		const lc = sourceFile.getLineAndCharacterOfPosition(pos);
-		return sourceFile.getPositionOfLineAndCharacter(lc.line, 0);
-	}
-
-	function getInsertInfo(node: ts.Node): { pos: number; indent: string } {
-		const fullStart = node.getFullStart();
-		const commentRanges = ts.getLeadingCommentRanges(source, fullStart);
-		const anchor =
-			commentRanges && commentRanges.length > 0
-				? commentRanges[0]!.pos
-				: node.getStart(sourceFile, false);
-		const pos = getLineStart(anchor);
-		const indent = source.slice(pos, anchor);
-		return { pos, indent };
-	}
-
-	function addInsertion(node: ts.Node, docText: string) {
-		if (isEmpty(docText)) return;
-		const { pos, indent } = getInsertInfo(node);
-		insertions.push({ pos, text: toJsDoc(docText, indent) });
-	}
-
-	for (const stmt of sourceFile.statements) {
-		const name = getName(stmt);
-		if (!name) continue;
-
-		const entry = getOwn(docs, name);
-		if (!entry) continue;
-
-		if (ts.isFunctionDeclaration(stmt)) {
-			const paramNames = stmt.parameters.map(getParamName).filter(isString);
-			const combined = [buildTopLevelDoc(entry), buildParamsDoc(entry, paramNames)]
-				.filter(Boolean)
-				.join("\n\n");
-			addInsertion(stmt, combined);
-			continue;
-		}
-
-		addInsertion(stmt, buildTopLevelDoc(entry));
-
-		if (ts.isClassDeclaration(stmt)) {
-			const ctor = stmt.members.find(ts.isConstructorDeclaration);
-			if (ctor) {
-				const paramNames = ctor.parameters.map(getParamName).filter(isString);
-				const paramsDoc = buildParamsDoc(entry, paramNames);
-				if (paramsDoc) addInsertion(ctor, paramsDoc);
-			}
-		}
-
-		if (
-			(ts.isClassDeclaration(stmt) || ts.isInterfaceDeclaration(stmt)) &&
-			entry.sections.properties
-		) {
-			const propsSection = entry.sections.properties;
-			for (const member of stmt.members) {
-				const memberName = getMemberName(member);
-				if (!memberName) continue;
-				const memberDoc = getOwn(propsSection.items, memberName);
-				if (memberDoc) addInsertion(member, memberDoc);
-			}
-		}
-	}
-
-	if (insertions.length === 0) return;
-
-	insertions.sort((a, b) => b.pos - a.pos);
-	let result = source;
-	for (const ins of insertions) {
-		result = result.slice(0, ins.pos) + ins.text + result.slice(ins.pos);
-	}
-	await fs.writeFile(dtsPath, result, "utf8");
-}
+const DOCS_MD_EXT = ".docs.md";
 
 async function walkDtsFiles(dir: string): Promise<Array<string>> {
 	const entries = await fs.readdir(dir, { withFileTypes: true });
@@ -288,14 +48,348 @@ async function walkDtsFiles(dir: string): Promise<Array<string>> {
 	return files;
 }
 
-export async function injectDocs(srcDir: string, distDir: string) {
-	const dtsFiles = await walkDtsFiles(distDir);
-	for (const dtsFile of dtsFiles) {
-		const rel = path.relative(distDir, dtsFile);
-		const mdPath = path.join(srcDir, rel.replace(/\.d\.ts$/, DOCS_MD_EXT));
-		const exists = await fs.exists(mdPath);
-		if (!exists) continue;
-		const docs = parseDocsMarkdown(await fs.readFile(mdPath, "utf8"));
-		await injectDocsIntoDts(dtsFile, docs);
+async function readDocsFile(
+	srcDir: string,
+	distDir: string,
+	dtsFile: string,
+): Promise<Nullable<string>> {
+	const rel = path.relative(distDir, dtsFile);
+	const mdPath = path.join(srcDir, rel.replace(/\.d\.ts$/, DOCS_MD_EXT));
+	const exists = await fs.exists(mdPath);
+	if (!exists) return null;
+	return await fs.readFile(mdPath, "utf8");
+}
+
+function splitFrontMatter(md: string): { frontmatter: string; content: string } {
+	const match = /^---\r?\n[\s\S]*?\r?\n---\r?\n?/.exec(md);
+	return {
+		frontmatter: match?.[0] ?? "",
+		content: match ? md.slice(match[0].length) : md,
+	};
+}
+
+function splitSections(md: string) {
+	const lines = md.split("\n");
+	const sections: Array<Section> = [];
+
+	let currentSection: Nullable<Section> = null;
+	let currentH1 = "";
+	let currentH2 = "";
+	let currentH3 = "";
+
+	function newSection(parent: string, title: string, kind: SectionKind): Section {
+		return {
+			id: currentH1,
+			parent,
+			title,
+			kind,
+			lines: [],
+			extendsName: undefined,
+		};
 	}
+
+	for (const line of lines) {
+		try {
+			if (isEmpty(line)) {
+				continue;
+			}
+
+			const h1 = /^#\s+(.+)$/.exec(line)?.[1];
+			if (!isEmpty(h1)) {
+				currentH1 = h1;
+				currentSection = newSection("", h1, "plain");
+				sections.push(currentSection);
+				continue;
+			}
+
+			const h2 = /^##\s+(.+)$/.exec(line)?.[1];
+			if (!isEmpty(h2)) {
+				currentH2 = h2;
+				let kind: SectionKind = "plain";
+				if (/^[Ee]xtend(?:s|ing)/.test(h2)) {
+					kind = "extends";
+				}
+				currentSection = newSection(currentH1, h2, kind);
+				if (kind === "extends") {
+					currentSection.extendsName = /[Ee]xtend(?:s|ing)\s*(.*)/.exec(h2)?.[1];
+				}
+				sections.push(currentSection);
+				continue;
+			}
+
+			const h3 = /^###\s+(.+)$/.exec(line)?.[1];
+			if (!isEmpty(h3)) {
+				currentH3 = h3;
+				let kind: SectionKind = "example";
+				if (/^[Pp]ropert(?:y|ies)/.test(currentH2)) {
+					kind = "property";
+				}
+				if (/^[Pp]aram(?:s|eters)/.test(currentH2)) {
+					kind = "param";
+				}
+				currentSection = newSection(currentH2, h3, kind);
+				sections.push(currentSection);
+				continue;
+			}
+
+			const h4 = /^####\s+(.+)$/.exec(line)?.[1];
+			if (!isEmpty(h4)) {
+				let kind: SectionKind = "example";
+				if (/^[Pp]ropert(?:y|ies)/.test(currentH2)) {
+					kind = "property";
+				}
+				if (/^[Pp]aram(?:s|eters)/.test(currentH2)) {
+					kind = "param";
+				}
+				currentSection = newSection(currentH3, h4, kind);
+				sections.push(currentSection);
+				continue;
+			}
+
+			if (!isNull(currentSection)) {
+				currentSection.lines.push(line);
+			}
+		} catch (err) {
+			console.log("Error in line:");
+			console.log(line);
+			console.log(String(err));
+		}
+	}
+	return sections;
+}
+
+function countChars(str: string, char: string): number {
+	return str.split(char).length - 1;
+}
+
+function getIndentLevel(line: string): number {
+	let level = 0;
+	while (line[level] === "\t") {
+		level++;
+	}
+	return level;
+}
+
+function toJsdoc(indentLevel: number, sections: Array<Section>) {
+	const indent = "\t".repeat(indentLevel);
+	const tagged = sections.map(tagExample).map(tagExtends);
+	const nonEmpty = tagged.filter((s) => s.lines.length > 0);
+	const lines = nonEmpty.flatMap((s, i) => (i === 0 ? s.lines : ["", ...s.lines]));
+	return lines.length === 1
+		? `${indent}/** ${lines[0]} */\n`
+		: `${indent}/**\n${lines.map((l) => `${indent} * ${l}`.trimEnd()).join("\n")}\n${indent} */\n`;
+}
+
+function tagExample(section: Section): Section {
+	return section.kind === "example"
+		? { ...section, lines: ["@example", ...section.lines] }
+		: section;
+}
+
+function tagExtends(section: Section): Section {
+	if (isUndefined(section.extendsName)) return section;
+	const extendsLines = section.extendsName.split(",").map((name) => `@extends ${name.trim()}`);
+	return { ...section, lines: [...extendsLines, ...section.lines] };
+}
+
+function getParamName(param: oxc.ParamPattern): Nullable<string> {
+	switch (param?.type) {
+		case "Identifier":
+			return param.name;
+		case "AssignmentPattern":
+			return getParamName(param.left);
+		case "RestElement":
+			return getParamName(param.argument);
+		case "TSParameterProperty":
+			return getParamName(param.parameter);
+		default:
+			return null;
+	}
+}
+
+async function injectDocsIntoDts(dtsFile: string, sections: Array<Section>) {
+	const parser = new FileParser(dtsFile);
+	const insertions: Array<Insertion> = [];
+
+	function getSections(id: string, kind: SectionKind): Array<Section> {
+		const section = sections.find((s) => s.id === id && s.kind === kind);
+		if (isNil(section)) return [];
+		const subSections = sections.filter((s) => s.parent === id && s.kind === kind);
+		const examples = sections.filter(
+			(s) =>
+				s.kind === "example" &&
+				(s.parent === id || subSections.some((sub) => sub.title === s.parent)),
+		);
+		const combined = Array.from(new Set([section, ...subSections, ...examples])); // dedupe
+		return combined;
+	}
+
+	function getSubSections(title: string, kind: SectionKind): Array<Section> {
+		const section = sections.find((s) => s.title === title && s.kind === kind);
+		if (isNil(section)) return [];
+		const examples = sections.filter((s) => s.kind === "example" && s.parent === title);
+		return [section, ...examples];
+	}
+
+	function addInsertion(line: number, jsdoc: string) {
+		insertions.push({ line, jsdoc });
+	}
+
+	async function writeInsertions() {
+		if (insertions.length === 0) return;
+		insertions.sort((a, b) => b.line - a.line);
+		const lines = parser.contents.split("\n");
+		for (const ins of insertions) {
+			let jsdoc = ins.jsdoc;
+			jsdoc = replaceMarkdownLinks(jsdoc, (label, url) =>
+				countChars(url, "/") > 1 ? `[${label}](${url})` : `{@link ${url.replace("/", "")}}`,
+			);
+			jsdoc = jsdoc.replace(/\n$/, "");
+			lines.splice(ins.line, 0, jsdoc);
+		}
+		const result = lines.join("\n");
+		await fs.writeFile(dtsFile, result, "utf8");
+	}
+
+	function injectParamDocs(params: Array<oxc.ParamPattern>, reader: StringReader) {
+		for (const param of params) {
+			const name = getParamName(param);
+			if (!name) continue;
+			const paramSections = getSubSections(name, "param");
+			if (!paramSections.length) continue;
+			const line = reader.getLineOfCharIndex(param.start);
+			const indent = getIndentLevel(line);
+			const jsdoc = toJsdoc(indent, paramSections);
+			const lineNumber = reader.getLineNumber(line);
+			addInsertion(lineNumber, jsdoc);
+		}
+	}
+
+	function injectTypeLiteralPropertyDocs(typeLiteral: Maybe<oxc.TSType>, reader: StringReader) {
+		if (isNil(typeLiteral)) return;
+		if (typeLiteral.type !== "TSTypeLiteral") return;
+		for (const member of typeLiteral.members) {
+			if (member.type !== "TSPropertySignature") continue;
+			const name = parser.getNodeTextContent(member.key);
+			const propSections = getSubSections(name, "property");
+			if (!propSections.length) continue;
+			const line = reader.getLineOfCharIndex(member.start);
+			const indent = getIndentLevel(line);
+			const jsdoc = toJsdoc(indent, propSections);
+			const lineNumber = reader.getLineNumber(line);
+			addInsertion(lineNumber, jsdoc);
+		}
+	}
+
+	function injectClassDeclarationDocs(node: oxc.Class, reader: StringReader) {
+		const title = node.id?.name;
+		if (!title) return;
+		const sections = getSections(title, "plain");
+		const extendsSections = getSections(title, "extends");
+		if (!sections.length) return;
+		const line = reader.getLineOfCharIndex(node.start);
+		const indent = getIndentLevel(line);
+		const jsdocSections = [...sections];
+		// no need to decipher all this through the parser,
+		// just write correct documentation...
+		jsdocSections.push(...extendsSections);
+		const jsdoc = toJsdoc(indent, jsdocSections);
+		const lineNumber = reader.getLineNumber(line);
+		addInsertion(lineNumber, jsdoc);
+
+		for (const member of node.body.body) {
+			const isConstructor = member.type === "MethodDefinition" && member.kind === "constructor";
+			if (!isConstructor) continue;
+			injectParamDocs(member.value.params, reader);
+		}
+	}
+
+	function injectPropertyDefinitionDocs(node: oxc.PropertyDefinition, reader: StringReader) {
+		const title = parser.getNodeTextContent(node.key);
+		const sections = getSubSections(title, "property");
+		if (!sections.length) return;
+		const line = reader.getLineOfCharIndex(node.start);
+		const indent = getIndentLevel(line);
+		const jsdoc = toJsdoc(indent, sections);
+		const lineNumber = reader.getLineNumber(line);
+		addInsertion(lineNumber, jsdoc);
+	}
+
+	function injectExportNamedDeclarationDocs(
+		node: oxc.ExportNamedDeclaration,
+		reader: StringReader,
+	) {
+		let title: Nullable<string> = null;
+		if (!node.declaration) return;
+		switch (node.declaration.type) {
+			case "VariableDeclaration": {
+				const id = node.declaration.declarations[0]?.id;
+				title = id?.type === "Identifier" ? id.name : null;
+				const typeAnnotation = id?.type === "Identifier" ? id.typeAnnotation?.typeAnnotation : null;
+				injectTypeLiteralPropertyDocs(typeAnnotation, reader);
+				break;
+			}
+			case "FunctionDeclaration":
+			case "FunctionExpression":
+			case "TSDeclareFunction":
+			case "TSEmptyBodyFunctionExpression":
+			case "TSImportEqualsDeclaration":
+			case "TSInterfaceDeclaration":
+			case "TSTypeAliasDeclaration":
+			case "TSEnumDeclaration":
+			case "ClassExpression":
+				title = node.declaration.id?.name ?? null;
+				break;
+			case "TSModuleDeclaration":
+				break;
+			case "ClassDeclaration":
+				// handled separately
+				title = null;
+				break;
+		}
+
+		if (!title) return;
+		const sections = getSections(title, "plain");
+		if (!sections.length) return;
+		const line = reader.getLineOfCharIndex(node.start);
+		const indent = getIndentLevel(line);
+		const jsdoc = toJsdoc(indent, sections);
+		const lineNumber = reader.getLineNumber(line);
+		addInsertion(lineNumber, jsdoc);
+
+		// easier to check for params existance, type narrows correctly
+		if ("params" in node.declaration) {
+			injectParamDocs(node.declaration.params, reader);
+		}
+	}
+
+	parser.runCallback((node, reader) => {
+		if (node.type === "ClassDeclaration") {
+			injectClassDeclarationDocs(node, reader);
+		}
+
+		if (node.type === "PropertyDefinition") {
+			injectPropertyDefinitionDocs(node, reader);
+		}
+
+		if (node.type === "ExportNamedDeclaration") {
+			injectExportNamedDeclarationDocs(node, reader);
+		}
+	});
+
+	await writeInsertions();
+}
+
+const srcDir = "./src";
+const distDir = "./dist";
+
+const dtsFiles = await walkDtsFiles(distDir);
+
+for (const dtsFile of dtsFiles) {
+	const md = await readDocsFile(srcDir, distDir, dtsFile);
+	if (isNull(md)) continue;
+	const { content } = splitFrontMatter(md);
+	const sections = splitSections(content);
+	if (isEmpty(sections)) continue;
+	injectDocsIntoDts(dtsFile, sections);
 }

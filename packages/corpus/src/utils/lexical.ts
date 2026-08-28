@@ -1,8 +1,14 @@
 import { assert } from "@/utils/assert";
-import { isNil } from "@/utils/maybe";
+import { isNil, type Optional } from "@/utils/maybe";
 
 // ---- type-level helpers ----
 export type OrString<T> = T | (string & {});
+
+type WithLeading<E extends string> = E extends `/${string}` ? E : `/${E}`;
+
+export type WithPrefix<Px extends Optional<string>, E extends string> = Px extends string
+	? `${WithLeading<Px>}${WithLeading<E>}`
+	: WithLeading<E>;
 
 type Separator = " " | "_" | "-" | "/" | ".";
 

@@ -68,6 +68,10 @@ export class StringReader {
 		return this.getSplitLines()[lineNumber] ?? "";
 	}
 
+	getLineOfCharIndex(charIndex: number): string {
+		return this.getLine(this.getLineNumberOfCharIndex(charIndex));
+	}
+
 	getCharAt(charIndex: number): string | null {
 		return this.source[charIndex] ?? null;
 	}
@@ -134,6 +138,10 @@ export class StringReader {
 
 	useUntil(endOrIndex: SearchOrIndex): StringReader {
 		return new StringReader(this.getUntil(endOrIndex));
+	}
+
+	useLineOfCharIndex(charIndex: number): StringReader {
+		return new StringReader(this.getLine(this.getLineNumberOfCharIndex(charIndex)));
 	}
 
 	useLinesBetween(startSearchOrLine: SearchOrIndex, endSearchOrLine: SearchOrIndex): StringReader {
