@@ -49,12 +49,12 @@ async function walkDtsFiles(dir: string): Promise<Array<string>> {
 }
 
 async function readDocsFile(
-	srcDir: string,
-	distDir: string,
+	srcdir: string,
+	outdir: string,
 	dtsFile: string,
 ): Promise<Nullable<string>> {
-	const rel = path.relative(distDir, dtsFile);
-	const mdPath = path.join(srcDir, rel.replace(/\.d\.ts$/, DOCS_MD_EXT));
+	const rel = path.relative(outdir, dtsFile);
+	const mdPath = path.join(srcdir, rel.replace(/\.d\.ts$/, DOCS_MD_EXT));
 	const exists = await fs.exists(mdPath);
 	if (!exists) return null;
 	return await fs.readFile(mdPath, "utf8");
@@ -380,16 +380,15 @@ async function injectDocsIntoDts(dtsFile: string, sections: Array<Section>) {
 	await writeInsertions();
 }
 
-const srcDir = "./src";
-const distDir = "./dist";
+export async function injectDocs(srcdir: string, outdir: string) {
+	const dtsFiles = await walkDtsFiles(outdir);
 
-const dtsFiles = await walkDtsFiles(distDir);
-
-for (const dtsFile of dtsFiles) {
-	const md = await readDocsFile(srcDir, distDir, dtsFile);
-	if (isNull(md)) continue;
-	const { content } = splitFrontMatter(md);
-	const sections = splitSections(content);
-	if (isEmpty(sections)) continue;
-	injectDocsIntoDts(dtsFile, sections);
+	for (const dtsFile of dtsFiles) {
+		const md = await readDocsFile(srcdir, outdir, dtsFile);
+		if (isNull(md)) continue;
+		const { content } = splitFrontMatter(md);
+		const sections = splitSections(content);
+		if (isEmpty(sections)) continue;
+		injectDocsIntoDts(dtsFile, sections);
+	}
 }
