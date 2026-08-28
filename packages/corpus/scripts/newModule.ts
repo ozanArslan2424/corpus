@@ -4,11 +4,16 @@ import path from "path";
 import { logFatal } from "@/utils/logger";
 
 import {
-	SCAFFOLD_EXTS,
-	boilerplate,
+	abstractBoilerplate,
+	barrelBoilerplate,
+	concreteBoilerplate,
+	docsBoilerplate,
 	fileExists,
 	parseGroupFlag,
 	resolveGroupDir,
+	sourceStems,
+	testBoilerplate,
+	typesBoilerplate,
 } from "./moduleScaffold";
 
 async function newModule() {
@@ -33,30 +38,21 @@ async function newModule() {
 
 	await fs.mkdir(moduleDir, { recursive: true });
 
-	await fs.writeFile(
-		path.join(moduleDir, "index.ts"),
-		`${[name, `${name}.abstract`, `${name}.types`]
-			.map((file) => `export * from "./${file}";`)
-			.join("\n")}\n`,
-		"utf8",
-	);
+	await fs.writeFile(path.join(moduleDir, "index.ts"), barrelBoilerplate(name), "utf8");
 
-	await fs.writeFile(
-		path.join(moduleDir, `${name}.ts`),
-		`import { ${name}Abstract } from "@${group ? `/${group}` : ``}/${name}/${name}.abstract";
-
-export class ${name} extends ${name}Abstract {}`,
-		"utf8",
-	);
+	await fs.writeFile(path.join(moduleDir, `${name}.ts`), concreteBoilerplate(group, name), "utf8");
 
 	await fs.writeFile(
 		path.join(moduleDir, `${name}.abstract.ts`),
-		`export abstract class ${name}Abstract {}`,
+		abstractBoilerplate(name),
 		"utf8",
 	);
 
-	for (const ext of SCAFFOLD_EXTS) {
-		await fs.writeFile(path.join(moduleDir, `${name}.${ext}`), boilerplate(name, ext), "utf8");
+	await fs.writeFile(path.join(moduleDir, `${name}.test.ts`), testBoilerplate(name), "utf8");
+	await fs.writeFile(path.join(moduleDir, `${name}.types.ts`), typesBoilerplate(name), "utf8");
+
+	for (const stem of sourceStems(name)) {
+		await fs.writeFile(path.join(moduleDir, `${stem}.docs.md`), docsBoilerplate(stem), "utf8");
 	}
 
 	const exportPath = `./${name}`;

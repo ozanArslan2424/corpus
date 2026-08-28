@@ -2,12 +2,16 @@ import fs from "fs/promises";
 import path from "path";
 
 import {
-	SCAFFOLD_EXTS,
-	boilerplate,
+	abstractBoilerplate,
+	concreteBoilerplate,
+	docsBoilerplate,
 	fileExists,
 	listModuleDirs,
 	parseGroupFlag,
 	resolveGroups,
+	sourceStems,
+	testBoilerplate,
+	typesBoilerplate,
 } from "./moduleScaffold";
 
 async function addMissingFiles() {
@@ -18,7 +22,7 @@ async function addMissingFiles() {
 	for (const group of groups) {
 		const modules = await listModuleDirs(group);
 		for (const mod of modules) {
-			for (const ext of SCAFFOLD_EXTS) {
+			for (const ext of ["test.ts", "types.ts", "abstract.ts", "ts"]) {
 				const fileName = `${mod.name}.${ext}`;
 				const filePath = path.join(mod.dir, fileName);
 				const exists = await fileExists(filePath);
@@ -26,7 +30,35 @@ async function addMissingFiles() {
 
 				console.log(`[${group}] creating ${path.join(mod.name, fileName)}`);
 				if (dryRun) continue;
-				await fs.writeFile(filePath, boilerplate(mod.name, ext), "utf8");
+
+				switch (ext) {
+					case "test.ts":
+						await fs.writeFile(filePath, testBoilerplate(mod.name), "utf8");
+						break;
+
+					case "types.ts":
+						await fs.writeFile(filePath, typesBoilerplate(mod.name), "utf8");
+						break;
+
+					case "abstract.ts":
+						await fs.writeFile(filePath, abstractBoilerplate(mod.name), "utf8");
+						break;
+
+					case "ts":
+						await fs.writeFile(filePath, concreteBoilerplate(group, mod.name), "utf8");
+						break;
+				}
+			}
+
+			for (const stem of sourceStems(mod.name)) {
+				const fileName = `${stem}.docs.md`;
+				const filePath = path.join(mod.dir, fileName);
+				const exists = await fileExists(filePath);
+				if (exists) continue;
+
+				console.log(`[${group}] creating ${path.join(mod.name, fileName)}`);
+				if (dryRun) continue;
+				await fs.writeFile(filePath, docsBoilerplate(stem), "utf8");
 			}
 		}
 	}

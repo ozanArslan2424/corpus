@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 
+import type { Nullable } from "@/utils";
 import { logFatal } from "@/utils/logger";
 
 export const SRC_DIR = "./src";
@@ -15,29 +16,60 @@ export async function listModuleDirs(group: Group): Promise<Array<{ name: string
 	const groupDir = resolveGroupDir(group);
 	const entries = await fs.readdir(groupDir, { withFileTypes: true });
 	return entries
-		.filter((entry) => entry.isDirectory())
+		.filter((entry) => entry.isDirectory() && !entry.name.includes("util"))
 		.filter((entry) => (group === "root" ? !GROUPS.includes(entry.name as Group) : true))
 		.map((entry) => ({ name: entry.name, dir: path.join(groupDir, entry.name) }));
 }
 
+/** The stems (filename without `.ts`) of every source file a module owns, aside from `index.ts` and the test file. Each one gets its own `.docs.md`. */
+export function sourceStems(name: string): Array<string> {
+	return [name, `${name}.abstract`, `${name}.types`];
+}
+
 export function expectedFiles(name: string): Array<string> {
+	const stems = sourceStems(name);
 	return [
 		"index.ts",
-		`${name}.ts`,
-		`${name}.abstract.ts`,
-		`${name}.docs.md`,
+		...stems.map((stem) => `${stem}.ts`),
 		`${name}.test.ts`,
-		`${name}.types.ts`,
+		...stems.map((stem) => `${stem}.docs.md`),
 	];
 }
 
-export const SCAFFOLD_EXTS = ["docs.md", "test.ts", "types.ts"] as const;
-export type ScaffoldExt = (typeof SCAFFOLD_EXTS)[number];
+export function barrelBoilerplate(name: string) {
+	const stems = sourceStems(name);
+	return `${stems.map((stem) => `export * from "./${stem}";`).join("\n")}\n`;
+}
 
-export function boilerplate(name: string, ext: ScaffoldExt): string {
-	switch (ext) {
-		case "docs.md":
-			return `
+export function abstractBoilerplate(name: string) {
+	return `export abstract class ${name}Abstract {}`;
+}
+
+export function concreteBoilerplate(group: Nullable<string>, name: string) {
+	return `import { ${name}Abstract } from "@${group ? `/${group}` : ``}/${name}/${name}.abstract";
+
+export class ${name} extends ${name}Abstract {}`;
+}
+
+export function typesBoilerplate(name: string) {
+	return `// TODO: define types for ${name}\n`;
+}
+
+export function testBoilerplate(name: string) {
+	return `
+import { afterEach, describe, expect, it } from "bun:test";
+import { createTestServer } from "#testutils";
+import { $registry } from "@/Registry";
+
+afterEach(() => $registry.reset());
+const s = createTestServer();
+
+describe("${name}", () => {});
+	`.trim();
+}
+
+export function docsBoilerplate(stem: string): string {
+	return `
 ---
 toc:
   - title: Title1
@@ -48,7 +80,7 @@ toc:
     url: "#title3"
 ---
 
-# ${name}
+# ${stem}
 
 explanation
 
@@ -76,20 +108,6 @@ explanation or code block
 
 explanation or code block
 			`.trim();
-		case "test.ts":
-			return `
-import { afterEach, describe, expect, it } from "bun:test";
-import { createTestServer } from "#testutils";
-import { $registry } from "@/Registry";
-
-afterEach(() => $registry.reset());
-const s = createTestServer();
-
-describe("${name}", () => {});
-	`.trim();
-		case "types.ts":
-			return `// TODO: define types for ${name}\n`;
-	}
 }
 
 export async function fileExists(filePath: string): Promise<boolean> {
