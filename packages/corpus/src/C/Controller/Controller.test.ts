@@ -6,7 +6,7 @@ import path from "path";
 import { createTestServer } from "#testutils";
 import { Controller } from "@/C/Controller/Controller";
 import { Exception } from "@/C/Exception/Exception";
-import { Status } from "@/C/Status/Status";
+import { Status } from "@/C/Res/Status";
 import { $registry } from "@/Registry/$registry";
 
 const s = createTestServer();

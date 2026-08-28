@@ -1,6 +1,6 @@
-import type { InferSchemaOut, Schema, Prettify } from "@/utils";
-
+// oxlint-disable typescript/no-explicit-any
 import type { RouteModel } from "@/C/RouteBase/RouteBase.types";
+import type { InferSchemaOut, Schema, Prettify } from "@/utils";
 
 /** If you prefer to put all schemas into a single object, this will be helpful */
 export type InferModel<T extends Record<string, any>> = {

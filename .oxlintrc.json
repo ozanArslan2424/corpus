@@ -19,6 +19,7 @@
 		"typescript/no-non-null-asserted-optional-chain": "error",
 		"typescript/no-non-null-asserted-nullish-coalescing": "error",
 		"typescript/no-restricted-types": ["error", { "types": { "Object": true } }],
+		"typescript/no-explicit-any": "warn",
 		"typescript/no-unnecessary-boolean-literal-compare": "error",
 		"typescript/no-unnecessary-qualifier": "error",
 		"typescript/no-unnecessary-template-expression": "error",
@@ -38,5 +39,13 @@
 		"typescript/require-await": "error",
 		"typescript/restrict-plus-operands": "error",
 		"typescript/switch-exhaustiveness-check": "error"
-	}
+	},
+	"overrides": [
+		{
+			"files": ["**/test/**", "**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
+			"rules": {
+				"typescript/no-explicit-any": "off"
+			}
+		}
+	]
 }

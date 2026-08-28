@@ -1,8 +1,7 @@
-import type { CacheControlDirective } from "@/C/CacheControlDirective/CacheControlDirective";
-import type { ContentDispositionDirective } from "@/C/ContentDispositionDirective/ContentDispositionDirective";
+import type { CacheControlDefinition, ContentDispositionDefinition } from "@/C/Headers";
 
 export type FileRouteDefinition = {
 	filePath: string;
-	disposition?: ContentDispositionDirective["disposition"];
-	cache?: CacheControlDirective;
+	disposition?: ContentDispositionDefinition["disposition"];
+	cache?: CacheControlDefinition;
 };

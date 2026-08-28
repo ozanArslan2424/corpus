@@ -1,16 +1,16 @@
-import type { Func } from "@/utils";
-
-import { CacheControlDirective } from "@/C/CacheControlDirective/CacheControlDirective";
 import type { Context } from "@/C/Context/Context";
 import { Exception } from "@/C/Exception/Exception";
-import { HeaderKey } from "@/C/HeaderKey/HeaderKey";
-import { Method } from "@/C/Method/Method";
+import { createCacheControlHeader, type CacheControlDefinition } from "@/C/Headers";
+import { HeaderKey } from "@/C/Headers/HeaderKey";
+import { Method } from "@/C/Req/Method";
 import { Res } from "@/C/Res/Res";
+import { Status } from "@/C/Res/Status";
 import { RouteBase } from "@/C/RouteBase/RouteBase";
-import { RouteVariant } from "@/C/RouteBase/RouteBase.types";
 import type { StaticRouteRes } from "@/C/StaticRoute/StaticRoute.types";
-import { Status } from "@/C/Status/Status";
+import type { Func } from "@/utils";
 import { XFile } from "@/X/XFile/XFile";
+
+import { RouteVariant } from "../RouteBase/RouteVariant";
 
 export abstract class StaticRouteAbstract<
 	B = unknown,
@@ -29,14 +29,14 @@ export abstract class StaticRouteAbstract<
 		Bun.MaybePromise<StaticRouteRes>
 	> = (_, content) => content;
 
-	protected cache: CacheControlDirective = { public: true, maxAge: 3600, noCache: false };
+	protected cache: CacheControlDefinition = { public: true, maxAge: 3600, noCache: false };
 
 	protected onFileNotFound: Func<[], Promise<Res>> = () => {
 		throw new Exception(Status.NOT_FOUND.toString(), Status.NOT_FOUND);
 	};
 
 	get handler(): Func<[Context<B, S, P, StaticRouteRes>], Bun.MaybePromise<StaticRouteRes>> {
-		const cacheHeader = CacheControlDirective.createHeaderString(this.cache);
+		const cacheHeader = createCacheControlHeader(this.cache);
 
 		return async (c) => {
 			const file = new XFile(this.filePath);

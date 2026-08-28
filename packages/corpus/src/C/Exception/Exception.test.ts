@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it } from "bun:test";
 
 import { createTestServer, parseBody, req } from "#testutils";
 import { Exception } from "@/C/Exception/Exception";
+import { Status } from "@/C/Res/Status";
 import { Route } from "@/C/Route/Route";
-import { Status } from "@/C/Status/Status";
 import { $registry } from "@/Registry";
 
 const s = createTestServer();

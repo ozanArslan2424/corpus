@@ -1,6 +1,6 @@
 import path from "path";
 
-import type { Maybe } from "@ozanarslan/utils";
+import type { Maybe } from "@ozanarslan/corpus/utils";
 
 import { joinPathSegments } from "@/functions/joinPathSegments";
 

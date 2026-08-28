@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
-import { Method } from "@/C/Method/Method";
+import { Method } from "@/C/Req/Method";
 import { resolveRouteAddress } from "@/C/RouteBase/resolveRouteAddress";
 
 describe("resolveRouteAddress", () => {

@@ -1,9 +1,7 @@
+import type { Cookies } from "@/C/Cookies/Cookies";
 import type { Func } from "@/utils";
 
-export function wrapCookieMap(
-	map: Bun.CookieMap,
-	syncCallback: Func<[Bun.CookieMap]>,
-): Bun.CookieMap {
+export function wrapCookieMap(map: Cookies, syncCallback: Func<[Cookies]>): Cookies {
 	return new Proxy(map, {
 		get: (target, prop, receiver) => {
 			const value = Reflect.get(target, prop, receiver);

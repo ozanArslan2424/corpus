@@ -1,9 +1,9 @@
-import { strSplit, createSafeObject } from "@/utils";
-
-import { HeaderKey } from "@/C/HeaderKey/HeaderKey";
+import { Cookies } from "@/C/Cookies/Cookies";
+import { HeaderKey } from "@/C/Headers/HeaderKey";
 import { Res } from "@/C/Res/Res";
 import type { ServerApp } from "@/C/Server/Server.types";
 import type { ContextDataInterface } from "@/index";
+import { strSplit, createSafeObject } from "@/utils";
 
 /**
  * The context object used in Route "callback" parameter.
@@ -64,17 +64,17 @@ export class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 		return this.req.headers;
 	}
 
-	private _cookies: Bun.CookieMap | null = null;
-	public get cookies(): Bun.CookieMap {
+	private _cookies: Cookies | null = null;
+	public get cookies(): Cookies {
 		if (this._cookies) return this._cookies;
 		// req may be Bun.BunRequest
-		if ("cookies" in this.req && this.req.cookies instanceof Bun.CookieMap) {
+		if ("cookies" in this.req && this.req.cookies instanceof Cookies) {
 			this._cookies = this.req.cookies;
 			return this._cookies;
 		}
 
 		// req may be Request
-		this._cookies = new Bun.CookieMap();
+		this._cookies = new Cookies();
 
 		const cookieHeader = this.req.headers.get(HeaderKey.Cookie);
 

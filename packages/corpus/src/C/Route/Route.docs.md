@@ -12,9 +12,9 @@ toc:
 
 The `Route` class (variant `dynamic` internally) defines an HTTP endpoint with automatic registration to the global router. It accepts a flexible address (a path string, a `"VERB /path"` string, or an object with `method` and `path`) and a handler that receives the request context. Routes can optionally include a model for request/response validation and type safety.
 
-## Extends RouteAbstract, BaseRoute
+## Extends RouteAbstract, RouteBase
 
-This object extends [RouteAbstract](/RouteAbstract) which itself extends [BaseRoute](/BaseRoute).
+This object extends [RouteAbstract](/RouteAbstract) which itself extends [RouteBase](/RouteBase).
 
 ## Usage
 

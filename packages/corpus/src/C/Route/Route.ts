@@ -1,5 +1,5 @@
 import type { Context } from "@/C/Context/Context";
-import type { Method } from "@/C/Method/Method";
+import type { Method } from "@/C/Req/Method";
 import { RouteAbstract } from "@/C/Route/Route.abstract";
 import type { ContextHandler } from "@/C/Route/Route.types";
 import { resolveRouteAddress } from "@/C/RouteBase/resolveRouteAddress";

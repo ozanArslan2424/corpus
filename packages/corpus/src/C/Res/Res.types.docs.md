@@ -1,37 +1,21 @@
 ---
 toc:
-  - title: Title1
-    url: "#title1"
-  - title: Title2
-    url: "#title2"
-  - title: Title3
-    url: "#title3"
+  - title: SseSource
+    url: "#SseSource"
+  - title: NdjsonSource
+    url: "#NdjsonSource"
+  - title: ResInit
+    url: "#ResInit"
 ---
 
-# Res.types
+# SseSource
 
-explanation
+Used for the `Res.sse` static method.
 
-## Extends x, y
+# NdjsonSource
 
-This object extends [x](/x) which itself extends [y](/y).
+Used for the `Res.ndjson` static method.
 
-## Title1
+# ResInit
 
-explanation
-
-### example or subtitle
-
-explanation or code block
-
-## Title2
-
-### example or subtitle
-
-explanation or code block
-
-## Title3
-
-### example or subtitle
-
-explanation or code block
+Res object init parameter type.

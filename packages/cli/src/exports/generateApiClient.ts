@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "path";
 
-import type { BaseRoute } from "@ozanarslan/corpus";
+import type { RouteBase } from "@ozanarslan/corpus";
 import {
 	type Maybe,
 	cache,
@@ -11,7 +11,7 @@ import {
 	logger,
 	StringBuilder,
 	quote,
-} from "@ozanarslan/utils";
+} from "@ozanarslan/corpus/utils";
 
 import type { Config } from "@/config/Config";
 import type { Schema } from "@/schema/Schema";
@@ -23,7 +23,7 @@ const CT_GENERIC = `CT extends "json" | "formData" = "json"`;
 const schemaPrinter = new SchemaPrinter();
 const typeToNameMap = new Map<string, string>();
 
-type Route = Omit<BaseRoute, "register" | "handle" | "request"> & {
+type Route = Omit<RouteBase, "register" | "handle" | "request"> & {
 	camelKey: string;
 	pascalKey: string;
 	params: string[];
@@ -127,7 +127,7 @@ const getTypeLine = cache(
 	},
 );
 
-export function generateApiClient(prefix: string, routesArr: Array<BaseRoute>, config: Config) {
+export function generateApiClient(prefix: string, routesArr: Array<RouteBase>, config: Config) {
 	const b = new StringBuilder();
 
 	const routes = routesArr.map((route) => {

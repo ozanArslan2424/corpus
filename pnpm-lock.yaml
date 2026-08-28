@@ -257,9 +257,6 @@ importers:
       '@ozanarslan/corpus':
         specifier: workspace:*
         version: link:../corpus
-      '@ozanarslan/utils':
-        specifier: workspace:*
-        version: link:../utils
       '@types/bun':
         specifier: ^1.4.0
         version: 1.4.0
@@ -331,22 +328,6 @@ importers:
       esbuild:
         specifier: ^0.28.2
         version: 0.28.2
-
-  packages/utils:
-    dependencies:
-      typescript:
-        specifier: 6.0.2
-        version: 6.0.2
-    devDependencies:
-      '@standard-schema/spec':
-        specifier: ^1.1.0
-        version: 1.1.0
-      '@types/bun':
-        specifier: ^1.4.0
-        version: 1.4.0
-      tsdown:
-        specifier: ^0.22.14
-        version: 0.22.14(oxc-resolver@11.24.2)(typescript@6.0.2)
 
 packages:
 

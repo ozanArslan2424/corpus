@@ -1,11 +1,10 @@
-import { isNil } from "@/utils";
-
 import { MiddlewareAbstract } from "@/C/Middleware/Middleware.abstract";
 import type {
 	MiddlewareDefinition,
 	MiddlewareHandler,
 	MiddlewareUseOn,
 } from "@/C/Middleware/Middleware.types";
+import { isNil } from "@/utils";
 
 /**
  * Simple Middleware registration class.

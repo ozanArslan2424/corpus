@@ -11,6 +11,7 @@ type _yd<t, T> = { type: t } & T;
 type YupDefBase = {
 	type: string;
 	label?: string;
+	// oxlint-disable-next-line typescript/no-explicit-any
 	meta?: Record<PropertyKey, any>;
 	oneOf: unknown[];
 	notOneOf: unknown[];

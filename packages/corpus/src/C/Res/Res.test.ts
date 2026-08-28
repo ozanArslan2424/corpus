@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it } from "bun:test";
 
-import { HeaderKey } from "@/C/HeaderKey/HeaderKey";
+import { Cookies } from "@/C/Cookies/Cookies";
+import { HeaderKey } from "@/C/Headers/HeaderKey";
 import { Res } from "@/C/Res/Res";
-import { Status } from "@/C/Status/Status";
+import { Status } from "@/C/Res/Status";
 import { $registry } from "@/Registry/$registry";
 
 afterEach(() => $registry.reset());
@@ -27,7 +28,7 @@ describe("Res", () => {
 	}) {
 		// types and instances
 		expect(res.headers).toBeInstanceOf(Headers);
-		expect(res.cookies).toBeInstanceOf(Bun.CookieMap);
+		expect(res.cookies).toBeInstanceOf(Cookies);
 		expect(res.status).toBeTypeOf("number");
 		expect(res.statusText).toBeTypeOf("string");
 

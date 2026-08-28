@@ -1,3 +1,4 @@
+// oxlint-disable typescript/no-explicit-any
 export type Logger = {
 	log(...args: any[]): void;
 	bold(...args: any[]): void;

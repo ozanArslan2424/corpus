@@ -1,9 +1,8 @@
-import type { Func, OrString, Maybe, Optional } from "@/utils";
-
 import type { Context } from "@/C/Context/Context";
-import type { Method } from "@/C/Method/Method";
+import type { Method } from "@/C/Req/Method";
 import type { WebSocketRoute } from "@/C/WebSocketRoute/WebSocketRoute";
 import type { RouterInterface } from "@/Registry/Registry.types";
+import type { Func, OrString, Maybe, Optional } from "@/utils";
 
 export interface ServerOptions {
 	port?: number;

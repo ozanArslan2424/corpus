@@ -1,20 +1,21 @@
 import path from "path";
 
-import type { Func } from "@/utils";
-
 import type { BundleRouteCacheConfig } from "@/C/BundleRoute/BundleRoute.types";
-import { CacheControlDirective } from "@/C/CacheControlDirective/CacheControlDirective";
-import { ContentDispositionDirective } from "@/C/ContentDispositionDirective/ContentDispositionDirective";
 import { Exception } from "@/C/Exception/Exception";
-import { HeaderKey } from "@/C/HeaderKey/HeaderKey";
-import { Method } from "@/C/Method/Method";
+import { createCacheControlHeader } from "@/C/Headers/createCacheControlHeader";
+import { createContentDispositionHeader } from "@/C/Headers/createContentDispositionHeader";
+import { HeaderKey } from "@/C/Headers/HeaderKey";
+import { Method } from "@/C/Req/Method";
 import type { Res } from "@/C/Res/Res";
+import { Status } from "@/C/Res/Status";
 import type { ContextHandler } from "@/C/Route/Route.types";
 import { RouteBase } from "@/C/RouteBase/RouteBase";
-import { RouteVariant, type RouteModel } from "@/C/RouteBase/RouteBase.types";
+import type { RouteModel } from "@/C/RouteBase/RouteBase.types";
 import type { StaticRouteRes } from "@/C/StaticRoute/StaticRoute.types";
-import { Status } from "@/C/Status/Status";
+import type { Func } from "@/utils";
 import { XFile } from "@/X/XFile/XFile";
+
+import { RouteVariant } from "../RouteBase/RouteVariant";
 
 export abstract class BundleRouteAbstract<E extends string = string> extends RouteBase<
 	never,
@@ -110,11 +111,11 @@ export abstract class BundleRouteAbstract<E extends string = string> extends Rou
 		let cacheHeader = "";
 
 		if (file.fullname === idx) {
-			cacheHeader = CacheControlDirective.createHeaderString(this.cache.indexHtml);
+			cacheHeader = createCacheControlHeader(this.cache.indexHtml);
 		} else if (file.path.includes(`/${this.assetsDir}/`)) {
-			cacheHeader = CacheControlDirective.createHeaderString(this.cache.assetsDir);
+			cacheHeader = createCacheControlHeader(this.cache.assetsDir);
 		} else if (this.cache.fallback) {
-			cacheHeader = CacheControlDirective.createHeaderString(this.cache.fallback);
+			cacheHeader = createCacheControlHeader(this.cache.fallback);
 		}
 
 		if (file.extension !== "html") {
@@ -123,7 +124,7 @@ export abstract class BundleRouteAbstract<E extends string = string> extends Rou
 			c.res.headers.set(HeaderKey.CacheControl, cacheHeader);
 			c.res.headers.set(
 				HeaderKey.ContentDisposition,
-				ContentDispositionDirective.createHeaderString({
+				createContentDispositionHeader({
 					disposition: "inline",
 					filename: file.fullname,
 				}),

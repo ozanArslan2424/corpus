@@ -1,8 +1,7 @@
-import { logFatal, logger, objGetValues } from "@/utils";
-
-import { Method } from "@/C/Method/Method";
+import { Method } from "@/C/Req/Method";
 import { Route } from "@/C/Route/Route";
 import type { RouterInterface } from "@/Registry/Registry.types";
+import { logFatal, logger, objGetValues } from "@/utils";
 
 import { BranchRouter } from "./BranchRouter";
 import { MemoiristAdapter } from "./MemoiristAdapter";

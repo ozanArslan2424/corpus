@@ -1,6 +1,5 @@
-import { isEmpty, type Func, type OrString } from "@/utils";
-
 import type { Env } from "@/index";
+import { isEmpty, type Func, type OrString } from "@/utils";
 
 type NodeEnv = OrString<"development" | "production" | "test">;
 type EnvKey = OrString<keyof Env>;

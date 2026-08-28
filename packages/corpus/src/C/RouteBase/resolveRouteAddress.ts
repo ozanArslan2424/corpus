@@ -1,7 +1,6 @@
-import { arrIncludes, assert, objGetValues } from "@/utils";
-
-import { Method } from "@/C/Method/Method";
+import { Method } from "@/C/Req";
 import type { RouteAddress } from "@/C/RouteBase/RouteBase.types";
+import { arrIncludes, assert, objGetValues } from "@/utils";
 
 export function resolveRouteAddress<E extends string>(
 	address: RouteAddress<E>,

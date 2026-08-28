@@ -5,7 +5,7 @@ import path from "path";
 
 import { createTestServer, req } from "#testutils";
 import { BundleRoute } from "@/C/BundleRoute/BundleRoute";
-import { Method } from "@/C/Method/Method";
+import { Method } from "@/C/Req/Method";
 import { $registry } from "@/Registry/$registry";
 
 const s = createTestServer();

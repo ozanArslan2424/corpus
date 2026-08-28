@@ -1,5 +1,6 @@
 import { RouteBase } from "@/C/RouteBase/RouteBase";
-import { RouteVariant } from "@/C/RouteBase/RouteBase.types";
+
+import { RouteVariant } from "../RouteBase/RouteVariant";
 
 export abstract class RouteAbstract<
 	B = unknown,

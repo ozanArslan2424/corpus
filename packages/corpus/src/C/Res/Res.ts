@@ -1,49 +1,33 @@
-import { isUndefined } from "@/utils";
-
-import { ContentDispositionDirective } from "@/C/ContentDispositionDirective/ContentDispositionDirective";
+import { Cookies, CookiesAbstract } from "@/C/Cookies";
 import { wrapCookieMap } from "@/C/Cookies/wrapCookieMap";
-import { DefaultStatusTexts } from "@/C/DefaultStatusTexts/DefaultStatusTexts";
 import { Exception } from "@/C/Exception/Exception";
-import { HeaderKey } from "@/C/HeaderKey/HeaderKey";
+import { createContentDispositionHeader } from "@/C/Headers";
+import { HeaderKey } from "@/C/Headers/HeaderKey";
+import { DefaultStatusTexts } from "@/C/Res/DefaultStatusTexts";
+import { ResAbstract } from "@/C/Res/Res.abstract";
 import type { ResInit, SseSource, NdjsonSource } from "@/C/Res/Res.types";
 import { resolveResBody } from "@/C/Res/resolveResBody";
-import { Status } from "@/C/Status/Status";
+import { Status } from "@/C/Res/Status";
+import { isUndefined } from "@/utils";
 import { XFile } from "@/X/XFile/XFile";
 
-/**
- * Represents an HTTP response. Pass it a body and optional init to construct a response,
- * or use the static methods for common patterns like redirects and streaming.
- *
- * The body is automatically serialized based on its type:
- * - `null` / `undefined` → empty body with `text/plain`
- * - Primitives (`string`, `number`, `boolean`, `bigint`) → string with `text/plain`
- * - `Date` → ISO string with `text/plain`
- * - Plain objects and arrays → JSON string with `application/json`
- * - `ArrayBuffer` → binary with `application/octet-stream`
- * - `Blob` → binary with the Blob's own mime type
- * - `FormData` → multipart with `multipart/form-data`
- * - `URLSearchParams` → encoded with `application/x-www-form-urlencoded`
- * - `ReadableStream` → streamed as-is, set `Content-Type` manually via `init.headers`
- * - Custom class instances → falls back to `.toString()`
- *
- * Use {@link Res.response} to get the native web `Response` to return from a route handler.
- *
- * Static helpers:
- * - {@link Res.redirect} / {@link Res.permanentRedirect} / {@link Res.temporaryRedirect} / {@link Res.seeOther} — HTTP redirects
- * - {@link Res.sse} — Server-Sent Events stream
- * - {@link Res.ndjson} — Newline-delimited JSON stream
- * - {@link Res.streamFile} — Stream a file from disk
- * - {@link Res.file} — Respond with a static file
- */
-
-export class Res<R = unknown> {
+export class Res<R = unknown> extends ResAbstract<R> {
 	constructor(
 		body?: BodyInit | R | null | undefined,
 		protected readonly init?: ResInit | Res,
 	) {
+		super();
 		if (init?.status) this.status = init.status;
 		if (init?.statusText) this.statusText = init.statusText;
 		this.body = body; // runs through the setter below
+	}
+
+	get response(): Response {
+		return new Response(this._resolvedBody, {
+			status: this.status,
+			statusText: this.statusText,
+			headers: this._headers,
+		});
 	}
 
 	private _body: BodyInit | R | null | undefined;
@@ -59,14 +43,6 @@ export class Res<R = unknown> {
 		if (!isUndefined(contentType) && !this.headers.has(HeaderKey.ContentType)) {
 			this.headers.set(HeaderKey.ContentType, contentType);
 		}
-	}
-
-	get response(): Response {
-		return new Response(this._resolvedBody, {
-			status: this.status,
-			statusText: this.statusText,
-			headers: this._headers,
-		});
 	}
 
 	private _statusText: string | undefined;
@@ -112,22 +88,22 @@ export class Res<R = unknown> {
 		this._headers = value;
 	}
 
-	private _cookies: Bun.CookieMap | undefined;
-	public get cookies(): Bun.CookieMap {
+	private _cookies: CookiesAbstract | undefined;
+	public get cookies(): CookiesAbstract {
 		if (!isUndefined(this._cookies)) return this._cookies;
 		const map =
-			this.init?.cookies instanceof Bun.CookieMap
+			this.init?.cookies instanceof CookiesAbstract
 				? this.init.cookies
-				: new Bun.CookieMap(this.init?.cookies);
+				: new Cookies(this.init?.cookies);
 		this._cookies = wrapCookieMap(map, this.syncCookieHeaders);
 		return this._cookies;
 	}
-	public set cookies(value: Bun.CookieMap) {
+	public set cookies(value: CookiesAbstract) {
 		this._cookies = wrapCookieMap(value, this.syncCookieHeaders);
 		this.syncCookieHeaders(this._cookies);
 	}
 
-	private syncCookieHeaders = (target: Bun.CookieMap): void => {
+	private syncCookieHeaders = (target: CookiesAbstract): void => {
 		this.headers.delete(HeaderKey.SetCookie);
 		for (const header of target.toSetCookieHeaders()) {
 			this.headers.append(HeaderKey.SetCookie, header);
@@ -258,7 +234,7 @@ export class Res<R = unknown> {
 		res.headers.set(HeaderKey.ContentType, file.mimeType);
 		res.headers.set(
 			HeaderKey.ContentDisposition,
-			ContentDispositionDirective.createHeaderString({
+			createContentDispositionHeader({
 				disposition: disposition,
 				filename: file.fullname,
 			}),

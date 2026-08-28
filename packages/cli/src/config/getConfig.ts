@@ -9,7 +9,7 @@ import {
 	objGetEntries,
 	isObject,
 	StringBuilder,
-} from "@ozanarslan/utils";
+} from "@ozanarslan/corpus/utils";
 
 import type { Config } from "@/config/Config";
 import { CONFIG_FILE_NAME } from "@/constants";
@@ -78,7 +78,7 @@ export const getConfig = cache("getConfig", (): Config => {
 		logger.info(`Config written to ${CONFIG_FILE_NAME}`);
 	}
 
-	function writeConfigEntries(b: StringBuilder, obj: Record<string, any>, indent: number) {
+	function writeConfigEntries(b: StringBuilder, obj: object, indent: number) {
 		for (const [key, val] of objGetEntries(obj)) {
 			if (isObject(val)) {
 				b.line(indent)(`${key}: {`);

@@ -1,4 +1,4 @@
-import { isEmpty, isNumber, type Maybe } from "@ozanarslan/utils";
+import { isEmpty, isNumber, type Maybe } from "@ozanarslan/corpus/utils";
 
 export function joinPathSegments(...segments: Maybe<string | number>[]): string {
 	return segments

@@ -1,7 +1,6 @@
-import { isNumber, isObject } from "@/utils";
-
 import { Res } from "@/C/Res/Res";
-import { Status } from "@/C/Status/Status";
+import { Status } from "@/C/Res/Status";
+import { isNumber, isObject } from "@/utils";
 
 export class Exception extends Error {
 	constructor(

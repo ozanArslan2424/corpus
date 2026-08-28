@@ -1,5 +1,5 @@
 import type { Method } from "@ozanarslan/corpus";
-import type { OrString } from "@ozanarslan/utils";
+import type { OrString } from "@ozanarslan/corpus/utils";
 
 import type { ImportableKind } from "@/classes/Importable";
 

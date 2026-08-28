@@ -1,17 +1,17 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 
-import type { Schema, ValidationIssues } from "@/utils";
 import { type } from "arktype";
 import z from "zod";
 
 import { createTestServer, parseBody, reqPath } from "#testutils";
 import { Controller } from "@/C/Controller/Controller";
 import { Exception } from "@/C/Exception/Exception";
-import { HeaderKey } from "@/C/HeaderKey/HeaderKey";
+import { HeaderKey } from "@/C/Headers/HeaderKey";
+import { Status } from "@/C/Res/Status";
 import { Route } from "@/C/Route/Route";
 import { joinPathSegments } from "@/C/RouteBase/joinPathSegments";
-import { Status } from "@/C/Status/Status";
 import { $registry } from "@/Registry/$registry";
+import type { Schema, ValidationIssues } from "@/utils";
 import type { SchemaParser } from "@/X/SchemaParser/SchemaParser";
 
 const GOOD = { hello: 1 };

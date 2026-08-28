@@ -7,13 +7,13 @@ import {
 	isEmpty,
 	isNil,
 	isNull,
+	isSomeArray,
 	isUndefined,
 	StringReader,
 	type Maybe,
 	type Nullable,
-} from "@/utils";
-import { FileParser } from "@/utils/FileParser";
-
+	FileParser,
+} from "../src/utils";
 import { replaceMarkdownLinks } from "./replaceMarkdownLinks";
 
 type SectionKind = "plain" | "example" | "param" | "property" | "extends";
@@ -170,11 +170,12 @@ function getIndentLevel(line: string): number {
 	return level;
 }
 
-function toJsdoc(indentLevel: number, sections: Array<Section>) {
+function toJsdoc(indentLevel: number, sections: Array<Section>): string {
 	const indent = "\t".repeat(indentLevel);
 	const tagged = sections.map(tagExample).map(tagExtends);
 	const nonEmpty = tagged.filter((s) => s.lines.length > 0);
 	const lines = nonEmpty.flatMap((s, i) => (i === 0 ? s.lines : ["", ...s.lines]));
+	if (!isSomeArray(lines)) return "";
 	return lines.length === 1
 		? `${indent}/** ${lines[0]} */\n`
 		: `${indent}/**\n${lines.map((l) => `${indent} * ${l}`.trimEnd()).join("\n")}\n${indent} */\n`;
@@ -232,6 +233,7 @@ async function injectDocsIntoDts(dtsFile: string, sections: Array<Section>) {
 	}
 
 	function addInsertion(line: number, jsdoc: string) {
+		if (isEmpty(jsdoc)) return;
 		insertions.push({ line, jsdoc });
 	}
 
@@ -329,13 +331,17 @@ async function injectDocsIntoDts(dtsFile: string, sections: Array<Section>) {
 				injectTypeLiteralPropertyDocs(typeAnnotation, reader);
 				break;
 			}
+			case "TSTypeAliasDeclaration": {
+				title = node.declaration.id?.name ?? null;
+				injectTypeLiteralPropertyDocs(node.declaration.typeAnnotation, reader);
+				break;
+			}
 			case "FunctionDeclaration":
 			case "FunctionExpression":
 			case "TSDeclareFunction":
 			case "TSEmptyBodyFunctionExpression":
 			case "TSImportEqualsDeclaration":
 			case "TSInterfaceDeclaration":
-			case "TSTypeAliasDeclaration":
 			case "TSEnumDeclaration":
 			case "ClassExpression":
 				title = node.declaration.id?.name ?? null;

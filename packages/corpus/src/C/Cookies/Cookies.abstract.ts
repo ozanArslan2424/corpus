@@ -1,1 +1,1 @@
-export abstract class CookiesAbstract {}
+export abstract class CookiesAbstract extends Bun.CookieMap {}

@@ -1,10 +1,7 @@
-import type { CacheControlDirective } from "@/C/CacheControlDirective/CacheControlDirective";
+import type { CacheControlDefinition } from "@/C/Headers/Headers.types";
 
 export type BundleRouteCacheConfig = {
-	/** Strategy for index.html */
-	indexHtml: CacheControlDirective;
-	/** Strategy for the assets folder */
-	assetsDir: CacheControlDirective;
-	/** Optional: Strategy for other root files (favicon, robots.txt, etc.) */
-	fallback?: CacheControlDirective;
+	indexHtml: CacheControlDefinition;
+	assetsDir: CacheControlDefinition;
+	fallback?: CacheControlDefinition;
 };

@@ -1,37 +1,25 @@
 ---
 toc:
-  - title: Title1
-    url: "#title1"
+  - title: BundleRouteCacheConfig
+    url: "#BundleRouteCacheConfig"
   - title: Title2
     url: "#title2"
   - title: Title3
     url: "#title3"
 ---
 
-# BundleRoute.types
+# BundleRouteCacheConfig
 
-explanation
+## Properties
 
-## Extends x, y
+### indexHtml
 
-This object extends [x](/x) which itself extends [y](/y).
+Strategy for index.html
 
-## Title1
+### assetsDir
 
-explanation
+Strategy for the assets folder
 
-### example or subtitle
+### fallback
 
-explanation or code block
-
-## Title2
-
-### example or subtitle
-
-explanation or code block
-
-## Title3
-
-### example or subtitle
-
-explanation or code block
+Optional: Strategy for other root files (favicon, robots.txt, etc.)

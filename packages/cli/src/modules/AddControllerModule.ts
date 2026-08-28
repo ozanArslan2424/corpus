@@ -8,7 +8,7 @@ import {
 	objGetEntries,
 	objGetValues,
 	StringBuilder,
-} from "@ozanarslan/utils";
+} from "@ozanarslan/corpus/utils";
 
 import { Importable } from "@/classes/Importable";
 import { MainFileUpdater } from "@/classes/MainFileUpdater";

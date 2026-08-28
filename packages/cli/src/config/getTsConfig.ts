@@ -1,6 +1,6 @@
 import fs from "fs";
 
-import { logger, type Nullable } from "@ozanarslan/utils";
+import { logger, type Nullable } from "@ozanarslan/corpus/utils";
 
 import { resolveCwdPath } from "@/functions/resolveCwdPath";
 

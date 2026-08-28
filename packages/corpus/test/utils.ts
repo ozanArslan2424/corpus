@@ -1,5 +1,3 @@
-import { logger } from "@/utils";
-
 import type { Res } from "@/C/Res/Res";
 import { joinPathSegments } from "@/C/RouteBase/joinPathSegments";
 import { Server } from "@/C/Server/Server";
@@ -7,6 +5,7 @@ import type { ServerOptions } from "@/C/Server/Server.types";
 import { ServerWithRouter } from "@/C/Server/ServerWithRouter";
 import { $registry } from "@/Registry/$registry";
 import type { RouterInterface } from "@/Registry/Registry.types";
+import { logger } from "@/utils";
 
 export const TEST_HOST = "localhost";
 export const TEST_PORT = 4444;

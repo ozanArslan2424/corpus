@@ -1,21 +1,20 @@
-import type { Schema } from "@/utils";
-
 import type { CorsOptions } from "@/C/Cors/Cors.types";
-import type { Method } from "@/C/Method/Method";
 import type { Middleware } from "@/C/Middleware/Middleware";
+import type { Method } from "@/C/Req/Method";
 import type { Res } from "@/C/Res/Res";
 import type { ContextHandler } from "@/C/Route/Route.types";
 import type { RouteBase } from "@/C/RouteBase/RouteBase";
 import type { RouterReturn } from "@/C/Router/Router.types";
+import type { Schema } from "@/utils";
 
 export interface RegistryInterface {
 	baseUrl: string;
 	prefix: string;
 	router: RouterInterface;
 	cors: CorsInterface | null;
-	urlParamsParser: ObjectParserInterface<Record<string, string>>;
-	searchParamsParser: ObjectParserInterface<URLSearchParams>;
-	formDataParser: ObjectParserInterface<FormData>;
+	urlParamsParser: ParserBaseInterface<Record<string, string>>;
+	searchParamsParser: ParserBaseInterface<URLSearchParams>;
+	formDataParser: ParserBaseInterface<FormData>;
 	bodyParser: BodyParserInterface;
 	schemaParser: SchemaParserInterface;
 	reset(): void;
@@ -35,7 +34,7 @@ export interface CorsInterface extends Middleware {
 	handlePreflight: ContextHandler;
 }
 
-export interface ObjectParserInterface<T> {
+export interface ParserBaseInterface<T> {
 	parse(input: T): Record<string, unknown>;
 }
 

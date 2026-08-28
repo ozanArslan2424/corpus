@@ -1,7 +1,7 @@
 import { describe, it, expect } from "bun:test";
 
 import { Exception } from "@/C/Exception/Exception";
-import { HeaderKey } from "@/C/HeaderKey/HeaderKey";
+import { HeaderKey } from "@/C/Headers/HeaderKey";
 import { $registry } from "@/Registry/$registry";
 
 describe("BodyParser", () => {

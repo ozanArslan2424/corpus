@@ -1,4 +1,4 @@
-import { assert, StringBuilder, quote, isNil } from "@ozanarslan/utils";
+import { assert, StringBuilder, quote, isNil } from "@ozanarslan/corpus/utils";
 
 import { Importable } from "@/classes/Importable";
 import type { Config } from "@/config/Config";

@@ -1,7 +1,5 @@
 import { describe, expect, it, afterEach } from "bun:test";
 
-import { objGetValues } from "@/utils";
-
 import { createTestServer, parseBody } from "#testutils";
 import { Context } from "@/C/Context/Context";
 import { Controller } from "@/C/Controller/Controller";
@@ -10,6 +8,7 @@ import { Res } from "@/C/Res/Res";
 import { Route } from "@/C/Route/Route";
 import { RouteBase } from "@/C/RouteBase/RouteBase";
 import { $registry } from "@/Registry/$registry";
+import { objGetValues } from "@/utils";
 
 afterEach(() => $registry.reset());
 

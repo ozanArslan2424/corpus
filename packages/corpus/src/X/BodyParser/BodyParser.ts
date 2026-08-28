@@ -1,24 +1,15 @@
-import { createSafeObject } from "@/utils";
-
 import { Exception } from "@/C/Exception/Exception";
-import { HeaderKey } from "@/C/HeaderKey/HeaderKey";
+import { HeaderKey } from "@/C/Headers/HeaderKey";
 import type { Res } from "@/C/Res/Res";
-import { Status } from "@/C/Status/Status";
-import type { BodyParserInterface, ObjectParserInterface } from "@/Registry/Registry.types";
-
-type NormalizedContentType =
-	| "json"
-	| "form-urlencoded"
-	| "form-data"
-	| "text"
-	| "xml"
-	| "binary"
-	| "unknown";
+import { Status } from "@/C/Res/Status";
+import type { BodyParserInterface, ParserBaseInterface } from "@/Registry/Registry.types";
+import { createSafeObject } from "@/utils";
+import type { NormalizedContentType } from "@/X/BodyParser/BodyParser.types";
 
 export class BodyParser implements BodyParserInterface {
 	constructor(
-		private readonly formDataParser: ObjectParserInterface<FormData>,
-		private readonly searchParamsParser: ObjectParserInterface<URLSearchParams>,
+		private readonly formDataParser: ParserBaseInterface<FormData>,
+		private readonly searchParamsParser: ParserBaseInterface<URLSearchParams>,
 	) {}
 
 	/** This can be used for both request and response bodies */

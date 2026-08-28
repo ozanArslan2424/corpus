@@ -1,3 +1,4 @@
+// oxlint-disable typescript/no-explicit-any
 import { beforeEach, describe, expect, it } from "bun:test";
 
 import { createTestServer, req, parseBody } from "#testutils";

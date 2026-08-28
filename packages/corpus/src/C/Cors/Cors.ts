@@ -1,13 +1,12 @@
-import { isSomeArray, boolToString } from "@/utils";
-
 import type { CorsOptions } from "@/C/Cors/Cors.types";
-import { HeaderKey } from "@/C/HeaderKey/HeaderKey";
+import { HeaderKey } from "@/C/Headers/HeaderKey";
 import type { MiddlewareUseOn, MiddlewareHandler } from "@/C/Middleware/Middleware.types";
 import { Res } from "@/C/Res/Res";
+import { Status } from "@/C/Res/Status";
 import type { ContextHandler } from "@/C/Route/Route.types";
-import { Status } from "@/C/Status/Status";
 import { $registry } from "@/Registry/$registry";
 import type { CorsInterface } from "@/Registry/Registry.types";
+import { isSomeArray, boolToString } from "@/utils";
 
 /**
  * Simple cors helper to set CORS headers. Also provides a preflight handler for the Server.

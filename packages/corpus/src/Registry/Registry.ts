@@ -1,18 +1,17 @@
-import { arrIncludes } from "@/utils";
-
 import type { Middleware } from "@/C/Middleware/Middleware";
 import { joinPathSegments } from "@/C/RouteBase/joinPathSegments";
 import type { RouteBase } from "@/C/RouteBase/RouteBase";
-import { RouteVariant } from "@/C/RouteBase/RouteBase.types";
+import { RouteVariant } from "@/C/RouteBase/RouteVariant";
 import { InternalRouteRegexpMatcher } from "@/C/Router/InternalRouteRegexpMatcher";
 import type {
 	BodyParserInterface,
 	CorsInterface,
-	ObjectParserInterface,
+	ParserBaseInterface,
 	RegistryInterface,
 	RouterInterface,
 	SchemaParserInterface,
 } from "@/Registry/Registry.types";
+import { arrIncludes } from "@/utils";
 import { BodyParser } from "@/X/BodyParser/BodyParser";
 import { FormDataParser } from "@/X/FormDataParser/FormDataParser";
 import { SchemaParser } from "@/X/SchemaParser/SchemaParser";
@@ -41,11 +40,11 @@ export class Registry implements RegistryInterface {
 
 	cors!: CorsInterface | null;
 
-	urlParamsParser!: ObjectParserInterface<Record<string, string>>;
+	urlParamsParser!: ParserBaseInterface<Record<string, string>>;
 
-	searchParamsParser!: ObjectParserInterface<URLSearchParams>;
+	searchParamsParser!: ParserBaseInterface<URLSearchParams>;
 
-	formDataParser!: ObjectParserInterface<FormData>;
+	formDataParser!: ParserBaseInterface<FormData>;
 
 	bodyParser!: BodyParserInterface;
 

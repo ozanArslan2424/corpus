@@ -1,6 +1,5 @@
-import { enumerate, type ValueOf, type Schema } from "@/utils";
-
-import type { Method } from "@/C/Method/Method";
+import type { Method } from "@/C/Req";
+import type { Schema } from "@/utils";
 
 export type RouteHandleInput<B, S, P> = {
 	body?: B;
@@ -8,16 +7,6 @@ export type RouteHandleInput<B, S, P> = {
 	params?: P;
 	headers?: HeadersInit;
 };
-
-export const RouteVariant = enumerate({
-	static: "static",
-	file: "file",
-	dynamic: "dynamic",
-	websocket: "websocket",
-	bundle: "bundle",
-});
-
-export type RouteVariant = ValueOf<typeof RouteVariant>;
 
 export type RouteAddress<E extends string = string> =
 	| E

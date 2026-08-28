@@ -1,5 +1,11 @@
-import type { OrString } from "@ozanarslan/corpus";
-import { toPascalCase, toCamelCase, toKebabCase, quote, isNil } from "@ozanarslan/utils";
+import {
+	toPascalCase,
+	toCamelCase,
+	toKebabCase,
+	quote,
+	isNil,
+	type OrString,
+} from "@ozanarslan/corpus/utils";
 
 import { Importable } from "@/classes/Importable";
 import type { Config } from "@/config/Config";

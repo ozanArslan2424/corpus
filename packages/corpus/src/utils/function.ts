@@ -1,7 +1,9 @@
+// oxlint-disable-next-line typescript/no-explicit-any
 export type Func<Args extends any[] = any[], Return = any> = (...args: Args) => Return;
 
 export const noop = () => {};
 
+// oxlint-disable-next-line typescript/no-explicit-any
 export function isFunction<T>(input: T): input is Extract<T, (...args: any[]) => any> {
 	return typeof input === "function";
 }

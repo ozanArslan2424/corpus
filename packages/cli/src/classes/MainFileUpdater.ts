@@ -8,7 +8,7 @@ import {
 	objGetKeys,
 	objGetEntries,
 	StringReader,
-} from "@ozanarslan/utils";
+} from "@ozanarslan/corpus/utils";
 import type { Node } from "oxc-parser";
 
 import { FileParser } from "@/classes/FileParser";

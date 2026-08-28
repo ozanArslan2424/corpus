@@ -6,8 +6,8 @@ import { Cors } from "@/C/Cors/Cors";
 import { Exception } from "@/C/Exception/Exception";
 import { Middleware } from "@/C/Middleware/Middleware";
 import { Res } from "@/C/Res/Res";
+import { Status } from "@/C/Res/Status";
 import { Route } from "@/C/Route/Route";
-import { Status } from "@/C/Status/Status";
 import { $registry } from "@/Registry/$registry";
 
 let s = createTestServer();

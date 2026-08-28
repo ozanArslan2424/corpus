@@ -1,9 +1,8 @@
-import { isString, isNil } from "@/utils";
-
 import { FileRouteAbstract } from "@/C/FileRoute/FileRoute.abstract";
 import type { FileRouteDefinition } from "@/C/FileRoute/FileRoute.types";
 import { resolveRouteAddress } from "@/C/RouteBase/resolveRouteAddress";
 import type { RouteAddress } from "@/C/RouteBase/RouteBase.types";
+import { isString, isNil } from "@/utils";
 
 /**
  * Defines a route that serves a static file. Accepts a path and a {@link FileRouteDefinition}

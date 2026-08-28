@@ -1,11 +1,10 @@
-import type { Func } from "@/utils";
-
-import type { Method } from "@/C/Method/Method";
 import type { Middleware } from "@/C/Middleware/Middleware";
 import type { MiddlewareUseOn } from "@/C/Middleware/Middleware.types";
+import type { Method } from "@/C/Req/Method";
 import type { RouteBase } from "@/C/RouteBase/RouteBase";
 import type { RouterReturn } from "@/C/Router/Router.types";
 import type { RouterInterface } from "@/Registry/Registry.types";
+import type { Func } from "@/utils";
 
 type Store = Map<Method, RouteBase>;
 

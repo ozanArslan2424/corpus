@@ -1,8 +1,7 @@
 import { createSafeObject } from "@/utils";
+import { ParserBase } from "@/X/ParserBase/ParserBase";
 
-import { ObjectParserAbstract } from "@/X/ObjectParserAbstract/ObjectParserAbstract";
-
-export class SearchParamsParser extends ObjectParserAbstract<URLSearchParams> {
+export class SearchParamsParser extends ParserBase<URLSearchParams> {
 	parse(searchParams: URLSearchParams): Record<string, unknown> {
 		const result = createSafeObject();
 

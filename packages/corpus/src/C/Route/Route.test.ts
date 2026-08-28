@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "bun:test";
 
 import { createTestServer, req } from "#testutils";
-import { Method } from "@/C/Method/Method";
+import { Method } from "@/C/Req/Method";
 import { Route } from "@/C/Route/Route";
 import { RouteAbstract } from "@/C/Route/Route.abstract";
 import { $registry } from "@/Registry/$registry";

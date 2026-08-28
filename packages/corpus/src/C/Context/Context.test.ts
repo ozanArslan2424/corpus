@@ -1,16 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 
-import { createSafeObject } from "@/utils";
 import { type } from "arktype";
 
 import { TEST_HOST, TEST_PORT } from "#testutils";
 import { Context } from "@/C/Context/Context";
-import { HeaderKey } from "@/C/HeaderKey/HeaderKey";
+import { Cookies } from "@/C/Cookies/Cookies";
+import { HeaderKey } from "@/C/Headers/HeaderKey";
 import { Res } from "@/C/Res/Res";
+import { Status } from "@/C/Res/Status";
 import { Route } from "@/C/Route/Route";
 import { Server } from "@/C/Server/Server";
-import { Status } from "@/C/Status/Status";
 import { $registry } from "@/Registry/$registry";
+import { createSafeObject } from "@/utils";
 
 const method = "POST";
 const endpoint = "/hello/:world";
@@ -47,7 +48,7 @@ const plainCookies = {
 	with: "chocolate-chips",
 };
 
-const cookies = new Bun.CookieMap(plainCookies);
+const cookies = new Cookies(plainCookies);
 
 const plainHeaders = {
 	[HeaderKey.Authorization]: "Bearer user",
@@ -216,7 +217,7 @@ describe("Context", () => {
 		});
 
 		it("get cookies", () => {
-			expect(context.cookies).toBeInstanceOf(Bun.CookieMap);
+			expect(context.cookies).toBeInstanceOf(Cookies);
 			for (const [key, val] of Object.entries(plainCookies)) {
 				expect(context.cookies.get(key)).toBe(val);
 			}
@@ -224,7 +225,7 @@ describe("Context", () => {
 
 		it("set cookies - cookies is readonly", () => {
 			expect(context.cookies).toEqual(cookies);
-			const newCookies = new Bun.CookieMap({ something: "new" });
+			const newCookies = new Cookies({ something: "new" });
 			expect(() => {
 				// @ts-expect-error
 				context.cookies = newCookies;

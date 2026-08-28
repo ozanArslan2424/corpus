@@ -1,17 +1,21 @@
-import { type Func, isNil } from "@/utils";
-
-import { CacheControlDirective } from "@/C/CacheControlDirective/CacheControlDirective";
-import { ContentDispositionDirective } from "@/C/ContentDispositionDirective/ContentDispositionDirective";
 import type { Context } from "@/C/Context/Context";
 import { Exception } from "@/C/Exception/Exception";
-import { HeaderKey } from "@/C/HeaderKey/HeaderKey";
-import { Method } from "@/C/Method/Method";
+import { createCacheControlHeader } from "@/C/Headers/createCacheControlHeader";
+import { createContentDispositionHeader } from "@/C/Headers/createContentDispositionHeader";
+import { HeaderKey } from "@/C/Headers/HeaderKey";
+import type {
+	CacheControlDefinition,
+	ContentDispositionDefinition,
+} from "@/C/Headers/Headers.types";
+import { Method } from "@/C/Req/Method";
 import { Res } from "@/C/Res/Res";
+import { Status } from "@/C/Res/Status";
 import { RouteBase } from "@/C/RouteBase/RouteBase";
-import { RouteVariant } from "@/C/RouteBase/RouteBase.types";
 import type { StaticRouteRes } from "@/C/StaticRoute/StaticRoute.types";
-import { Status } from "@/C/Status/Status";
+import { type Func, isNil } from "@/utils";
 import { XFile } from "@/X/XFile/XFile";
+
+import { RouteVariant } from "../RouteBase/RouteVariant";
 
 export abstract class FileRouteAbstract<E extends string = string> extends RouteBase<
 	never,
@@ -26,9 +30,9 @@ export abstract class FileRouteAbstract<E extends string = string> extends Route
 
 	override method: Method = Method.GET;
 
-	protected disposition?: ContentDispositionDirective["disposition"] | undefined = undefined;
+	protected disposition?: ContentDispositionDefinition["disposition"] | undefined = undefined;
 
-	protected cache: CacheControlDirective = { public: true, maxAge: 3600, noCache: false };
+	protected cache: CacheControlDefinition = { public: true, maxAge: 3600, noCache: false };
 
 	protected onFileNotFound: Func<[], Promise<Res>> = () => {
 		throw new Exception(Status.NOT_FOUND.toString(), Status.NOT_FOUND);
@@ -38,7 +42,7 @@ export abstract class FileRouteAbstract<E extends string = string> extends Route
 		[Context<never, never, never, StaticRouteRes>],
 		Bun.MaybePromise<StaticRouteRes>
 	> {
-		const cacheHeader = CacheControlDirective.createHeaderString(this.cache);
+		const cacheHeader = createCacheControlHeader(this.cache);
 
 		return async (c) => {
 			const file = new XFile(this.filePath);
@@ -51,7 +55,7 @@ export abstract class FileRouteAbstract<E extends string = string> extends Route
 				c.res.headers.set(HeaderKey.CacheControl, cacheHeader);
 				c.res.headers.set(
 					HeaderKey.ContentDisposition,
-					ContentDispositionDirective.createHeaderString({
+					createContentDispositionHeader({
 						disposition: this.disposition,
 						filename: file.fullname,
 					}),

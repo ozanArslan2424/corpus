@@ -1,4 +1,4 @@
-import type { Nullable } from "@ozanarslan/utils";
+import type { Nullable } from "@ozanarslan/corpus/utils";
 
 import { getArkSchemas } from "./getArkSchemas";
 import { getYupSchemas } from "./getYupSchemas";

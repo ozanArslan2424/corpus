@@ -1,0 +1,37 @@
+import { enumerate, type ValueOf, type OrString } from "@/utils";
+
+export const HeaderKey = enumerate({
+	CacheControl: "Cache-Control",
+	ContentType: "Content-Type",
+	ContentLength: "Content-Length",
+	ContentDisposition: "Content-Disposition",
+	AcceptEncoding: "Accept-Encoding",
+	Accept: "Accept",
+	Authorization: "Authorization",
+	UserAgent: "User-Agent",
+	Host: "Host",
+	Referer: "Referer",
+	Connection: "Connection",
+	Upgrade: "Upgrade",
+	Pragma: "Pragma",
+	Date: "Date",
+	IfNoneMatch: "If-None-Match",
+	IfModifiedSince: "If-Modified-Since",
+	ETag: "ETag",
+	Expires: "Expires",
+	LastModified: "Last-Modified",
+	Location: "Location",
+	WWWAuthenticate: "WWW-Authenticate",
+	AccessControlMaxAge: "Access-Control-Max-Age",
+	AccessControlAllowCredentials: "Access-Control-Allow-Credentials",
+	AccessControlRequestMethod: "Access-Control-Request-Method",
+	AccessControlExposeHeaders: "Access-Control-Expose-Headers",
+	AccessControlAllowOrigin: "Access-Control-Allow-Origin",
+	AccessControlAllowMethods: "Access-Control-Allow-Methods",
+	AccessControlAllowHeaders: "Access-Control-Allow-Headers",
+	SetCookie: "Set-Cookie",
+	Cookie: "Cookie",
+	Vary: "Vary",
+});
+
+export type HeaderKey = OrString<ValueOf<typeof HeaderKey>>;

@@ -1,4 +1,4 @@
-import { assert, quote } from "@ozanarslan/utils";
+import { assert, quote } from "@ozanarslan/corpus/utils";
 
 import { MainFileUpdater } from "@/classes/MainFileUpdater";
 import { Resource } from "@/classes/Resource";

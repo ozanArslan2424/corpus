@@ -8,7 +8,7 @@ import {
 	type OrString,
 	logFatal,
 	objGetEntries,
-} from "@ozanarslan/utils";
+} from "@ozanarslan/corpus/utils";
 
 import { FileParser, type FileParserCallback } from "@/classes/FileParser";
 import type { Config } from "@/config/Config";

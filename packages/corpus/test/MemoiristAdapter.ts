@@ -1,7 +1,7 @@
 import Memoirist from "memoirist";
 
-import type { Method } from "@/C/Method/Method";
 import type { Middleware } from "@/C/Middleware/Middleware";
+import type { Method } from "@/C/Req/Method";
 import type { RouteBase } from "@/C/RouteBase/RouteBase";
 import type { RouterReturn } from "@/C/Router/Router.types";
 import type { RouterInterface } from "@/Registry/Registry.types";

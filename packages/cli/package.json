@@ -39,7 +39,6 @@
 	},
 	"devDependencies": {
 		"@ozanarslan/corpus": "workspace:*",
-		"@ozanarslan/utils": "workspace:*",
 		"@types/bun": "^1.4.0",
 		"arktype": "^2.2.3",
 		"tsdown": "^0.22.14",

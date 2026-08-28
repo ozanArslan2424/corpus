@@ -1,7 +1,6 @@
-import { isNil } from "@/utils";
-
 import { BundleRouteAbstract } from "@/C/BundleRoute/BundleRoute.abstract";
 import type { BundleRouteCacheConfig } from "@/C/BundleRoute/BundleRoute.types";
+import { isNil } from "@/utils";
 
 export class BundleRoute<E extends string = string> extends BundleRouteAbstract<E> {
 	constructor(path: E, dir: string, cache?: BundleRouteCacheConfig) {

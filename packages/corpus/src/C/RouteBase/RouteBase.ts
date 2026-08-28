@@ -1,13 +1,15 @@
-import { isObject, objGetEntries } from "@/utils";
-
 import { Context } from "@/C/Context/Context";
-import { HeaderKey } from "@/C/HeaderKey/HeaderKey";
-import { Method } from "@/C/Method/Method";
+import { HeaderKey } from "@/C/Headers/HeaderKey";
+import { Method } from "@/C/Req/Method";
 import type { ContextHandler } from "@/C/Route/Route.types";
 import { joinPathSegments } from "@/C/RouteBase/joinPathSegments";
-import type { RouteVariant, RouteModel, RouteHandleInput } from "@/C/RouteBase/RouteBase.types";
+import type { RouteModel, RouteHandleInput } from "@/C/RouteBase/RouteBase.types";
 import { $registry } from "@/Registry/$registry";
+import { isObject, objGetEntries } from "@/utils";
 
+import type { RouteVariant } from "./RouteVariant";
+
+// oxlint-disable-next-line typescript/no-explicit-any
 export abstract class RouteBase<B = any, S = any, P = any, R = any, E extends string = string> {
 	get id(): string {
 		return `${this.method.toUpperCase()} ${this.endpoint}`;

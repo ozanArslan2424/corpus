@@ -1,6 +1,5 @@
-import type { Func } from "@/utils";
-
 import type { ServerWebSocket } from "@/C/Server/Server.types";
+import type { Func } from "@/utils";
 
 export type WebSocketOnOpen = Func<[ws: ServerWebSocket], Bun.MaybePromise<void>>;
 export type WebSocketOnClose = Func<

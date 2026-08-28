@@ -1,8 +1,7 @@
 import { createSafeObject } from "@/utils";
+import { ParserBase } from "@/X/ParserBase/ParserBase";
 
-import { ObjectParserAbstract } from "@/X/ObjectParserAbstract/ObjectParserAbstract";
-
-export class FormDataParser extends ObjectParserAbstract<FormData> {
+export class FormDataParser extends ParserBase<FormData> {
 	parse(formData: FormData): Record<string, unknown> {
 		const result = createSafeObject();
 

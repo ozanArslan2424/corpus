@@ -1,3 +1,4 @@
+// oxlint-disable typescript/no-explicit-any
 import { logger as alwaysLog, type Logger } from "@/utils/logger";
 
 export class TestHelper {

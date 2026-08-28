@@ -1,8 +1,7 @@
-import { isObjectWith, type Schema, type ValidationIssues } from "@/utils";
-
 import { Exception } from "@/C/Exception/Exception";
-import { Status } from "@/C/Status/Status";
+import { Status } from "@/C/Res/Status";
 import type { SchemaParserInterface } from "@/Registry/Registry.types";
+import { isObjectWith, type Schema, type ValidationIssues } from "@/utils";
 
 export class SchemaParser implements SchemaParserInterface {
 	async parse<T = Record<string, unknown>>(
@@ -22,7 +21,8 @@ export class SchemaParser implements SchemaParserInterface {
 	parseSync<T = Record<string, unknown>>(label: string, data: unknown, schema?: Schema<T>): T {
 		if (!schema) return data as T;
 		const result = schema["~standard"].validate(data);
-		if (result instanceof Promise || typeof (result as any)?.then === "function") {
+		const isThenable = "then" in result && typeof result?.then === "function";
+		if (result instanceof Promise || isThenable) {
 			throw new Error("parseSync called with async validator — use a sync schema library");
 		}
 		if (result.issues !== undefined) {

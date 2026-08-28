@@ -1,8 +1,6 @@
-import { noop, type Maybe } from "@/utils";
-
 import { Context } from "@/C/Context/Context";
-import { HeaderKey } from "@/C/HeaderKey/HeaderKey";
-import { Method } from "@/C/Method/Method";
+import { HeaderKey } from "@/C/Headers/HeaderKey";
+import { Method } from "@/C/Req/Method";
 import type { ContextHandler } from "@/C/Route/Route.types";
 import { composeHandlerChain } from "@/C/Server/composeHandlerChain";
 import { ServerAbstract } from "@/C/Server/Server.abstract";
@@ -13,6 +11,7 @@ import type {
 	ServerRouteMap,
 } from "@/C/Server/Server.types";
 import { $registry } from "@/Registry/$registry";
+import { noop, type Maybe } from "@/utils";
 
 export class Server extends ServerAbstract {
 	constructor(opts?: ServerOptions) {

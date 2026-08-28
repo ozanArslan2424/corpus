@@ -1,6 +1,6 @@
 import fs from "fs";
 
-import { assert, objGetEntries, objGetValues, StringBuilder } from "@ozanarslan/utils";
+import { assert, objGetEntries, objGetValues, StringBuilder } from "@ozanarslan/corpus/utils";
 
 import { Importable } from "@/classes/Importable";
 import { MainFileUpdater } from "@/classes/MainFileUpdater";

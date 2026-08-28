@@ -1,37 +1,16 @@
----
-toc:
-  - title: Title1
-    url: "#title1"
-  - title: Title2
-    url: "#title2"
-  - title: Title3
-    url: "#title3"
----
+import type { InferSchemaOut, Schema, Prettify } from "@/utils";
 
-# InferModel
+import type { RouteModel } from "@/C/RouteBase/RouteBase.types";
 
-explanation
-
-## Extends x, y
-
-This object extends [x](/x) which itself extends [y](/y).
-
-## Title1
-
-explanation
-
-### example or subtitle
-
-explanation or code block
-
-## Title2
-
-### example or subtitle
-
-explanation or code block
-
-## Title3
-
-### example or subtitle
-
-explanation or code block
+/** If you prefer to put all schemas into a single object, this will be helpful */
+export type InferModel<T extends Record<string, any>> = {
+[K in keyof T as K extends "prototype" ? never : K]: T[K] extends RouteModel<any, any, any, any>
+? Prettify<
+(T[K]["body"] extends Schema ? { body: InferSchemaOut<T[K]["body"]> } : {}) &
+(T[K]["search"] extends Schema ? { search: InferSchemaOut<T[K]["search"]> } : {}) &
+(T[K]["params"] extends Schema ? { params: InferSchemaOut<T[K]["params"]> } : {}) &
+(T[K]["response"] extends Schema ? { response: InferSchemaOut<T[K]["response"]> } : {}) >
+: T[K] extends Schema
+? InferSchemaOut<T[K]>
+: never;
+};

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "bun:test";
 
 import { createTestServer } from "#testutils";
-import { Method } from "@/C/Method/Method";
+import { Method } from "@/C/Req/Method";
 import { WebSocketRoute } from "@/C/WebSocketRoute/WebSocketRoute";
 import { $registry } from "@/Registry/$registry";
 

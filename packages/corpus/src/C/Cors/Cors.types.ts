@@ -1,4 +1,4 @@
-import type { HeaderKey } from "@/C/HeaderKey/HeaderKey";
+import type { HeaderKey } from "@/C/Headers/HeaderKey";
 
 export type CorsOptions = {
 	/** Which origins are allowed to access the resource. Use ["*"] for any origin, or specific domains. */
