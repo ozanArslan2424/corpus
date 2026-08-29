@@ -162,16 +162,11 @@ function countChars(str: string, char: string): number {
 	return str.split(char).length - 1;
 }
 
-function getIndentLevel(line: string): number {
-	let level = 0;
-	while (line[level] === "\t") {
-		level++;
-	}
-	return level;
+function getIndentStr(line: string): string {
+	return line.match(/^[\t ]*/)?.[0] ?? "";
 }
 
-function toJsdoc(indentLevel: number, sections: Array<Section>): string {
-	const indent = "\t".repeat(indentLevel);
+function toJsdoc(indent: string, sections: Array<Section>): string {
 	const tagged = sections.map(tagExample).map(tagExtends);
 	const nonEmpty = tagged.filter((s) => s.lines.length > 0);
 	const lines = nonEmpty.flatMap((s, i) => (i === 0 ? s.lines : ["", ...s.lines]));
@@ -260,7 +255,7 @@ async function injectDocsIntoDts(dtsFile: string, sections: Array<Section>) {
 			const paramSections = getSubSections(name, "param");
 			if (!paramSections.length) continue;
 			const line = reader.getLineOfCharIndex(param.start);
-			const indent = getIndentLevel(line);
+			const indent = getIndentStr(line);
 			const jsdoc = toJsdoc(indent, paramSections);
 			const lineNumber = reader.getLineNumber(line);
 			addInsertion(lineNumber, jsdoc);
@@ -276,7 +271,7 @@ async function injectDocsIntoDts(dtsFile: string, sections: Array<Section>) {
 			const propSections = getSubSections(name, "property");
 			if (!propSections.length) continue;
 			const line = reader.getLineOfCharIndex(member.start);
-			const indent = getIndentLevel(line);
+			const indent = getIndentStr(line);
 			const jsdoc = toJsdoc(indent, propSections);
 			const lineNumber = reader.getLineNumber(line);
 			addInsertion(lineNumber, jsdoc);
@@ -290,7 +285,7 @@ async function injectDocsIntoDts(dtsFile: string, sections: Array<Section>) {
 		const extendsSections = getSections(title, "extends");
 		if (!sections.length) return;
 		const line = reader.getLineOfCharIndex(node.start);
-		const indent = getIndentLevel(line);
+		const indent = getIndentStr(line);
 		const jsdocSections = [...sections];
 		// no need to decipher all this through the parser,
 		// just write correct documentation...
@@ -311,7 +306,7 @@ async function injectDocsIntoDts(dtsFile: string, sections: Array<Section>) {
 		const sections = getSubSections(title, "property");
 		if (!sections.length) return;
 		const line = reader.getLineOfCharIndex(node.start);
-		const indent = getIndentLevel(line);
+		const indent = getIndentStr(line);
 		const jsdoc = toJsdoc(indent, sections);
 		const lineNumber = reader.getLineNumber(line);
 		addInsertion(lineNumber, jsdoc);
@@ -358,7 +353,7 @@ async function injectDocsIntoDts(dtsFile: string, sections: Array<Section>) {
 		const sections = getSections(title, "plain");
 		if (!sections.length) return;
 		const line = reader.getLineOfCharIndex(node.start);
-		const indent = getIndentLevel(line);
+		const indent = getIndentStr(line);
 		const jsdoc = toJsdoc(indent, sections);
 		const lineNumber = reader.getLineNumber(line);
 		addInsertion(lineNumber, jsdoc);

@@ -1,21 +1,15 @@
 import path from "path";
 
 import type { BundleRouteCacheConfig } from "@/C/BundleRoute/BundleRoute.types";
-import { Exception } from "@/C/Exception/Exception";
-import { createCacheControlHeader } from "@/C/Headers/createCacheControlHeader";
-import { createContentDispositionHeader } from "@/C/Headers/createContentDispositionHeader";
-import { HeaderKey } from "@/C/Headers/HeaderKey";
-import { Method } from "@/C/Req/Method";
-import type { Res } from "@/C/Res/Res";
-import { Status } from "@/C/Res/Status";
-import type { ContextHandler } from "@/C/Route/Route.types";
-import { RouteBase } from "@/C/RouteBase/RouteBase";
-import type { RouteModel } from "@/C/RouteBase/RouteBase.types";
-import type { StaticRouteRes } from "@/C/StaticRoute/StaticRoute.types";
-import type { Func } from "@/utils";
-import { XFile } from "@/X/XFile/XFile";
-
-import { RouteVariant } from "../RouteBase/RouteVariant";
+import { Exception } from "@/C/Exception";
+import { createCacheControlHeader, HeaderKey, createContentDispositionHeader } from "@/C/Headers";
+import { Method } from "@/C/Req";
+import { Res, Status } from "@/C/Res";
+import type { ContextHandler } from "@/C/Route";
+import { RouteBase, RouteVariant, type RouteModel } from "@/C/RouteBase";
+import type { StaticRouteRes } from "@/C/StaticRoute";
+import { type Func, isNull, objGetEntries } from "@/utils";
+import { XFile } from "@/X/XFile";
 
 export abstract class BundleRouteAbstract<E extends string = string> extends RouteBase<
 	never,
@@ -29,6 +23,7 @@ export abstract class BundleRouteAbstract<E extends string = string> extends Rou
 	override readonly model?: RouteModel<never, never, never, StaticRouteRes> | undefined = undefined;
 
 	abstract readonly dir: string;
+	protected readonly indexHtml: string = "index.html";
 	protected assetsDir: string = "assets";
 	protected ignore: string[] = [];
 	protected cache: BundleRouteCacheConfig = {
@@ -54,30 +49,34 @@ export abstract class BundleRouteAbstract<E extends string = string> extends Rou
 		throw new Exception(`${subPath} file was not found.`, Status.NOT_FOUND);
 	};
 
-	protected onIgnore: Func<[], Bun.MaybePromise<Res>> = () => {
-		return this.onFileNotFound("");
-	};
+	protected async resolveFile(targetPath: string): Promise<XFile | null> {
+		let file = new XFile(targetPath);
+		let exists = await file.exists();
 
-	override handler: ContextHandler<never, never, never, StaticRouteRes> = async (c) => {
-		const idx = "index.html";
-		const pathname = c.url.pathname;
+		if (!exists && file.extension !== "html") {
+			const idxPath = path.join(this.dir, this.indexHtml);
+			const idxFile = new XFile(idxPath);
 
+			if (await idxFile.exists()) {
+				file = idxFile;
+				exists = true;
+			}
+		}
+
+		return exists ? file : null;
+	}
+
+	protected resolveSubPath(pathname: string): string {
 		const base = this.endpoint.endsWith("/*")
 			? this.endpoint.slice(0, -2)
 			: this.endpoint.endsWith("*")
 				? this.endpoint.slice(0, -1)
 				: this.endpoint;
-		const subPath = base && pathname.startsWith(base) ? pathname.slice(base.length) : pathname;
+		return base && pathname.startsWith(base) ? pathname.slice(base.length) : pathname;
+	}
 
-		const relFilePath = subPath === "" || subPath === "/" ? idx : subPath;
-		const targetPath = path.join(this.dir, relFilePath);
-
-		// guard against traversal
-		const root = path.resolve(this.dir);
-		const resolved = path.resolve(targetPath);
-		if (resolved !== root && !resolved.startsWith(root + path.sep)) {
-			return this.onFileNotFound(subPath);
-		}
+	protected resolveTargetPath(subPath: string): string {
+		const relFilePath = subPath === "" || subPath === "/" ? this.indexHtml : subPath;
 
 		const isIgnored = this.ignore.some((pattern) => {
 			if (pattern.endsWith("*")) {
@@ -87,30 +86,20 @@ export abstract class BundleRouteAbstract<E extends string = string> extends Rou
 			return relFilePath === pattern || relFilePath === `/${pattern}`;
 		});
 
-		if (isIgnored) {
-			return this.onIgnore();
-		}
+		return path.join(this.dir, isIgnored ? this.indexHtml : relFilePath);
+	}
 
-		let file = new XFile(targetPath);
-		let exists = await file.exists();
+	protected isTraversalAttempt(targetPath: string): boolean {
+		const root = path.resolve(this.dir);
+		const resolved = path.resolve(targetPath);
+		return resolved !== root && !resolved.startsWith(root + path.sep);
+	}
 
-		if (!exists && file.extension !== "html") {
-			const idxPath = path.join(this.dir, idx);
-			const idxFile = new XFile(idxPath);
-
-			if (await idxFile.exists()) {
-				file = idxFile;
-				exists = true;
-			}
-		}
-
-		if (!exists) {
-			return this.onFileNotFound(subPath);
-		}
-
-		let cacheHeader = "";
-
-		if (file.fullname === idx) {
+	protected async resolveResponseData(
+		file: XFile,
+	): Promise<[ReadableStream | string, Record<string, string>]> {
+		let cacheHeader: string = "";
+		if (file.fullname === this.indexHtml) {
 			cacheHeader = createCacheControlHeader(this.cache.indexHtml);
 		} else if (file.path.includes(`/${this.assetsDir}/`)) {
 			cacheHeader = createCacheControlHeader(this.cache.assetsDir);
@@ -120,22 +109,47 @@ export abstract class BundleRouteAbstract<E extends string = string> extends Rou
 
 		if (file.extension !== "html") {
 			const stream = await file.stream();
-			c.res.headers.set(HeaderKey.ContentType, file.mimeType);
-			c.res.headers.set(HeaderKey.CacheControl, cacheHeader);
-			c.res.headers.set(
-				HeaderKey.ContentDisposition,
-				createContentDispositionHeader({
-					disposition: "inline",
-					filename: file.fullname,
-				}),
-			);
-			return stream;
+			return [
+				stream,
+				{
+					[HeaderKey.ContentType]: file.mimeType,
+					[HeaderKey.CacheControl]: cacheHeader,
+					[HeaderKey.ContentDisposition]: createContentDispositionHeader({
+						disposition: "inline",
+						filename: file.fullname,
+					}),
+				},
+			];
 		}
 
 		const content = await file.text();
-		c.res.headers.set(HeaderKey.ContentType, file.mimeType);
-		c.res.headers.set(HeaderKey.ContentLength, content.length.toString());
-		c.res.headers.set(HeaderKey.CacheControl, cacheHeader);
-		return content;
+		return [
+			content,
+			{
+				[HeaderKey.ContentType]: file.mimeType,
+				[HeaderKey.ContentLength]: content.length.toString(),
+				[HeaderKey.CacheControl]: cacheHeader,
+			},
+		];
+	}
+
+	override handler: ContextHandler<never, never, never, StaticRouteRes> = async (c) => {
+		const subPath = this.resolveSubPath(c.url.pathname);
+		const targetPath = this.resolveTargetPath(subPath);
+
+		if (this.isTraversalAttempt(targetPath)) {
+			return this.onFileNotFound(subPath);
+		}
+
+		const file = await this.resolveFile(targetPath);
+		if (isNull(file)) {
+			return this.onFileNotFound(subPath);
+		}
+
+		const [data, headers] = await this.resolveResponseData(file);
+		for (const [key, value] of objGetEntries(headers)) {
+			c.res.headers.set(key, value);
+		}
+		return data;
 	};
 }
