@@ -14,7 +14,7 @@ import {
 	sourceStems,
 	testBoilerplate,
 	typesBoilerplate,
-} from "./moduleScaffold";
+} from "./utils";
 
 async function newModule() {
 	const args = process.argv.slice(2);
@@ -52,7 +52,7 @@ async function newModule() {
 	await fs.writeFile(path.join(moduleDir, `${name}.types.ts`), typesBoilerplate(name), "utf8");
 
 	for (const stem of sourceStems(name)) {
-		await fs.writeFile(path.join(moduleDir, `${stem}.docs.md`), docsBoilerplate(stem), "utf8");
+		await fs.writeFile(path.join(moduleDir, `${stem}.md`), docsBoilerplate(stem), "utf8");
 	}
 
 	const exportPath = `./${name}`;

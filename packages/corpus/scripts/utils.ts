@@ -21,7 +21,7 @@ export async function listModuleDirs(group: Group): Promise<Array<{ name: string
 		.map((entry) => ({ name: entry.name, dir: path.join(groupDir, entry.name) }));
 }
 
-/** The stems (filename without `.ts`) of every source file a module owns, aside from `index.ts` and the test file. Each one gets its own `.docs.md`. */
+/** The stems (filename without `.ts`) of every source file a module owns, aside from `index.ts` and the test file. Each one gets its own `.md`. */
 export function sourceStems(name: string): Array<string> {
 	return [name, `${name}.abstract`, `${name}.types`];
 }
@@ -32,7 +32,7 @@ export function expectedFiles(name: string): Array<string> {
 		"index.ts",
 		...stems.map((stem) => `${stem}.ts`),
 		`${name}.test.ts`,
-		...stems.map((stem) => `${stem}.docs.md`),
+		...stems.map((stem) => `${stem}.md`),
 	];
 }
 

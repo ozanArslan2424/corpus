@@ -12,7 +12,7 @@ import {
 	sourceStems,
 	testBoilerplate,
 	typesBoilerplate,
-} from "./moduleScaffold";
+} from "./utils";
 
 async function addMissingFiles() {
 	const args = process.argv.slice(2);
@@ -51,7 +51,7 @@ async function addMissingFiles() {
 			}
 
 			for (const stem of sourceStems(mod.name)) {
-				const fileName = `${stem}.docs.md`;
+				const fileName = `${stem}.md`;
 				const filePath = path.join(mod.dir, fileName);
 				const exists = await fileExists(filePath);
 				if (exists) continue;

@@ -32,8 +32,6 @@ interface Insertion {
 	jsdoc: string;
 }
 
-const DOCS_MD_EXT = ".docs.md";
-
 async function walkDtsFiles(dir: string): Promise<Array<string>> {
 	const entries = await fs.readdir(dir, { withFileTypes: true });
 	const files: Array<string> = [];
@@ -54,7 +52,7 @@ async function readDocsFile(
 	dtsFile: string,
 ): Promise<Nullable<string>> {
 	const rel = path.relative(outdir, dtsFile);
-	const mdPath = path.join(srcdir, rel.replace(/\.d\.ts$/, DOCS_MD_EXT));
+	const mdPath = path.join(srcdir, rel.replace(/\.d\.ts$/, ".md"));
 	const exists = await fs.exists(mdPath);
 	if (!exists) return null;
 	return await fs.readFile(mdPath, "utf8");

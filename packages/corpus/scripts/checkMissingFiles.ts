@@ -1,12 +1,6 @@
 import path from "path";
 
-import {
-	expectedFiles,
-	fileExists,
-	listModuleDirs,
-	parseGroupFlag,
-	resolveGroups,
-} from "./moduleScaffold";
+import { expectedFiles, fileExists, listModuleDirs, parseGroupFlag, resolveGroups } from "./utils";
 
 async function checkMissingFiles() {
 	const groups = resolveGroups(parseGroupFlag(process.argv.slice(2)));
