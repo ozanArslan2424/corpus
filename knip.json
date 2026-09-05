@@ -5,25 +5,30 @@
 			"ignoreBinaries": ["release.zsh"]
 		},
 		"packages/cli": {
-			"entry": ["src/index.ts", "tsdown.config.ts", "test/other/*.ts"],
-			"project": ["src/**/*.ts", "test/**/*.ts"],
-			"ignore": ["test/other/generated.ts"]
-		},
-		"packages/corpus": {
 			"entry": [
 				"src/index.ts",
-				"src/C.ts",
-				"src/X.ts",
-				"build.ts",
+				"tsdown.config.ts",
+				"corpus.config.ts",
 				"test/**/*.test.ts",
-				"test/other/*.ts"
+				"test/other/**/*.ts"
 			],
-			"project": ["src/**/*.ts", "test/**/*.ts"],
-			"ignore": ["test/fixtures/**"]
+			"project": ["src/**/*.ts", "test/**/*.ts", "corpus.config.ts", "tsdown.config.ts"],
+			"ignore": ["test/app/**", "test/other/apigen/generated.ts"]
+		},
+		"packages/corpus": {
+			"entry": ["src/index.ts", "scripts/*.ts", "src/**/*.test.ts", "test/*.test.ts"],
+			"project": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts"]
 		},
 		"packages/docs": {
-			"entry": ["build.ts", "src/index.ts", "src/js/*.js"],
-			"project": ["src/**/*.{ts,js}"]
+			"entry": [
+				"build.ts",
+				"src/index.ts",
+				"src/serve.ts",
+				"src/check-hrefs.ts",
+				"src/check-llms.ts",
+				"src/files/scripts/*.ts"
+			],
+			"project": ["build.ts", "src/**/*.ts"]
 		}
 	}
 }

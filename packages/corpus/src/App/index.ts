@@ -239,12 +239,9 @@ class App implements AppInterface {
 	async handle(request: Request, server?: Maybe<Server>): Promise<Response> {
 		// TODO: This is how it should be but Bun.Server.fetch only handles the fetch argument
 		// when it should also handle the routes argument. I'm not sure why this is the case
-		// or if it is the case at all. it just doesn't work. Temporary regex matcher is used.
+		// or if it is the case at all. it just doesn't work.
 		//
 		const app = this.createServer() ?? server;
-		// // change the request base url to $registry.baseUrl first
-		// const url = new URL(new URL(request.url).pathname, $registry.baseUrl);
-		// request = new Request(url, request);
 		app.stop();
 		return await app.fetch(request);
 
@@ -373,12 +370,6 @@ class App implements AppInterface {
 		};
 	}
 
-	/**
-	 * Applies a handler's return value to the context's Res and serializes it.
-	 * Everything here can throw as readily as the handler itself - CORS runs
-	 * user-supplied logic, and toNativeResponse serializes a body of unknown
-	 * shape - so it stays inside the caller's try rather than after it.
-	 */
 	protected async respond(context: Context, result: unknown): Promise<Response> {
 		if (result instanceof Res) context.res = result;
 		else if (result !== undefined) context.res.body = result;
@@ -389,13 +380,6 @@ class App implements AppInterface {
 		return context.res.toNativeResponse();
 	}
 
-	/**
-	 * Last line of defence. handleError is user-overridable and the Res it
-	 * returns still has to survive serialization, so both are guarded. If that
-	 * fails there is nothing left to attempt: a throw escaping here reaches Bun
-	 * as a dropped connection, which the client sees as ECONNRESET rather than
-	 * a response.
-	 */
 	protected async respondWithError(context: Context, err: Error): Promise<Response> {
 		try {
 			return await this.respond(context, await this.handleError(err, context));
