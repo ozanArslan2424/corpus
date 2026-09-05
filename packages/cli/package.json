@@ -1,0 +1,48 @@
+{
+	"$schema": "https://www.schemastore.org/package.json",
+	"name": "@ozanarslan/corpus-cli",
+	"version": "0.6.6",
+	"description": "CLI for @ozanarslan/corpus",
+	"license": "MIT",
+	"author": "Ozan Arslan <ozanarslanwork@gmail.com>",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ozanArslan2424/corpus.git",
+		"directory": "packages/cli"
+	},
+	"bin": {
+		"corpus": "./dist/cli.mjs"
+	},
+	"files": [
+		"dist",
+		"LICENSE.txt"
+	],
+	"type": "module",
+	"exports": {
+		".": "./dist/index.mjs",
+		"./cli": "./dist/cli.mjs",
+		"./package.json": "./package.json"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"scripts": {
+		"build": "tsdown",
+		"dev": "NODE_ENV=development bun run ./src/cli.ts",
+		"api": "bun run ./dist/cli.mjs api -m ./test/other/apigen/startServer.ts -o ./test/other/apigen/generated.ts",
+		"test:api": "bun api && bun run ./test/other/integration.ts -s",
+		"test:all": "VALI=arktype bun test:api && VALI=zod bun test:api && VALI=yup bun test:api"
+	},
+	"dependencies": {
+		"@standard-schema/spec": "^1.1.0",
+		"oxc-parser": "^0.147.0"
+	},
+	"devDependencies": {
+		"@ozanarslan/corpus": "workspace:*",
+		"@types/bun": "^1.4.0",
+		"arktype": "^2.2.3",
+		"tsdown": "^0.22.14",
+		"yup": "^1.7.1",
+		"zod": "^4.4.3"
+	}
+}

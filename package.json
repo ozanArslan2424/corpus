@@ -1,0 +1,24 @@
+{
+	"$schema": "https://www.schemastore.org/package.json",
+	"name": "corpus",
+	"private": true,
+	"workspaces": [
+		"packages/*"
+	],
+	"scripts": {
+		"fm": "oxfmt --write",
+		"lint": "oxlint --fix",
+		"knip": "knip",
+		"build": "pnpm -r run build",
+		"test:all": "pnpm -r --reporter=append-only test:all",
+		"changeset": "changeset",
+		"version": "changeset version",
+		"release": "changeset publish"
+	},
+	"devDependencies": {
+		"@changesets/cli": "^3.0.1",
+		"knip": "^6.32.2",
+		"oxfmt": "^0.65.0",
+		"oxlint": "^1.80.0"
+	}
+}

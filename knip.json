@@ -1,0 +1,29 @@
+{
+	"$schema": "https://unpkg.com/knip@latest/schema.json",
+	"workspaces": {
+		".": {
+			"ignoreBinaries": ["release.zsh"]
+		},
+		"packages/cli": {
+			"entry": ["src/index.ts", "tsdown.config.ts", "test/other/*.ts"],
+			"project": ["src/**/*.ts", "test/**/*.ts"],
+			"ignore": ["test/other/generated.ts"]
+		},
+		"packages/corpus": {
+			"entry": [
+				"src/index.ts",
+				"src/C.ts",
+				"src/X.ts",
+				"build.ts",
+				"test/**/*.test.ts",
+				"test/other/*.ts"
+			],
+			"project": ["src/**/*.ts", "test/**/*.ts"],
+			"ignore": ["test/fixtures/**"]
+		},
+		"packages/docs": {
+			"entry": ["build.ts", "src/index.ts", "src/js/*.js"],
+			"project": ["src/**/*.{ts,js}"]
+		}
+	}
+}
