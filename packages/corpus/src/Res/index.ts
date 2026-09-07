@@ -1,3 +1,28 @@
+/**
+ * Response building: status codes, body serialization, streaming, and cookies.
+ *
+ * A {@link Res} is what a handler shapes on its way to a native `Response`. It
+ * is created lazily on {@link Context.res}, so a handler that just returns a
+ * value never constructs one; reach for it when the response needs a status,
+ * headers, cookies, or a body form that a plain return value cannot express —
+ * a file, a redirect, or a stream.
+ *
+ * Body serialization is inferred from the value's type at
+ * {@link Res.toNativeResponse} time, so an object becomes JSON, a typed array
+ * stays binary, and a stream passes through untouched — each with a matching
+ * `Content-Type` unless one was set explicitly.
+ *
+ * ```ts
+ * import { Res, Status } from "@ozanarslan/corpus";
+ *
+ * new Res({ id: 1 }, { status: Status.CREATED });
+ * new Res().file("./report.pdf");
+ * new Res().redirect("/login");
+ * ```
+ *
+ * @module Res
+ */
+
 import { Cookies } from "@/Cookies";
 import { Exception } from "@/Exception";
 import {
@@ -147,8 +172,26 @@ const Status = enumerate({
 	NETWORK_AUTHENTICATION_REQUIRED: 511,
 });
 
+/**
+ * An HTTP status code. The {@link Status} constants are suggested, but any
+ * number is assignable.
+ */
 type Status = ValueOf<typeof Status> | (number & {});
 
+/**
+ * Converts a body value into something `Response` accepts, and infers the
+ * content type that goes with it.
+ *
+ * Types are checked in a deliberate order. Binary views are matched before the
+ * JSON catch-all, because `Buffer` defines its own `toJSON` and would otherwise
+ * serialize to `{"type":"Buffer","data":[…]}` instead of being sent as bytes.
+ * Streams get no inferred type at all — the producer knows what it is streaming,
+ * so {@link FileRoute} and {@link StaticRoute} set it themselves.
+ *
+ * @param b - The value to send as the body.
+ * @returns A {@link Tuple} of the `BodyInit` and the inferred content type,
+ * either of which may be `null`.
+ */
 function resolveResBody(b: unknown): Tuple<Nullable<BodyInit>, Nullable<string>> {
 	if (isNil(b)) return tuple(null, null);
 
@@ -190,12 +233,46 @@ function resolveResBody(b: unknown): Tuple<Nullable<BodyInit>, Nullable<string>>
 	return tuple(JSON.stringify(b), "application/json");
 }
 
+/**
+ * Produces the events for a server-sent event stream, used by {@link Res.sse}.
+ *
+ * @param send - Emits one event. `data` is JSON-serialized; `event` names the
+ * event type for a client listening on something other than `message`, and `id`
+ * lets a client resume from where it left off.
+ * @returns Nothing when the source is finite — the stream is closed for you once
+ * it resolves — or a cleanup function when it is open-ended, in which case the
+ * stream stays open and the function runs if the client disconnects.
+ */
 type SseSource = (
 	send: (item: { data: unknown; event?: string; id?: string }) => void,
 ) => MaybePromise<void | (() => void)>;
 
+/**
+ * Produces the lines for a newline-delimited JSON stream, used by
+ * {@link Res.ndjson}.
+ *
+ * @param send - Emits one item, JSON-serialized on its own line.
+ * @returns Nothing to close the stream when the source resolves, or a cleanup
+ * function to keep it open and be told when the client disconnects.
+ */
 type NdjsonSource = (send: (item: unknown) => void) => MaybePromise<void | (() => void)>;
 
+/**
+ * Wraps a producer function into a `ReadableStream` with disconnect handling.
+ *
+ * Whether the stream closes on its own is decided by what the producer returns:
+ * no cleanup function means it had a finite amount to send, so the stream closes
+ * when it resolves; a cleanup function means it is open-ended and the stream
+ * stays open until the client goes away.
+ *
+ * The cancelled flag is passed in rather than checked here, because a producer
+ * that is mid-loop needs to notice the disconnect itself — sending after
+ * cancellation would throw on a closed controller.
+ *
+ * @param execute - Fills the stream. Receives the controller to enqueue through,
+ * and a predicate reporting whether the client has disconnected.
+ * @returns The stream. Anything the producer throws surfaces as a stream error.
+ */
 function createStream(
 	execute: (
 		controller: ReadableStreamDefaultController,
@@ -224,6 +301,14 @@ function createStream(
 	});
 }
 
+/**
+ * Resolves a path or file into a readable {@link XFile}.
+ *
+ * @param fileOrPath - An {@link XFile} or a path to one.
+ * @returns The file.
+ * @throws {@link Exception} with {@link Status.NOT_FOUND} when it does not
+ * exist, carrying the path as exception data.
+ */
 function resolveFile(fileOrPath: XFile | string): XFile {
 	const file = fileOrPath instanceof XFile ? fileOrPath : new XFile(fileOrPath);
 	if (!file.exists()) {
@@ -232,6 +317,21 @@ function resolveFile(fileOrPath: XFile | string): XFile {
 	return file;
 }
 
+/**
+ * Wraps a response's headers so that writing `Set-Cookie` also updates the
+ * cookie map.
+ *
+ * {@link Res} exposes cookies two ways — as headers and as a {@link Cookies} map
+ * — and they must not disagree. The map wins at serialization time, so a
+ * `Set-Cookie` written directly as a header would be dropped unless it is
+ * mirrored into the map, which is what this does. An array append is mirrored
+ * item by item, since each is its own cookie.
+ *
+ * @param headers - The headers to wrap. Mutated in place.
+ * @param getCookies - Resolves the cookie map lazily, so wrapping does not force
+ * it into existence.
+ * @returns The same headers object.
+ */
 function resHeadersWrapper(headers: Headers, getCookies: () => Cookies): Headers {
 	const set = headers.set.bind(headers);
 	const append = headers.append.bind(headers);
@@ -261,11 +361,36 @@ function resHeadersWrapper(headers: Headers, getCookies: () => Cookies): Headers
 	return headers;
 }
 
+/** A `ResponseInit` that can also carry cookies. */
 interface ResInit extends ResponseInit {
+	/** Cookies to seed {@link Res.cookies} with. */
 	cookies?: Cookies;
 }
 
+/**
+ * A response under construction.
+ *
+ * Everything is mutable until {@link Res.toNativeResponse} is called, so a
+ * {@link Middleware} can adjust a response a route handler already built. The
+ * body is kept as the original value rather than serialized eagerly, which is
+ * what lets the content type be inferred from it at the very end.
+ *
+ * Headers and cookies are both lazy, so an untouched response allocates neither.
+ * The chainable methods — {@link Res.file}, {@link Res.redirect},
+ * {@link Res.sse} and the rest — set the body and its headers together and
+ * return `this`.
+ *
+ * @typeParam R - The body type, carried from the route's own response type.
+ */
 class Res<R = unknown> {
+	/**
+	 * Creates a response.
+	 *
+	 * @param body - The body value. Serialized by {@link resolveResBody} at
+	 * {@link Res.toNativeResponse} time, not now.
+	 * @param init - Status, status text, headers and cookies. See
+	 * {@link ResInit}.
+	 */
 	constructor(body?: Nullable<BodyInit | R>, init?: ResInit) {
 		this.body = isUndefined(body) ? null : body;
 
@@ -299,20 +424,65 @@ class Res<R = unknown> {
 		});
 	}
 
+	/**
+	 * The body to send. Assign any value — objects become JSON, typed arrays stay
+	 * binary, streams pass through — and {@link resolveResBody} works out the rest
+	 * at serialization time.
+	 */
 	body: Nullable<BodyInit | R> = null;
+
+	/** The status code. Defaults to {@link Status.OK}. */
 	status: number;
+
+	/** The status text. Empty by default, which lets the runtime supply the standard phrase. */
 	statusText: string;
 
+	/** Backing store for {@link Res.headers}, created on first access. */
 	private _headers: LazyMut<Headers>;
+
+	/**
+	 * The response headers.
+	 *
+	 * Reading them rewrites the `Set-Cookie` lines from {@link Res.cookies} first,
+	 * so the two views never disagree — and writing `Set-Cookie` here feeds back
+	 * into the cookie map. Values may be numbers or booleans, since
+	 * {@link patchGlobalHeaders} has stringified setters.
+	 *
+	 * @returns The headers, created on first access.
+	 */
 	get headers(): Headers {
 		return this._headers();
 	}
 
+	/** Backing store for {@link Res.cookies}, created on first access. */
 	private _cookies: Lazy<Cookies>;
+
+	/**
+	 * The cookies to send, as a mutable map.
+	 *
+	 * This is the authoritative view: the map is serialized into `Set-Cookie`
+	 * whenever {@link Res.headers} is read, so deleting a cookie here removes its
+	 * header. Values are percent-encoded on serialization, which is what keeps a
+	 * CRLF in a cookie value from splitting the response.
+	 *
+	 * @returns The {@link Cookies} map, created on first access.
+	 */
 	get cookies(): Cookies {
 		return this._cookies();
 	}
 
+	/**
+	 * Serializes everything into a native `Response`.
+	 *
+	 * The content type inferred from the body is applied only when none was set
+	 * explicitly, so a handler's own choice always wins. `X-Content-Type-Options:
+	 * nosniff` is set unconditionally — without it a browser will sniff a
+	 * `text/plain` body that looks like markup and render it as HTML, turning any
+	 * reflected value into XSS.
+	 *
+	 * @returns The response to send over the wire. Called by
+	 * {@link App.respond}.
+	 */
 	toNativeResponse(): Response {
 		const data = this.body;
 		const headers = this.headers;
@@ -331,6 +501,18 @@ class Res<R = unknown> {
 		return new Response(body, { headers, status, statusText });
 	}
 
+	/**
+	 * Turns the response into a server-sent event stream.
+	 *
+	 * Sets the body to a stream and the headers browsers require for `EventSource`
+	 * to work — the event stream type, no caching, and a kept-alive connection.
+	 *
+	 * @param source - The {@link SseSource} producing events. Return a cleanup
+	 * function from it to keep the stream open indefinitely.
+	 * @param retry - Reconnection delay in milliseconds, sent with every event to
+	 * tell the client how long to wait before reconnecting.
+	 * @returns This response, for chaining.
+	 */
 	sse(source: SseSource, retry?: number): this {
 		const encoder = new TextEncoder();
 		const stream = createStream((controller, isCancelled) => {
@@ -351,6 +533,18 @@ class Res<R = unknown> {
 		return this;
 	}
 
+	/**
+	 * Turns the response into a newline-delimited JSON stream.
+	 *
+	 * Each item is serialized onto its own line, so a client can parse results as
+	 * they arrive instead of waiting for a whole array. Useful for large result
+	 * sets and progressive output where the event semantics of {@link Res.sse} are
+	 * not needed.
+	 *
+	 * @param source - The {@link NdjsonSource} producing items. Return a cleanup
+	 * function from it to keep the stream open indefinitely.
+	 * @returns This response, for chaining.
+	 */
 	ndjson(source: NdjsonSource): this {
 		const encoder = new TextEncoder();
 		const stream = createStream((controller, isCancelled) => {
@@ -365,6 +559,17 @@ class Res<R = unknown> {
 		return this;
 	}
 
+	/**
+	 * Streams a file as the response body, without reading it into memory. Prefer
+	 * this over {@link Res.file} for anything large.
+	 *
+	 * @param fileOrPath - An {@link XFile} or a path to one.
+	 * @param disposition - `"inline"` to display in the browser, `"attachment"` to
+	 * prompt a download under the file's own name.
+	 * @returns This response, for chaining.
+	 * @throws {@link Exception} with {@link Status.NOT_FOUND} when the file does
+	 * not exist.
+	 */
 	streamFile(
 		fileOrPath: XFile | string,
 		disposition: ContentDispositionDefinition["disposition"],
@@ -383,6 +588,15 @@ class Res<R = unknown> {
 		return this;
 	}
 
+	/**
+	 * Sends a file as the response body, read into memory so it can carry an exact
+	 * `Content-Length`. Use {@link Res.streamFile} instead for large files.
+	 *
+	 * @param fileOrPath - An {@link XFile} or a path to one.
+	 * @returns This response, for chaining.
+	 * @throws {@link Exception} with {@link Status.NOT_FOUND} when the file does
+	 * not exist.
+	 */
 	file(fileOrPath: XFile | string): this {
 		const file = resolveFile(fileOrPath);
 		const bytes = file.bytes();
@@ -392,6 +606,16 @@ class Res<R = unknown> {
 		return this;
 	}
 
+	/**
+	 * Redirects the client to another URL.
+	 *
+	 * @param url - Where to send the client, absolute or relative.
+	 * @param status - Which redirect to use. Defaults to {@link Status.FOUND}, a
+	 * temporary redirect that browsers do not cache. See
+	 * {@link Res.permanentRedirect}, {@link Res.temporaryRedirect} and
+	 * {@link Res.seeOther} for the named alternatives.
+	 * @returns This response, for chaining.
+	 */
 	redirect(url: string | URL, status: 301 | 302 | 303 | 307 | 308 = 302): this {
 		this.status = status;
 		const urlString = url instanceof URL ? url.toString() : url;
@@ -399,14 +623,38 @@ class Res<R = unknown> {
 		return this;
 	}
 
+	/**
+	 * Redirects with {@link Status.MOVED_PERMANENTLY}, which browsers and search
+	 * engines cache indefinitely. Use it only when the resource has really moved
+	 * for good.
+	 *
+	 * @param url - Where to send the client.
+	 * @returns This response, for chaining.
+	 */
 	permanentRedirect(url: string | URL): this {
 		return this.redirect(url, Status.MOVED_PERMANENTLY);
 	}
 
+	/**
+	 * Redirects with {@link Status.TEMPORARY_REDIRECT}, which preserves the
+	 * original method and body — unlike {@link Status.FOUND}, which clients
+	 * commonly turn into a GET.
+	 *
+	 * @param url - Where to send the client.
+	 * @returns This response, for chaining.
+	 */
 	temporaryRedirect(url: string | URL): this {
 		return this.redirect(url, Status.TEMPORARY_REDIRECT);
 	}
 
+	/**
+	 * Redirects with {@link Status.SEE_OTHER}, which explicitly switches the
+	 * client to a GET. This is the correct redirect after a successful POST, since
+	 * it stops a refresh from resubmitting the form.
+	 *
+	 * @param url - Where to send the client.
+	 * @returns This response, for chaining.
+	 */
 	seeOther(url: string | URL): this {
 		return this.redirect(url, Status.SEE_OTHER);
 	}

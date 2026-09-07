@@ -1,22 +1,102 @@
+/**
+ * Request validation against the schemas declared in a {@link RouteConfig}.
+ *
+ * Schemas are taken as [Standard Schema](https://standardschema.dev), so any
+ * library implementing that spec works — Zod, Valibot, ArkType and others —
+ * without corpus depending on any of them. The same interface also supplies the
+ * inferred types that flow into {@link Context}, so declaring a schema both
+ * validates the request and types the handler.
+ *
+ * {@link App} calls this after each surface is parsed, so what a handler sees on
+ * {@link Context.body}, {@link Context.search} and {@link Context.params} is
+ * already validated. A failure raises {@link Status.UNPROCESSABLE_ENTITY} with a
+ * message naming the offending fields, so the client is told what was wrong
+ * rather than just that something was.
+ *
+ * @module SchemaParser
+ */
+
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 
 import { Exception } from "@/Exception";
 import { Status } from "@/Res";
 import { isObjectWith } from "@/utils/object";
 
+/**
+ * Any Standard Schema validator producing `T`. This is the type
+ * {@link RouteConfig} fields accept.
+ *
+ * @typeParam T - What the schema validates to.
+ */
 type Schema<T = unknown> = StandardSchemaV1<unknown, T>;
 
+/**
+ * The type a schema accepts as input, before transformation.
+ *
+ * @typeParam T - The schema.
+ */
 type InferSchemaIn<T extends Schema> = StandardSchemaV1.InferInput<T>;
+
+/**
+ * The type a schema produces after validation. This is what a route's
+ * {@link Context} fields are typed as.
+ *
+ * @typeParam T - The schema.
+ */
 type InferSchemaOut<T extends Schema> = StandardSchemaV1.InferOutput<T>;
 
+/** The validation failures a schema reports. */
 type ValidationIssues = readonly StandardSchemaV1.Issue[];
 
+/**
+ * The public shape of a schema parser, implemented by {@link SchemaParser}.
+ * Assign an alternative to {@link ParsersRegistry.schemaParser} to change how
+ * validation failures are reported.
+ */
 interface SchemaParserInterface {
+	/**
+	 * Validates a value against a schema.
+	 *
+	 * @param label - Names the surface being validated, for the error message.
+	 * @param input - The value to validate.
+	 * @param schema - The schema. Omitting it passes the value through unchanged.
+	 * @returns The validated value.
+	 */
 	parse<T = Record<string, unknown>>(label: string, input: unknown, schema?: Schema<T>): Promise<T>;
+	/**
+	 * Validates a value against a synchronous schema.
+	 *
+	 * @param label - Names the surface being validated, for the error message.
+	 * @param input - The value to validate.
+	 * @param schema - The schema. Omitting it passes the value through unchanged.
+	 * @returns The validated value.
+	 */
 	parseSync<T = Record<string, unknown>>(label: string, input: unknown, schema?: Schema<T>): T;
 }
 
+/**
+ * Default {@link SchemaParserInterface} implementation.
+ *
+ * A missing schema is not an error — the value passes through untouched, which
+ * is what makes {@link RouteConfig} entirely optional.
+ */
 class SchemaParser implements SchemaParserInterface {
+	/**
+	 * Validates a value against a schema.
+	 *
+	 * This is what {@link App} uses during the request lifecycle, since a schema
+	 * may validate asynchronously.
+	 *
+	 * @param label - Names the surface being validated — `"body"`, `"search"` or
+	 * `"params"` — and appears in the error message.
+	 * @param data - The value to validate, already parsed from the request.
+	 * @param schema - The schema from the route's {@link RouteConfig}. Omitting it
+	 * returns the data as-is.
+	 * @returns The validated value, with whatever transformations the schema
+	 * applies.
+	 * @throws {@link Exception} with {@link Status.UNPROCESSABLE_ENTITY} when
+	 * validation fails, carrying the rejected data as exception data.
+	 */
 	async parse<T = Record<string, unknown>>(
 		label: string,
 		data: unknown,
@@ -31,6 +111,23 @@ class SchemaParser implements SchemaParserInterface {
 		return result.value;
 	}
 
+	/**
+	 * Validates a value without awaiting, for callers that cannot be async.
+	 *
+	 * Whether a schema validates synchronously is not visible in its type, so it
+	 * is detected at runtime: a validator that returns a promise is rejected
+	 * outright rather than having its result silently used as a value.
+	 *
+	 * @param label - Names the surface being validated, and appears in the error
+	 * message.
+	 * @param data - The value to validate.
+	 * @param schema - The schema. Omitting it returns the data as-is.
+	 * @returns The validated value.
+	 * @throws {@link Error} when the schema validates asynchronously — use
+	 * {@link SchemaParser.parse} instead.
+	 * @throws {@link Exception} with {@link Status.UNPROCESSABLE_ENTITY} when
+	 * validation fails.
+	 */
 	parseSync<T = Record<string, unknown>>(label: string, data: unknown, schema?: Schema<T>): T {
 		if (!schema) return data as T;
 		const result = schema["~standard"].validate(data);
@@ -45,25 +142,39 @@ class SchemaParser implements SchemaParserInterface {
 		return result.value;
 	}
 
+	/**
+	 * Renders validation issues into the message sent to the client.
+	 *
+	 * Each issue is reported as `in <label> <path> (received <value>): <message>`,
+	 * so a client can see which field failed and what it actually sent — a
+	 * schema's own message alone rarely says which field it came from. Path
+	 * segments are joined with dots, and the offending value is looked up by
+	 * walking the original data along that path. Issues with no path are global to
+	 * the surface and keep their message unadorned.
+	 *
+	 * Override this to change the wording or to withhold the received values.
+	 *
+	 * @param label - Names the surface being validated.
+	 * @param data - The value that failed, walked to find each reported value.
+	 * @param issues - The failures the schema reported.
+	 * @returns One line per issue, newline-joined, or an empty string when there
+	 * are none.
+	 */
 	issuesToErrorMessage(label: string, data: unknown, issues: ValidationIssues): string {
 		if (issues.length === 0) return "";
-
 		return issues
 			.map((issue) => {
 				// Handle global issues without a path
 				if (!issue.path || issue.path.length === 0) {
 					return issue.message;
 				}
-
 				// Extract the string representation of the path
 				const pathKeys = issue.path.map((segment) =>
 					isObjectWith<{ key: string }>(segment, "key")
 						? String(segment.key)
 						: String(segment as string),
 				);
-
 				const key = pathKeys.join(".");
-
 				// Traverse the input data to find the specific value at this path
 				const value = pathKeys.reduce<unknown>((acc, segment) => {
 					if (acc && typeof acc === "object") {
@@ -71,10 +182,8 @@ class SchemaParser implements SchemaParserInterface {
 					}
 					return undefined;
 				}, data);
-
 				// Format: "key (received value): message"
 				const received = value !== undefined ? ` (received ${JSON.stringify(value)})` : "";
-
 				return `in ${label} ${key}${received}: ${issue.message}`;
 			})
 			.join("\n");

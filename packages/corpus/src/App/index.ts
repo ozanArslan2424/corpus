@@ -1,3 +1,21 @@
+/**
+ * The application root: owns the {@link Server}, the route table, the
+ * {@link Middleware} registry, and the request lifecycle that ties them
+ * together.
+ *
+ * An {@link App} is the only thing that talks to Bun's HTTP server.
+ * {@link RouteBase} implementations and {@link Middleware} instances register
+ * themselves against an app, and at {@link App.listen} time the app compiles
+ * them into a single {@link ServerRouteMap} plus a fallback {@link ServerHandler}.
+ *
+ * ```ts
+ * const app = new App({ port: 3000, prefix: "/api" });
+ * await app.listen();
+ * ```
+ *
+ * @module App
+ */
+
 import { registerApp } from "@/AppsRegistry";
 import { Config } from "@/Config";
 import { type ContextFactory, type ContextHandler, Context } from "@/Context";
@@ -20,7 +38,6 @@ import {
 	isNil,
 	isNull,
 	isUndefined,
-	type Maybe,
 	type MaybePromise,
 	type Nullable,
 	type Optional,
@@ -28,23 +45,81 @@ import {
 import { withLeadingSlash } from "@/utils/path";
 import type { WebSocketRoute } from "@/WebSocketRoute";
 
+/**
+ * TLS material used to serve an {@link App} over HTTPS.
+ *
+ * Passing this to {@link App} switches {@link App.baseUrl} to the `https`
+ * scheme and hands the certificate straight to Bun's server.
+ */
 interface TlsOptions {
+	/** PEM-encoded certificate chain, as a string or a file buffer. */
 	cert: string | Buffer;
+	/** PEM-encoded private key matching {@link TlsOptions.cert}. */
 	key: string | Buffer;
+	/** Optional PEM-encoded certificate authority bundle for client verification. */
 	ca?: string | Buffer;
 }
 
+/**
+ * Construction options for {@link App}. Every field is optional; omitted fields
+ * keep the defaults declared on {@link App}.
+ */
 interface AppOptions {
+	/** TCP port to bind. See {@link App.port}. */
 	port?: number;
+	/**
+	 * Path prefix prepended to the endpoint of every {@link RouteBase} registered
+	 * on the app. See {@link App.prefix}.
+	 */
 	prefix?: string;
+	/** Interface to bind. See {@link App.hostname}. */
 	hostname?: OrString<"0.0.0.0" | "127.0.0.1" | "localhost">;
+	/** Seconds a connection may stay idle before Bun closes it. See {@link App.idleTimeout}. */
 	idleTimeout?: number;
+	/** {@link TlsOptions} to serve the app over HTTPS. See {@link App.tls}. */
 	tls?: TlsOptions;
+	/**
+	 * App-wide request body ceiling in bytes, handed to Bun's server. An
+	 * individual {@link RouteBase} can tighten this through its own
+	 * {@link Config}, which {@link enforceBodyLimit} applies per request.
+	 */
 	maxRequestBodySize?: number;
 }
 
+/**
+ * Handles an {@link Error} raised anywhere in the request lifecycle. Assigned to
+ * {@link App.handleError}.
+ *
+ * @param error - The thrown error, typically an {@link Exception}.
+ * @param context - The {@link Context} the error was raised in. Absent only when
+ * the failure happened before a {@link Context} could be built.
+ * @returns The value to respond with — a {@link Res}, a plain body that
+ * {@link App.respond} will assign to {@link Res.body}, or a promise of either.
+ */
 type ErrorHandler<R = unknown> = (error: Error, context?: Context) => MaybePromise<R>;
 
+/**
+ * Folds {@link Middleware} handlers and a terminal {@link RouteBase} handler
+ * into one {@link MiddlewareHandler}, giving each link an `await next()` that
+ * runs the rest of the chain.
+ *
+ * Resolution order for what a link contributes to the response:
+ *
+ * 1. A returned value wins — it is either the terminal body or a
+ *    {@link Middleware} short-circuiting the chain with a {@link Res}.
+ * 2. If `next()` was never called, it is called implicitly so the chain still
+ *    reaches its terminal handler.
+ * 3. If the handler replaced {@link Context.res} after `next()` resolved, that
+ *    outbound mutation wins over the downstream result.
+ * 4. Otherwise the downstream result passes through untouched.
+ *
+ * @param handlers - {@link MiddlewareHandler} functions in execution order; the
+ * last one is normally the {@link RouteBase} handler.
+ * @returns A single {@link MiddlewareHandler} that runs the whole chain,
+ * delegating to its own `next` once the chain is exhausted.
+ * @throws {@link Exception} with {@link Status.INTERNAL_SERVER_ERROR} if a
+ * handler calls `next()` more than once.
+ */
 function composeHandlerChain(...handlers: Array<MiddlewareHandler>): MiddlewareHandler {
 	return (c, outerNext) => {
 		let index = -1;
@@ -79,19 +154,30 @@ function composeHandlerChain(...handlers: Array<MiddlewareHandler>): MiddlewareH
 }
 
 /**
- * Enforces the configured body size limit. Runs whether or not the body is
- * parsed - the limit is a property of the request, not of what the handler
- * happens to read.
+ * Enforces the body size limit declared by a {@link RouteBase}'s {@link Config}.
+ * Runs whether or not the body is parsed — the limit is a property of the
+ * request, not of what the handler happens to read.
  *
- * Content-Length is trusted: Bun's parser stops reading at the declared
- * length regardless of how much the client actually writes (verified - a
- * request declaring 10 and sending 10MB yields 10 bytes), so a declared
- * length under the limit needs no buffering. Chunked bodies carry no
- * declared length, so those are counted while streaming.
+ * {@link HeaderKey.ContentLength} is trusted: Bun's parser stops reading at the
+ * declared length regardless of how much the client actually writes (verified —
+ * a request declaring 10 and sending 10MB yields 10 bytes), so a declared length
+ * under the limit needs no buffering. Chunked bodies carry no declared length,
+ * so those are counted while streaming.
  *
- * Returns the request the body should be read from: the original when
- * nothing was consumed, and a re-wrapped one when a chunked body had to be
- * drained and `retain` asked for it back.
+ * Binary content types are exempt from the streaming count: they are handed to
+ * the handler as a live stream, and draining them here would leave the handler
+ * with a consumed body. Only the declared-length check applies to them.
+ *
+ * @param request - The incoming request to measure.
+ * @param maxRequestBodySize - Ceiling in bytes for the request body.
+ * @param retain - Whether the drained chunks are kept so the body can be read
+ * again by the parsers. Pass `true` only when the body will actually be parsed;
+ * `false` counts bytes without holding them in memory.
+ * @returns The request the body should be read from — the original when nothing
+ * was consumed, or a re-wrapped one carrying the buffered chunks when a chunked
+ * body had to be drained and `retain` asked for it back.
+ * @throws {@link Exception} with {@link Status.PAYLOAD_TOO_LARGE} when the
+ * declared or observed size exceeds `maxRequestBodySize`.
  */
 async function enforceBodyLimit(
 	request: Request,
@@ -140,31 +226,81 @@ async function enforceBodyLimit(
 	return new Response(new Blob(chunks), { headers: request.headers });
 }
 
+/**
+ * The public shape of an application instance, implemented by {@link App}.
+ *
+ * Depend on this type rather than the {@link App} class when you need to accept
+ * an app without pinning the implementation.
+ */
 interface AppInterface {
+	/** The running {@link Server}, or `null` before {@link AppInterface.listen} and after {@link AppInterface.close}. */
 	server: Nullable<Server>;
+	/** {@link CorsInterface} policy applied to every response and to preflight requests. */
 	cors: Optional<CorsInterface>;
+	/** {@link RouteBase} instances registered on this app, in registration order. */
 	routes: Array<RouteBase>;
+	/** {@link Middleware} instances keyed by the {@link RouteBase.id} they target; `"*"` holds the global ones. */
 	middlewares: Map<string, Array<Middleware>>;
+	/** TCP port to bind. */
 	port: number;
+	/** Path prefix prepended to every {@link RouteBase} endpoint on this app. */
 	prefix: string;
+	/** Interface to bind. */
 	hostname: OrString<"0.0.0.0" | "127.0.0.1" | "localhost">;
+	/** Seconds a connection may stay idle before Bun closes it. */
 	idleTimeout?: number;
+	/** {@link TlsOptions} material; when set, the app is served over HTTPS. */
 	tls?: TlsOptions;
+	/** Origin the app is reachable at. */
 	get baseUrl(): string;
+	/** Compiles {@link RouteBase} and {@link Middleware} registrations and starts the {@link Server}. */
 	listen(): Promise<void>;
+	/** Stops the {@link Server} and releases the port. */
 	close(closeActiveConnections?: boolean): Promise<void>;
-	handle(request: Request, server?: Maybe<Server>): Promise<Response>;
+	/** Hook run just before the {@link Server} starts. */
 	handleBeforeListen: Optional<() => MaybePromise<void>>;
+	/** Hook run just before the {@link Server} stops. */
 	handleBeforeClose: Optional<() => MaybePromise<void>>;
+	/** {@link ErrorHandler} that converts a thrown {@link Error} into a response value. */
 	handleError: ErrorHandler;
+	/** {@link ContextHandler} that produces the response for requests matching no {@link RouteBase}. */
 	handleNotFound: ContextHandler;
+	/** {@link ContextHandler} that produces the response for CORS preflight requests. */
 	handlePreflight: ContextHandler;
+	/** {@link ContextFactory} that builds the {@link Context} for each incoming request. */
 	contextFactory: ContextFactory;
+	/** Registers a {@link Middleware} against each {@link RouteBase.id} it targets. */
 	addMiddleware(middleware: Middleware): void;
+	/** Resolves the {@link Middleware} instances that apply to a {@link RouteBase.id}. */
 	findMiddlewares(routeId: string): Array<Middleware>;
 }
 
+/**
+ * An HTTP application.
+ *
+ * The app is a container first: {@link RouteBase} implementations and
+ * {@link Middleware} instances attach to it as they are constructed. Nothing is
+ * compiled until {@link App.listen}, at which point {@link App.composeRoutes}
+ * turns routes into a {@link ServerRouteMap} and folds the matching
+ * {@link Middleware} handlers into each route's chain.
+ *
+ * Every request follows the same path — build a {@link Context}, resolve
+ * {@link Context.params}, {@link Context.search} and {@link Context.body}
+ * through the parsers registry, run the {@link composeHandlerChain} chain, apply
+ * {@link CorsInterface}, and serialise the {@link Res}. Anything thrown along
+ * the way is routed to {@link App.handleError}.
+ *
+ * Constructing an app calls {@link registerApp}, so it is discoverable without
+ * being passed around.
+ */
 class App implements AppInterface {
+	/**
+	 * Creates an app and registers it globally with {@link registerApp}.
+	 *
+	 * @param opts - {@link AppOptions} overriding port, hostname, prefix, idle
+	 * timeout, {@link TlsOptions} and body size. Any field left out keeps the
+	 * default declared on the corresponding {@link App} property.
+	 */
 	constructor(opts?: AppOptions) {
 		if (opts?.port) this.port = opts.port;
 		if (opts?.hostname) this.hostname = opts.hostname;
@@ -175,23 +311,76 @@ class App implements AppInterface {
 		registerApp(this);
 	}
 
+	/**
+	 * The live {@link Server}. `null` until {@link App.listen} is called and again
+	 * after {@link App.close}.
+	 */
 	server: Nullable<Server> = null;
+
+	/**
+	 * {@link CorsInterface} policy for this app. When set,
+	 * {@link CorsInterface.handler} runs after every handler chain in
+	 * {@link App.respond} and {@link CorsInterface.handlePreflight} answers
+	 * preflight requests. Left unset, {@link App.handlePreflight} replies with
+	 * {@link Status.NO_CONTENT} and no CORS headers are added.
+	 */
 	cors: Optional<CorsInterface>;
+
+	/** {@link RouteBase} instances attached to this app, in registration order. */
 	routes: Array<RouteBase> = [];
+
+	/**
+	 * {@link Middleware} instances indexed by the {@link RouteBase.id} they
+	 * target. The `"*"` key holds middlewares that run on every route as well as
+	 * on the {@link App.handleNotFound} path.
+	 */
 	middlewares: Map<string, Array<Middleware>> = new Map();
+
+	/** Port the {@link Server} binds to. Defaults to `3000`. */
 	port: number = 3000;
+
+	/** Prefix prepended to every {@link RouteBase} endpoint on this app. Defaults to `""`. */
 	prefix: string = "";
+
+	/** Interface the {@link Server} binds to. Defaults to `"0.0.0.0"`. */
 	hostname: OrString<"0.0.0.0" | "127.0.0.1" | "localhost"> = "0.0.0.0";
+
+	/** Seconds an idle connection is kept open before Bun closes it. */
 	idleTimeout?: number;
+
+	/** {@link TlsOptions} material. When present the app is served over HTTPS. */
 	tls?: TlsOptions;
+
+	/**
+	 * App-wide body ceiling in bytes passed to Bun. A {@link RouteBase} may
+	 * declare a tighter limit in its {@link Config}, enforced per request by
+	 * {@link enforceBodyLimit}.
+	 */
 	maxRequestBodySize?: number;
 
+	/**
+	 * Origin the app is reachable at, for example `http://0.0.0.0:3000`.
+	 *
+	 * @returns The {@link Server} URL once listening; otherwise a URL derived from
+	 * {@link App.tls}, {@link App.hostname} and {@link App.port}.
+	 */
 	get baseUrl(): string {
 		if (!isNull(this.server)) return this.server.url.toString();
 		const protocol = this.tls ? "https" : "http";
 		return `${protocol}://${this.hostname}${this.port ? `:${this.port}` : ""}`;
 	}
 
+	/**
+	 * Compiles {@link App.composeRoutes} and {@link App.composeFetch} and hands
+	 * them to `Bun.serve`, wiring the WebSocket callbacks through to the handlers
+	 * carried by each {@link WebSocketRoute}. Unroutable middlewares are reported
+	 * first by {@link App.warnUnmatchedMiddlewares}.
+	 *
+	 * Calling this when {@link App.server} already exists is a no-op that returns
+	 * the existing one, so it is safe to reach for lazily.
+	 *
+	 * @returns The running {@link Server}.
+	 */
 	protected createServer(): Server {
 		if (!isNull(this.server)) return this.server;
 
@@ -215,6 +404,16 @@ class App implements AppInterface {
 		return this.server;
 	}
 
+	/**
+	 * Starts the app.
+	 *
+	 * Installs `SIGINT` and `SIGTERM` handlers that call {@link App.close}, runs
+	 * {@link App.handleBeforeListen}, then compiles and starts the {@link Server}
+	 * via {@link App.createServer}. A failure at any of these steps is logged and
+	 * the app is closed rather than left half-started.
+	 *
+	 * @returns A promise that resolves once the {@link Server} is listening.
+	 */
 	async listen(): Promise<void> {
 		try {
 			process.on("SIGINT", () => this.close());
@@ -229,6 +428,18 @@ class App implements AppInterface {
 		}
 	}
 
+	/**
+	 * Stops the app.
+	 *
+	 * Runs {@link App.handleBeforeClose}, stops the {@link Server}, and clears
+	 * {@link App.server}. Outside the `test` value of {@link Config.nodeEnv} this
+	 * also exits the process, so tests can close apps without tearing down the
+	 * runner.
+	 *
+	 * @param closeActiveConnections - Whether in-flight connections are severed
+	 * immediately rather than allowed to drain. Defaults to `true`.
+	 * @returns A promise that resolves once the {@link Server} has stopped.
+	 */
 	async close(closeActiveConnections: boolean = true): Promise<void> {
 		await this.handleBeforeClose?.();
 		await this.server?.stop(closeActiveConnections);
@@ -236,44 +447,25 @@ class App implements AppInterface {
 		if (Config.nodeEnv !== "test") process.exit(0);
 	}
 
-	async handle(request: Request, server?: Maybe<Server>): Promise<Response> {
-		// TODO: This is how it should be but Bun.Server.fetch only handles the fetch argument
-		// when it should also handle the routes argument. I'm not sure why this is the case
-		// or if it is the case at all. it just doesn't work.
-		//
-		const app = this.createServer() ?? server;
-		app.stop();
-		return await app.fetch(request);
+	// TODO: async handle(request: Request, server?: Maybe<Server>): Promise<Response>
 
-		// const context = this.contextFactory(request, server);
-		// return this.finalize(context, async (c) => {
-		// 	try {
-		// 		const isPreflight =
-		// 			c.req.method === Method.OPTIONS &&
-		// 			c.req.headers.has(HeaderKey.AccessControlRequestMethod);
-		// 		if (isPreflight) {
-		// 			return await this.handlePreflight(c);
-		// 		}
-		//
-		// 		const match = this.find(c.req.method, c.req.url);
-		// 		if (match) {
-		// 			const composedHandler = composeHandlerChain(
-		// 				...match.middlewares.map((m) => m.handler),
-		// 				match.route.handler,
-		// 			);
-		// 			return await this.handleRoute(c, match.route, match.params, composedHandler);
-		// 		}
-		// 		const notFoundHandler = composeHandlerChain(
-		// 			...this.findMiddlewares("*").map((m) => m.handler),
-		// 			this.handleNotFound,
-		// 		);
-		// 		return await notFoundHandler(c, noop);
-		// 	} catch (err) {
-		// 		return await this.handleError(err as Error, c);
-		// 	}
-		// });
-	}
-
+	/**
+	 * Compiles {@link App.routes} into the {@link ServerRouteMap} Bun expects,
+	 * keyed by endpoint and then by {@link Method}.
+	 *
+	 * Each entry is a full request pipeline wrapped in {@link App.finalize}:
+	 * wildcard segments are lifted into {@link Req.params} (Bun does not treat
+	 * them as params), then params, search and body are parsed and validated
+	 * against the {@link RouteBase} {@link Config} — but only the ones the handler
+	 * chain actually reads, as reported by {@link getContextAccess}. Routes with
+	 * {@link RouteVariant.websocket} upgrade the connection into a
+	 * {@link WebSocketRoute} instead of responding, and {@link Method.GET} and
+	 * {@link Method.HEAD} skip body work entirely.
+	 *
+	 * @returns A {@link ServerRouteMap} ready to hand to `Bun.serve`.
+	 * @throws {@link Exception} with {@link Status.UPGRADE_REQUIRED} when a
+	 * WebSocket upgrade is rejected.
+	 */
 	protected composeRoutes(): ServerRouteMap {
 		const routes: ServerRouteMap = {};
 
@@ -342,6 +534,19 @@ class App implements AppInterface {
 		return routes;
 	}
 
+	/**
+	 * Builds the {@link ServerHandler} Bun uses for requests that matched no
+	 * {@link RouteBase}.
+	 *
+	 * Preflight requests — {@link Method.OPTIONS} carrying
+	 * {@link HeaderKey.AccessControlRequestMethod} — go to
+	 * {@link App.handlePreflight}. Everything else runs the global (`"*"`)
+	 * {@link Middleware} chain followed by {@link App.handleNotFound}, so global
+	 * middlewares still observe traffic to unknown endpoints.
+	 *
+	 * @returns The `fetch` handler for `Bun.serve`, wrapped by
+	 * {@link App.finalize}.
+	 */
 	protected composeFetch(): ServerHandler {
 		const notFoundChain = composeHandlerChain(
 			...this.findMiddlewares("*").map((m) => m.handler),
@@ -358,6 +563,18 @@ class App implements AppInterface {
 		});
 	}
 
+	/**
+	 * Wraps a {@link ContextHandler} into the {@link ServerHandler} Bun calls,
+	 * giving it a {@link Context} from {@link App.contextFactory} and guaranteeing
+	 * that every outcome — value or throw — leaves as a `Response`.
+	 *
+	 * This is the single boundary where errors are caught, so every throw reaches
+	 * {@link App.handleError} through {@link App.respondWithError}.
+	 *
+	 * @param handler - The {@link ContextHandler} to run for the request.
+	 * @returns A {@link ServerHandler} suitable for a {@link ServerRouteMap} entry
+	 * or for `Bun.serve`'s `fetch`.
+	 */
 	protected finalize(handler: ContextHandler): ServerHandler {
 		return async (request, server) => {
 			const context = this.contextFactory(request, server);
@@ -370,6 +587,20 @@ class App implements AppInterface {
 		};
 	}
 
+	/**
+	 * Turns a handler's return value into the response sent over the wire.
+	 *
+	 * A returned {@link Res} replaces {@link Context.res} wholesale; any other
+	 * defined value becomes {@link Res.body}; `undefined` leaves the existing
+	 * {@link Res} untouched, which is how handlers that mutate
+	 * {@link Context.res} directly are supported. {@link CorsInterface.handler}
+	 * runs last and separately from the {@link Middleware} chain, so CORS headers
+	 * cannot be clobbered by a short-circuiting middleware.
+	 *
+	 * @param context - The {@link Context} for the request.
+	 * @param result - Whatever the handler chain returned.
+	 * @returns The native `Response` produced by {@link Res.toNativeResponse}.
+	 */
 	protected async respond(context: Context, result: unknown): Promise<Response> {
 		if (result instanceof Res) context.res = result;
 		else if (result !== undefined) context.res.body = result;
@@ -380,6 +611,17 @@ class App implements AppInterface {
 		return context.res.toNativeResponse();
 	}
 
+	/**
+	 * Runs {@link App.handleError} and responds with its result.
+	 *
+	 * If the error handler itself throws, that second failure is logged and a bare
+	 * {@link Status.INTERNAL_SERVER_ERROR} is returned — the request never escapes
+	 * without a response.
+	 *
+	 * @param context - The {@link Context} the failure occurred in.
+	 * @param err - The {@link Error} thrown by the handler chain.
+	 * @returns The error response.
+	 */
 	protected async respondWithError(context: Context, err: Error): Promise<Response> {
 		try {
 			return await this.respond(context, await this.handleError(err, context));
@@ -389,14 +631,41 @@ class App implements AppInterface {
 		}
 	}
 
+	/**
+	 * Hook run inside {@link App.listen}, before the {@link Server} is created.
+	 * Use it for setup that must complete before traffic is accepted; throwing
+	 * here aborts startup and closes the app.
+	 */
 	handleBeforeListen: Optional<() => MaybePromise<void>>;
+
+	/**
+	 * Hook run inside {@link App.close}, before the {@link Server} is stopped. Use
+	 * it to release resources the app owns.
+	 */
 	handleBeforeClose: Optional<() => MaybePromise<void>>;
 
+	/**
+	 * Default {@link ErrorHandler}. An {@link Exception} is rendered through
+	 * {@link Exception.toRes}; anything else becomes an opaque
+	 * {@link Status.INTERNAL_SERVER_ERROR} {@link Res}, so internal failures never
+	 * leak their message. Replace it to customise error output.
+	 *
+	 * @param err - The thrown {@link Error}.
+	 * @returns The {@link Res} to send.
+	 */
 	handleError: ErrorHandler = (err) => {
 		if (err instanceof Exception) return err.toRes();
 		return new Res({ message: "INTERNAL_SERVER_ERROR" }, { status: Status.INTERNAL_SERVER_ERROR });
 	};
 
+	/**
+	 * Default {@link ContextHandler} for unmatched requests. Replace it to
+	 * customise the 404 body.
+	 *
+	 * @param c - The {@link Context} for the unmatched request.
+	 * @returns A {@link Status.NOT_FOUND} {@link Res} naming the method and URL
+	 * that did not resolve.
+	 */
 	handleNotFound: ContextHandler = (c) => {
 		return new Res(
 			{ message: `${c.req.method} on ${c.req.url} does not exist.` },
@@ -404,6 +673,14 @@ class App implements AppInterface {
 		);
 	};
 
+	/**
+	 * Default {@link ContextHandler} for CORS preflight requests. Delegates to
+	 * {@link CorsInterface.handlePreflight} when {@link App.cors} is configured.
+	 *
+	 * @param c - The {@link Context} for the preflight request.
+	 * @returns The CORS preflight response, or an empty
+	 * {@link Status.NO_CONTENT} {@link Res} when no {@link CorsInterface} is set.
+	 */
 	handlePreflight: ContextHandler = (c) => {
 		if (isNil(this.cors)) {
 			return new Res(undefined, { status: Status.NO_CONTENT });
@@ -411,10 +688,24 @@ class App implements AppInterface {
 		return this.cors.handlePreflight(c);
 	};
 
+	/**
+	 * Default {@link ContextFactory}. Replace it to have the app build a
+	 * {@link Context} subclass carrying your own per-request state.
+	 *
+	 * @param request - The incoming request.
+	 * @param server - The {@link Server} that accepted it.
+	 * @returns A new {@link Context}.
+	 */
 	contextFactory: ContextFactory = (request, server) => {
 		return new Context(request, server);
 	};
 
+	/**
+	 * Registers a {@link Middleware} under every {@link RouteBase.id} in
+	 * {@link Middleware.routeIds}, so one instance can serve several routes.
+	 *
+	 * @param middleware - The {@link Middleware} to register.
+	 */
 	addMiddleware(middleware: Middleware): void {
 		for (const routeId of middleware.routeIds) {
 			const arr = this.middlewares.get(routeId);
@@ -423,12 +714,29 @@ class App implements AppInterface {
 		}
 	}
 
+	/**
+	 * Resolves the {@link Middleware} instances that apply to a route, global ones
+	 * first so they wrap the route-specific ones.
+	 *
+	 * @param routeId - The {@link RouteBase.id} to resolve for, or `"*"` to get
+	 * only the global middlewares without duplicating them.
+	 * @returns The middlewares in execution order.
+	 */
 	findMiddlewares(routeId: string): Array<Middleware> {
 		const global = routeId === "*" ? [] : (this.middlewares.get("*") ?? []);
 		const local = this.middlewares.get(routeId) ?? [];
 		return [...global, ...local];
 	}
 
+	/**
+	 * Logs a warning for every {@link Middleware} whose target
+	 * {@link RouteBase.id} is not registered on this app and which therefore can
+	 * never run — usually a typo or a route that was never attached.
+	 *
+	 * Runs from {@link App.createServer} rather than {@link App.addMiddleware},
+	 * because registration order is not guaranteed and a middleware may legally be
+	 * added before its route.
+	 */
 	protected warnUnmatchedMiddlewares(): void {
 		const routeIds = new Set(this.routes.map((route) => route.id));
 		for (const routeId of this.middlewares.keys()) {
@@ -440,5 +748,5 @@ class App implements AppInterface {
 	}
 }
 
-export type { AppInterface };
 export { App };
+export type { AppInterface };
