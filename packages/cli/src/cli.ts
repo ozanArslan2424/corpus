@@ -2,14 +2,14 @@
 
 import { logFatal } from "@ozanarslan/corpus/utils";
 
-import { MainFileUpdater } from "@/classes/MainFileUpdater";
 import { APP_NAME, EXE_NAME } from "@/constants";
-import { AddControllerModule } from "@/modules/AddControllerModule";
-import { AddExceptionModule } from "@/modules/AddExceptionModule";
-import { AddModelModule } from "@/modules/AddModelModule";
-import { AddResourceModule } from "@/modules/AddResourceModule";
-import { AddServiceModule } from "@/modules/AddServiceModule";
-import { ApiClientModule } from "@/modules/ApiClientModule";
+import { MainFileUpdater } from "@/FileParser/MainFileUpdater";
+import { AddControllerModule } from "@/Modules/AddControllerModule";
+import { AddExceptionModule } from "@/Modules/AddExceptionModule";
+import { AddModelModule } from "@/Modules/AddModelModule";
+import { AddResourceModule } from "@/Modules/AddResourceModule";
+import { AddServiceModule } from "@/Modules/AddServiceModule";
+import { ApiClientModule } from "@/Modules/ApiClientModule";
 
 const mainFileUpdater = new MainFileUpdater();
 

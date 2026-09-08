@@ -1,6 +1,6 @@
 import type { Schema } from "@ozanarslan/corpus";
 
-import { SchemaPrinterAbstract } from "@/schema/SchemaPrinterAbstract";
+import { SchemaPrinterAbstract } from "@/SchemaPrinter/SchemaPrinterAbstract";
 
 // i don't want yup as an inlined dependency
 type YupSchema = Schema & {

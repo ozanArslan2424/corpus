@@ -1,13 +1,13 @@
 import { assert, quote } from "@ozanarslan/corpus/utils";
 
-import { MainFileUpdater } from "@/classes/MainFileUpdater";
-import { Resource } from "@/classes/Resource";
 import { EXE_NAME, NAME_FLAG_HELP } from "@/constants";
-import type { AddControllerModule } from "@/modules/AddControllerModule";
-import type { AddExceptionModule } from "@/modules/AddExceptionModule";
-import type { AddModelModule } from "@/modules/AddModelModule";
-import type { AddServiceModule } from "@/modules/AddServiceModule";
-import { ModuleAbstract } from "@/modules/ModuleAbstract";
+import { MainFileUpdater } from "@/FileParser/MainFileUpdater";
+import type { AddControllerModule } from "@/Modules/AddControllerModule";
+import type { AddExceptionModule } from "@/Modules/AddExceptionModule";
+import type { AddModelModule } from "@/Modules/AddModelModule";
+import type { AddServiceModule } from "@/Modules/AddServiceModule";
+import { ModuleAbstract } from "@/Modules/ModuleAbstract";
+import { Resource } from "@/Resource";
 
 export class AddResourceModule extends ModuleAbstract {
 	constructor(

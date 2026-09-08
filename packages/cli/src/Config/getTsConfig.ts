@@ -2,7 +2,7 @@ import fs from "fs";
 
 import { logger, type Nullable } from "@ozanarslan/corpus/utils";
 
-import { resolveCwdPath } from "@/functions/resolveCwdPath";
+import { resolveCwdPath } from "@/utils/resolveCwdPath";
 
 export type PartialTsConfig = Partial<{
 	compilerOptions: Partial<{

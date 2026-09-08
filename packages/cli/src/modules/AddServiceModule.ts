@@ -2,12 +2,12 @@ import fs from "fs";
 
 import { assert, objGetEntries, objGetValues, StringBuilder } from "@ozanarslan/corpus/utils";
 
-import { Importable } from "@/classes/Importable";
-import { MainFileUpdater } from "@/classes/MainFileUpdater";
 import { EXE_NAME, NAME_FLAG_HELP, NEVER_SCHEMAS } from "@/constants";
-import { checkNotImplementedExceptionExists } from "@/functions/checkNotImplementedExceptionExists";
-import { parseModelDefinition } from "@/functions/parseModelDefinition";
-import { ModuleAbstract } from "@/modules/ModuleAbstract";
+import { MainFileUpdater } from "@/FileParser/MainFileUpdater";
+import { Importable } from "@/Importable";
+import { ModuleAbstract } from "@/Modules/ModuleAbstract";
+import { checkNotImplementedExceptionExists } from "@/utils/checkNotImplementedExceptionExists";
+import { parseModelDefinition } from "@/utils/parseModelDefinition";
 
 export class AddServiceModule extends ModuleAbstract {
 	constructor(private readonly mainFileUpdater: MainFileUpdater) {

@@ -10,8 +10,8 @@ import {
 } from "@ozanarslan/corpus/utils";
 
 import { EXE_NAME, GEN_FUNC, LISTEN_PATTERN } from "@/constants";
-import { resolveCwdPath } from "@/functions/resolveCwdPath";
-import { ModuleAbstract } from "@/modules/ModuleAbstract";
+import { ModuleAbstract } from "@/Modules/ModuleAbstract";
+import { resolveCwdPath } from "@/utils/resolveCwdPath";
 
 export class ApiClientModule extends ModuleAbstract {
 	override keys = ["api"];
@@ -66,10 +66,8 @@ Could not find a .listen() call in: ${mainPath}.
 				`
 try {
     const nearestApp = getNearestApp();
-    const prefix = nearestApp.prefix;
-    const routesArr = nearestApp.routes;
     const config = ${JSON.stringify(this.config)};
-    ${GEN_FUNC}(prefix, routesArr, config);
+    ${GEN_FUNC}(nearestApp.prefix, nearestApp.routes, config);
     process.exit(0);
 } catch (err) {
     console.log(String(err));

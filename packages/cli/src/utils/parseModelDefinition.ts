@@ -1,14 +1,21 @@
-import { Importable } from "@/classes/Importable";
+import type { Node } from "oxc-parser";
+
 import { INTERFACE_MODEL_PATTERN, MODEL_PATTERN, MODEL_TYPE_PATTERN } from "@/constants";
+import { Importable } from "@/Importable";
 
 export function parseModelDefinition(model: Importable) {
 	let modelName = "";
 	let modelTypeName = "";
 	const modelDef: Record<string, Record<string, string>> = {};
 
-	model.parseFile((node, reader, str) => {
+	model.parseFile((node, reader) => {
 		const firstLn = reader.useBetween(node.start, node.end).useUntil("\n");
 		const isModel = firstLn.contains(MODEL_PATTERN);
+
+		function str(node: Node): string {
+			return reader.getBetween(node.start, node.end);
+		}
+
 		if (isModel) {
 			if (node.type === "ClassDeclaration") {
 				// model that's class

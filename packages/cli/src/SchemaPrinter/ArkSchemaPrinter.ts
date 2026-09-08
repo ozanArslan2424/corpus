@@ -1,7 +1,7 @@
 import type { Schema } from "@ozanarslan/corpus";
 import type { Type } from "arktype";
 
-import { SchemaPrinterAbstract } from "@/schema/SchemaPrinterAbstract";
+import { SchemaPrinterAbstract } from "@/SchemaPrinter/SchemaPrinterAbstract";
 
 /** Bare identifiers that are already valid TS. */
 const KEEP = new Set([

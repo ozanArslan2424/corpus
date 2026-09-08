@@ -1,7 +1,7 @@
 import type { Method } from "@ozanarslan/corpus";
 import type { OrString } from "@ozanarslan/corpus/utils";
 
-import type { ImportableKind } from "@/classes/Importable";
+import type { ImportableKind } from "@/Importable";
 
 interface ApiClientConfig {
 	/**

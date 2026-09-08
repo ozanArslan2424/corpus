@@ -5,9 +5,9 @@ import { parseArgs } from "util";
 
 import { type Nullable, logger, isUndefined, setLoggerNoop } from "@ozanarslan/corpus/utils";
 
-import type { Config } from "@/config/Config";
-import { getConfig } from "@/config/getConfig";
-import { resolveCwdPath } from "@/functions/resolveCwdPath";
+import type { Config } from "@/Config/Config";
+import { getConfig } from "@/Config/getConfig";
+import { resolveCwdPath } from "@/utils/resolveCwdPath";
 
 export interface ModuleInterface {
 	help: string[];

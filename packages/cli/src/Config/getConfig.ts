@@ -10,10 +10,10 @@ import {
 	StringBuilder,
 } from "@ozanarslan/corpus/utils";
 
-import type { Config } from "@/config/Config";
+import type { Config } from "@/Config/Config";
 import { CONFIG_FILE_NAME } from "@/constants";
-import { cache } from "@/functions/cache";
-import { resolveCwdPath } from "@/functions/resolveCwdPath";
+import { cache } from "@/utils/cache";
+import { resolveCwdPath } from "@/utils/resolveCwdPath";
 
 export function getDefaultConfig(): Config {
 	return {

@@ -1,8 +1,8 @@
 import { assert, StringBuilder, quote } from "@ozanarslan/corpus/utils";
 
-import { Importable } from "@/classes/Importable";
 import { EXE_NAME, NAME_FLAG_HELP } from "@/constants";
-import { ModuleAbstract } from "@/modules/ModuleAbstract";
+import { Importable } from "@/Importable";
+import { ModuleAbstract } from "@/Modules/ModuleAbstract";
 
 export class AddExceptionModule extends ModuleAbstract {
 	override keys: string[] = ["exception", "exc"];

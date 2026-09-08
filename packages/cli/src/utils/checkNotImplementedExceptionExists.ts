@@ -1,6 +1,6 @@
 import fs from "fs";
 
-import type { Importable } from "@/classes/Importable";
+import type { Importable } from "@/Importable";
 
 export function checkNotImplementedExceptionExists(exception: Importable) {
 	let notImplementedExceptionExists = false;

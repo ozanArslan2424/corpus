@@ -3,9 +3,9 @@ import path from "path";
 
 import type { Nullable } from "@ozanarslan/corpus/utils";
 
-import type { Config } from "@/config/Config";
-import { defineConfig } from "@/config/defineConfig";
-import type { PartialTsConfig } from "@/config/getTsConfig";
+import type { Config } from "@/Config/Config";
+import { defineConfig } from "@/Config/defineConfig";
+import type { PartialTsConfig } from "@/Config/getTsConfig";
 
 let mockConfig: Config;
 let mockTsConfig: Nullable<PartialTsConfig>;
@@ -18,7 +18,7 @@ mock.module("@/config/getTsConfig", () => ({
 	getTsConfig: () => mockTsConfig,
 }));
 
-const { Importable } = await import("@/classes/Importable");
+const { Importable } = await import("@/Importable");
 
 const testDir = __dirname;
 spyOn(process, "cwd").mockReturnValue(testDir);

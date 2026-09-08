@@ -10,11 +10,11 @@ import {
 	objGetEntries,
 } from "@ozanarslan/corpus/utils";
 
-import { FileParser, type FileParserCallback } from "@/classes/FileParser";
-import type { Config } from "@/config/Config";
-import { getConfig } from "@/config/getConfig";
-import { getTsConfig } from "@/config/getTsConfig";
-import { resolveCwdPath } from "@/functions/resolveCwdPath";
+import type { Config } from "@/Config/Config";
+import { getConfig } from "@/Config/getConfig";
+import { getTsConfig } from "@/Config/getTsConfig";
+import { FileParser, type FileParserCallback } from "@/FileParser";
+import { resolveCwdPath } from "@/utils/resolveCwdPath";
 
 export type ImportableKind = OrString<"model" | "service" | "controller" | "route" | "exception">;
 

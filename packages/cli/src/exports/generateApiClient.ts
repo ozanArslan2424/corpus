@@ -12,9 +12,9 @@ import {
 	quote,
 } from "@ozanarslan/corpus/utils";
 
-import type { Config } from "@/config/Config";
-import { cache } from "@/functions/cache";
-import { SchemaPrinter } from "@/schema/SchemaPrinter";
+import type { Config } from "@/Config/Config";
+import { SchemaPrinter } from "@/SchemaPrinter";
+import { cache } from "@/utils/cache";
 
 const MODEL_KEYS = ["body", "search", "params", "response"] as const;
 const CT_GENERIC = `CT extends "json" | "formData" = "json"`;

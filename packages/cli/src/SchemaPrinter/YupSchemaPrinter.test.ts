@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 
 import * as yup from "yup";
 
-import { YupSchemaPrinter } from "@/schema/YupSchemaPrinter";
+import { YupSchemaPrinter } from "@/SchemaPrinter/YupSchemaPrinter";
 
 const p = new YupSchemaPrinter();
 

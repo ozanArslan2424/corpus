@@ -1,4 +1,4 @@
-import { defineConfig } from "@/config/defineConfig";
+import { defineConfig } from "@/Config/defineConfig";
 
 export default defineConfig({
 	silent: false,

@@ -1,9 +1,9 @@
 import { assert, StringBuilder, quote, isNil } from "@ozanarslan/corpus/utils";
 
-import { Importable } from "@/classes/Importable";
-import type { Config } from "@/config/Config";
+import type { Config } from "@/Config/Config";
 import { EXE_NAME, NAME_FLAG_HELP } from "@/constants";
-import { ModuleAbstract } from "@/modules/ModuleAbstract";
+import { Importable } from "@/Importable";
+import { ModuleAbstract } from "@/Modules/ModuleAbstract";
 
 export class AddModelModule extends ModuleAbstract {
 	override keys: string[] = ["model", "mdl"];
@@ -124,9 +124,9 @@ export class AddModelModule extends ModuleAbstract {
 		const schemas = this.getSchemas(validationLibrary);
 
 		return `${schemas.import}
-import type { X } from ${quote(this.config.pkgPath)};
+import type { C } from ${quote(this.config.pkgPath)};
 
-export type ${modelTypeName} = X.InferModel<typeof ${model.pascalName}>
+export type ${modelTypeName} = C.InferModel<typeof ${model.pascalName}>
 
 export abstract class ${model.pascalName} {${validationLibrary === "yup" ? `\n\tstatic readonly never = y.mixed().oneOf([undefined] as const);\n` : ``}
     static readonly entity = ${schemas.entity};

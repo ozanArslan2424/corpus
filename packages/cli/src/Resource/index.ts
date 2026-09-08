@@ -7,9 +7,9 @@ import {
 	type OrString,
 } from "@ozanarslan/corpus/utils";
 
-import { Importable } from "@/classes/Importable";
-import type { Config } from "@/config/Config";
-import { getConfig } from "@/config/getConfig";
+import type { Config } from "@/Config/Config";
+import { getConfig } from "@/Config/getConfig";
+import { Importable } from "@/Importable";
 
 export class Resource {
 	constructor(key: string) {

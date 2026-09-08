@@ -1,8 +1,8 @@
 import type { Schema } from "@ozanarslan/corpus";
 
-import { ArkSchemaPrinter } from "@/schema/ArkSchemaPrinter";
-import { YupSchemaPrinter } from "@/schema/YupSchemaPrinter";
-import { ZodSchemaPrinter } from "@/schema/ZodSchemaPrinter";
+import { ArkSchemaPrinter } from "@/SchemaPrinter/ArkSchemaPrinter";
+import { YupSchemaPrinter } from "@/SchemaPrinter/YupSchemaPrinter";
+import { ZodSchemaPrinter } from "@/SchemaPrinter/ZodSchemaPrinter";
 
 export class SchemaPrinter {
 	private readonly ark = new ArkSchemaPrinter();

@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 
 import * as z from "zod";
 
-import { ZodSchemaPrinter } from "@/schema/ZodSchemaPrinter";
+import { ZodSchemaPrinter } from "@/SchemaPrinter/ZodSchemaPrinter";
 
 const p = new ZodSchemaPrinter();
 

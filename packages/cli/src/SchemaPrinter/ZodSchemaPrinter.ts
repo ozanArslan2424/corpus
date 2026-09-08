@@ -1,7 +1,7 @@
 import type { Schema } from "@ozanarslan/corpus";
 import type * as TZ from "zod";
 
-import { SchemaPrinterAbstract } from "@/schema/SchemaPrinterAbstract";
+import { SchemaPrinterAbstract } from "@/SchemaPrinter/SchemaPrinterAbstract";
 
 type _zd<t, T extends TZ.ZodType> = { type: t } & T["def"];
 

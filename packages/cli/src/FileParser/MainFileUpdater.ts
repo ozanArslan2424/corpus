@@ -11,9 +11,9 @@ import {
 } from "@ozanarslan/corpus/utils";
 import type { Node } from "oxc-parser";
 
-import { FileParser } from "@/classes/FileParser";
-import { getConfig } from "@/config/getConfig";
+import { getConfig } from "@/Config/getConfig";
 import { LISTEN_PATTERN, PATTERNS } from "@/constants";
+import { FileParser } from "@/FileParser";
 
 type ChunkKind = "import" | "route" | "middleware" | "controller" | "service";
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 
 import { type } from "arktype";
 
-import { ArkSchemaPrinter } from "@/schema/ArkSchemaPrinter";
+import { ArkSchemaPrinter } from "@/SchemaPrinter/ArkSchemaPrinter";
 
 const p = new ArkSchemaPrinter();
 
