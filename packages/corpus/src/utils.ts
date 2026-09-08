@@ -3,7 +3,6 @@ export * from "@/utils/assert";
 export * from "@/utils/boolean";
 export * from "@/utils/class";
 export * from "@/utils/enum";
-export * from "@/utils/FileParser";
 export * from "@/utils/function";
 export * from "@/utils/lexical";
 export * from "@/utils/logger";

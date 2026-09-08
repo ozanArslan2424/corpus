@@ -41,13 +41,13 @@ export { Res, Status } from "@/Res";
 // oxfmt-ignore
 export { Route } from "@/Route";
 // oxfmt-ignore
-export { RouteBase, RouteVariant, type RouteAddress, type RouteConfig, type InferModel } from "@/RouteBase";
+export { RouteBase, RouteVariant, type RouteAddress, type RouteConfig } from "@/RouteBase";
 // oxfmt-ignore
-export { SchemaParser, type SchemaParserInterface } from "@/SchemaParser";
+export { SchemaParser, type SchemaParserInterface, type InferModel } from "@/SchemaParser";
 // oxfmt-ignore
 export { SearchParamsParser } from "@/SearchParamsParser";
 // oxfmt-ignore
-export type { Server, ServerWebSocket, ServerHandler, ServerRouteMap, ServerWebSocketHandler } from "@/Server";
+export type { Server, ServerWebSocket, ServerHandler, ServerRouteMap } from "@/Server";
 // oxfmt-ignore
 export { StaticRoute } from "@/StaticRoute";
 // oxfmt-ignore

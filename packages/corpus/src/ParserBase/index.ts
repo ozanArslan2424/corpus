@@ -124,5 +124,4 @@ abstract class ParserBase<T> implements ParserBaseInterface<T> {
 	}
 }
 
-export type { ParserBaseInterface };
-export { ParserBase };
+export { type ParserBaseInterface, ParserBase };

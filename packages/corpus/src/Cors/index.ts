@@ -187,5 +187,4 @@ class Cors implements CorsInterface {
 	}
 }
 
-export { Cors };
-export type { CorsInterface };
+export { Cors, type CorsInterface };

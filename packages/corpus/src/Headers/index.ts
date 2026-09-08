@@ -457,10 +457,11 @@ declare global {
 }
 
 export {
-	HeaderKey,
+	patchGlobalHeaders,
 	createCacheControlHeader,
 	createContentDispositionHeader,
 	readHeader,
-	patchGlobalHeaders,
+	HeaderKey,
+	type ContentDispositionDefinition,
+	type CacheControlDefinition,
 };
-export type { ContentDispositionDefinition, CacheControlDefinition };

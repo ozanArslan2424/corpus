@@ -1,0 +1,42 @@
+.table-of-contents {
+	background-color: var(--aside-bg);
+	border-left: 2px solid var(--code-keyword);
+	padding-inline: 1rem;
+	padding-block: 1.25rem;
+	border-radius: 0 6px 6px 0;
+}
+
+.table-of-contents h5 {
+	font-size: 0.75rem;
+	line-height: 1;
+	text-transform: uppercase;
+	letter-spacing: 0.7px;
+	color: var(--text-muted);
+	font-weight: 600;
+	margin-top: 0;
+	margin-bottom: 0.75rem;
+}
+
+.table-of-contents ol {
+	margin: 0;
+	padding-left: 1.25rem;
+}
+
+.table-of-contents li {
+	margin-bottom: 0.125rem;
+
+	&:last-child {
+		margin-bottom: 0;
+	}
+}
+
+.table-of-contents a {
+	color: var(--text-secondary);
+	text-decoration: none;
+	font-size: 0.875rem;
+	transition: color 0.15s ease;
+
+	&:hover {
+		color: var(--text-primary);
+	}
+}

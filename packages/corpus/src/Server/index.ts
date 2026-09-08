@@ -23,13 +23,6 @@ import type { WebSocketRoute } from "@/WebSocketRoute";
  */
 type ServerWebSocket = Bun.ServerWebSocket<WebSocketRoute>;
 
-/**
- * The socket lifecycle callbacks Bun's server takes. {@link App} registers one
- * set for the whole server and forwards each event to the originating
- * {@link WebSocketRoute}.
- */
-type ServerWebSocketHandler = Bun.WebSocketHandler<WebSocketRoute>;
-
 /** The running Bun server, as held by {@link App.server}. */
 type Server = Bun.Server<WebSocketRoute>;
 
@@ -53,4 +46,4 @@ type ServerHandler = (request: Request, server: Maybe<Server>) => MaybePromise<O
  */
 type ServerRouteMap = Record<string, Partial<Record<Method, ServerHandler>>>;
 
-export type { Server, ServerHandler, ServerRouteMap, ServerWebSocketHandler, ServerWebSocket };
+export type { Server, ServerHandler, ServerRouteMap, ServerWebSocket };

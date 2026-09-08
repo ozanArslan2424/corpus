@@ -204,5 +204,4 @@ class Config {
 	}
 }
 
-export { Config };
-export type { Env };
+export { Config, type Env };

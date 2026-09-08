@@ -76,9 +76,8 @@ class Exception extends Error {
 	 * Renders the exception as the response to send.
 	 *
 	 * When {@link Exception.data} is a {@link Res}, that response is used directly:
-	 * its status is overwritten with {@link Exception.status}, and the message is
-	 * filled in only if the body does not already carry one, so a body you wrote
-	 * yourself is left alone. Otherwise a fresh {@link Res} is built with the
+	 * its status is overwritten with {@link Exception.status}, the Exception
+	 * message gets discarded. Otherwise a fresh {@link Res} is built with the
 	 * message and the detail under `error`.
 	 *
 	 * @returns The {@link Res} for this error. Called by
@@ -86,7 +85,6 @@ class Exception extends Error {
 	 */
 	toRes(): Res {
 		if (this.data instanceof Res) {
-			if (!("message" in this.data.body)) this.data.body.message = this.message;
 			this.data.status = this.status;
 			return this.data;
 		}

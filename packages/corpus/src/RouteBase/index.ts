@@ -20,12 +20,12 @@ import { getNearestApp } from "@/AppsRegistry";
 import { Context, type ContextHandler } from "@/Context";
 import { HeaderKey } from "@/Headers";
 import { Method } from "@/Request";
-import type { InferSchemaOut, Schema } from "@/SchemaParser";
+import type { Schema } from "@/SchemaParser";
 import { arrIncludes } from "@/utils/array";
 import { assert } from "@/utils/assert";
 import { enumerate, type ValueOf } from "@/utils/enum";
 import type { MaybePromise } from "@/utils/maybe";
-import { isObject, objGetEntries, objGetValues, type Prettify } from "@/utils/object";
+import { isObject, objGetEntries, objGetValues } from "@/utils/object";
 import { joinPathSegments } from "@/utils/path";
 
 /**
@@ -99,20 +99,6 @@ type RouteConfig<B = unknown, S = unknown, P = unknown, R = unknown> = {
 	search?: Schema<S>;
 	/** Schema for the path parameters. Validated before the handler runs. */
 	params?: Schema<P>;
-};
-
-/** If you prefer to put all schemas into a single object, this will be helpful */
-type InferModel<T extends Record<string, any>> = {
-	[K in keyof T as K extends "prototype" ? never : K]: T[K] extends RouteConfig<any, any, any, any>
-		? Prettify<
-				(T[K]["body"] extends Schema ? { body: InferSchemaOut<T[K]["body"]> } : {}) &
-					(T[K]["search"] extends Schema ? { search: InferSchemaOut<T[K]["search"]> } : {}) &
-					(T[K]["params"] extends Schema ? { params: InferSchemaOut<T[K]["params"]> } : {}) &
-					(T[K]["response"] extends Schema ? { response: InferSchemaOut<T[K]["response"]> } : {})
-			>
-		: T[K] extends Schema
-			? InferSchemaOut<T[K]>
-			: never;
 };
 
 /**
@@ -298,5 +284,4 @@ abstract class RouteBase<B = any, S = any, P = any, R = any, E extends string = 
 	}
 }
 
-export type { RouteConfig, RouteAddress, InferModel };
-export { RouteBase, RouteVariant, resolveRouteAddress };
+export { RouteBase, RouteVariant, type RouteConfig, type RouteAddress, resolveRouteAddress };

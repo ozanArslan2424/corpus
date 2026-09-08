@@ -283,5 +283,4 @@ class BodyParser implements BodyParserInterface {
 	}
 }
 
-export type { BodyParserInterface };
-export { BodyParser };
+export { type BodyParserInterface, BodyParser };

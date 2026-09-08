@@ -748,5 +748,4 @@ class App implements AppInterface {
 	}
 }
 
-export { App };
-export type { AppInterface };
+export { App, type AppInterface };

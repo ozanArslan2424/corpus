@@ -151,5 +151,10 @@ class WebSocketRoute<E extends string = string> extends RouteBase<
 	onMessage!: WebSocketOnMessage;
 }
 
-export type { WebSocketOnMessage, WebSocketOnClose, WebSocketOnOpen, WebSocketRouteDefinition };
-export { WebSocketRoute };
+export {
+	WebSocketRoute,
+	type WebSocketOnMessage,
+	type WebSocketOnClose,
+	type WebSocketOnOpen,
+	type WebSocketRouteDefinition,
+};

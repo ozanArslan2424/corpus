@@ -108,12 +108,6 @@ describe("Exception", () => {
 			expect(err.toRes()).toBe(providedRes);
 		});
 
-		it("overwrites the reused Res's body with just the exception message", () => {
-			const providedRes = new Res("original body");
-			const err = new Exception("Not found", Status.NOT_FOUND, providedRes);
-			expect(err.toRes().body).toEqual({ message: "Not found" });
-		});
-
 		it("overwrites the reused Res's status with the exception's status", () => {
 			const providedRes = new Res("original body", { status: Status.OK });
 			const err = new Exception("Custom error", Status.INTERNAL_SERVER_ERROR, providedRes);

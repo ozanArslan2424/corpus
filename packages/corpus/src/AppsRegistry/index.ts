@@ -66,5 +66,4 @@ function registerApp(app: AppInterface): void {
 	apps.push(app);
 }
 
-export type { AppsRegistry };
-export { getOrInitAppsRegistry, getNearestApp, registerApp };
+export { type AppsRegistry, getOrInitAppsRegistry, getNearestApp, registerApp };

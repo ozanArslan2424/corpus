@@ -141,3 +141,11 @@ export function strRemoveExt(str: string) {
 export function strRemoveWhitespace(str: string) {
 	return str.trim().replace(/\s+/g, "");
 }
+
+export function slugify(text: string): string {
+	return text
+		.replace(/`/g, "")
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/^-|-$/g, "");
+}

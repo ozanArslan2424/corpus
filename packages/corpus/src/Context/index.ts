@@ -196,5 +196,4 @@ class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	}
 }
 
-export { Context };
-export type { ContextDataInterface, ContextFactory, ContextHandler };
+export { Context, type ContextDataInterface, type ContextFactory, type ContextHandler };

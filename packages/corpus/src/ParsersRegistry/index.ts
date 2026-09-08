@@ -113,5 +113,4 @@ function setParsersRegistry(overrides: Partial<ParsersRegistry>): void {
 	Object.assign(getOrInitParsersRegistry(), overrides);
 }
 
-export type { ParsersRegistry };
-export { setParsersRegistry, getOrInitParsersRegistry };
+export { type ParsersRegistry, getOrInitParsersRegistry, setParsersRegistry };

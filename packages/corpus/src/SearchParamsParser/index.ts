@@ -24,7 +24,7 @@ import { createSafeObject } from "@/utils/object";
  * Values are coerced through {@link ParserBase.tryParseJSON}, so `?page=2` and
  * `?active=true` arrive as a number and a boolean rather than as strings.
  */
-export class SearchParamsParser extends ParserBase<URLSearchParams> {
+class SearchParamsParser extends ParserBase<URLSearchParams> {
 	/**
 	 * Parses a query string into a nested object.
 	 *
@@ -105,3 +105,5 @@ export class SearchParamsParser extends ParserBase<URLSearchParams> {
 		}
 	}
 }
+
+export { SearchParamsParser };

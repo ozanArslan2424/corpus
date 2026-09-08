@@ -572,5 +572,9 @@ class RateLimiter extends Middleware {
 	}
 }
 
-export { RateLimiter, RateLimiterMemoryStore };
-export type { RateLimiterStoreInterface, RateLimiterConfig };
+export {
+	RateLimiter,
+	RateLimiterMemoryStore,
+	type RateLimiterStoreInterface,
+	type RateLimiterConfig,
+};

@@ -201,4 +201,4 @@ declare global {
 	}
 }
 
-export { Method, patchGlobalRequest };
+export { patchGlobalRequest, Method };

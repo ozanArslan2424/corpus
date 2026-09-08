@@ -20,7 +20,8 @@ import type { StandardSchemaV1 } from "@standard-schema/spec";
 
 import { Exception } from "@/Exception";
 import { Status } from "@/Res";
-import { isObjectWith } from "@/utils/object";
+import type { RouteConfig } from "@/RouteBase";
+import { isObjectWith, type Prettify } from "@/utils/object";
 
 /**
  * Any Standard Schema validator producing `T`. This is the type
@@ -47,6 +48,20 @@ type InferSchemaOut<T extends Schema> = StandardSchemaV1.InferOutput<T>;
 
 /** The validation failures a schema reports. */
 type ValidationIssues = readonly StandardSchemaV1.Issue[];
+
+/** If you prefer to put all schemas into a single object, this will be helpful */
+type InferModel<T extends Record<string, any>> = {
+	[K in keyof T as K extends "prototype" ? never : K]: T[K] extends RouteConfig<any, any, any, any>
+		? Prettify<
+				(T[K]["body"] extends Schema ? { body: InferSchemaOut<T[K]["body"]> } : {}) &
+					(T[K]["search"] extends Schema ? { search: InferSchemaOut<T[K]["search"]> } : {}) &
+					(T[K]["params"] extends Schema ? { params: InferSchemaOut<T[K]["params"]> } : {}) &
+					(T[K]["response"] extends Schema ? { response: InferSchemaOut<T[K]["response"]> } : {})
+			>
+		: T[K] extends Schema
+			? InferSchemaOut<T[K]>
+			: never;
+};
 
 /**
  * The public shape of a schema parser, implemented by {@link SchemaParser}.
@@ -190,5 +205,12 @@ class SchemaParser implements SchemaParserInterface {
 	}
 }
 
-export type { SchemaParserInterface, Schema, InferSchemaIn, InferSchemaOut, ValidationIssues };
-export { SchemaParser };
+export {
+	type SchemaParserInterface,
+	SchemaParser,
+	type Schema,
+	type InferSchemaIn,
+	type InferSchemaOut,
+	type ValidationIssues,
+	type InferModel,
+};

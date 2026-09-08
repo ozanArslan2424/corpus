@@ -152,5 +152,4 @@ class Globals {
 	}
 }
 
-export type { GlobalRegistry };
-export { Globals, GLOBAL_SYMBOLS };
+export { type GlobalRegistry, Globals, GLOBAL_SYMBOLS };

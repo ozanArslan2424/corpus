@@ -164,5 +164,4 @@ class Middleware {
 	}
 }
 
-export { Middleware };
-export type { MiddlewareDefinition, MiddlewareUseOn, MiddlewareHandler };
+export { Middleware, type MiddlewareDefinition, type MiddlewareUseOn, type MiddlewareHandler };
