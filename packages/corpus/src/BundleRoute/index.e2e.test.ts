@@ -126,8 +126,7 @@ describe("BundleRoute e2e", () => {
 
 	it("does not escape the bundle dir via percent-encoded traversal", async () => {
 		const res = await fetch(`${BASE_URL}/app/%2e%2e%2f%2e%2e%2fpackage.json`);
-		expect(res.status).toBe(200);
-		expect(await res.text()).toBe(INDEX_HTML);
+		expect(res.status).toBe(404);
 	});
 
 	it("honors a custom indexHtml path at the bundle root", async () => {

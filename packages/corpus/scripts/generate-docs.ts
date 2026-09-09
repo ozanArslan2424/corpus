@@ -12,7 +12,7 @@ import { slugify } from "@/utils/lexical";
 const SRC_DIR = path.join(process.cwd(), "src");
 
 /** Where the markdown lands. Generated files are overwritten in place; everything else in the directory is left alone. */
-const OUT_DIR = path.join(process.cwd(), "..", "docs", "files");
+const OUT_DIR = path.join(process.cwd(), "..", "docs", "src", "files");
 
 const IGNORE = ["src/index.ts", "/C.namespace.ts", "/exports.ts", "/utils.ts", "/utils/"];
 
@@ -683,7 +683,7 @@ function resolveLinks(text: string, index: LinkIndex, from: string): ResolveResu
 				return `\`${label}\``;
 			}
 
-			return `[\`${label}\`](${relativeHref(from, found)})`;
+			return `[${label}](${relativeHref(from, found)})`;
 		},
 	);
 
@@ -777,6 +777,25 @@ const KIND_LABEL: Record<DocEntry["kind"], string> = {
 	member: "member",
 };
 
+function renderTableOfContents(entries: Array<DocEntry>): Array<string> {
+	if (entries.length === 0) return [];
+
+	const items = entries.map(
+		(entry, i) => `${i + 1}. [${entry.heading}](#${slugify(entry.heading)})`,
+	);
+
+	return [
+		`<section class="table-of-contents">`,
+		"",
+		`##### Contents`,
+		"",
+		...items,
+		"",
+		`</section>`,
+		"",
+	];
+}
+
 function renderModule(module: DocModule): string {
 	const lines: Array<string> = [`# ${module.name}`, ""];
 
@@ -784,6 +803,8 @@ function renderModule(module: DocModule): string {
 	for (const example of module.examples) {
 		lines.push(example.includes("```") ? example : fence(example), "");
 	}
+
+	lines.push(...renderTableOfContents(module.entries));
 
 	for (const entry of module.entries) {
 		const suffix = entry.augmentation

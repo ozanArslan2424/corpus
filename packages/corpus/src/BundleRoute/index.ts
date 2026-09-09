@@ -20,6 +20,7 @@
  * @module BundleRoute
  */
 
+import fs from "fs";
 import path from "path";
 
 import type { ContextHandler } from "@/Context";
@@ -210,6 +211,24 @@ class BundleRoute<E extends string = string> extends RouteBase<
 	}
 
 	/**
+	 * Lists every file this route can serve, as sub-paths relative to
+	 * {@link BundleRoute.dir}.
+	 *
+	 * Walks {@link BundleRoute.dir} recursively and returns each file's path
+	 * with a leading `/`, matching what {@link BundleRoute.resolveSubPath} would
+	 * produce for a request reaching that file. Useful for generating a sitemap
+	 * or verifying what a deployed bundle actually contains.
+	 *
+	 * @returns The sub-paths of every file under {@link BundleRoute.dir}.
+	 */
+	getEndpoints(): Array<string> {
+		return fs
+			.readdirSync(this.dir, { recursive: true, encoding: "utf8" })
+			.filter((entry) => fs.statSync(path.join(this.dir, entry)).isFile())
+			.map((entry) => `/${entry.split(path.sep).join("/")}`);
+	}
+
+	/**
 	 * Decides what to serve when a request resolves to no readable file — an HTML
 	 * file that is genuinely missing, a directory with no entry document, or a
 	 * path rejected by {@link BundleRoute.isTraversalAttempt}.
@@ -260,7 +279,9 @@ class BundleRoute<E extends string = string> extends RouteBase<
 	 * relative to {@link BundleRoute.dir}.
 	 *
 	 * Both `/*` and `*` endpoint suffixes are handled, and a pathname that does
-	 * not start with the prefix is returned untouched.
+	 * not start with the prefix is returned untouched. The result is percent-decoded,
+	 * since {@link URL.pathname} leaves escapes like `%20` intact and filesystem
+	 * paths need the literal characters.
 	 *
 	 * @param pathname - The pathname of the incoming request.
 	 * @returns The bundle-relative sub-path, `""` or `/` for the route root.
@@ -271,7 +292,13 @@ class BundleRoute<E extends string = string> extends RouteBase<
 			: this.endpoint.endsWith("*")
 				? this.endpoint.slice(0, -1)
 				: this.endpoint;
-		return base && pathname.startsWith(base) ? pathname.slice(base.length) : pathname;
+		const subPath = base && pathname.startsWith(base) ? pathname.slice(base.length) : pathname;
+
+		try {
+			return decodeURIComponent(subPath);
+		} catch {
+			return subPath;
+		}
 	}
 
 	/**
