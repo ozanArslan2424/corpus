@@ -18,83 +18,89 @@ aside {
 		&:last-of-type {
 			margin-bottom: 6rem;
 		}
-	}
 
-	nav h3 {
-		font-size: 10px;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.8px;
-		color: var(--text-muted);
-		margin-bottom: 0.5rem;
-		display: block;
-	}
+		h3 {
+			font-size: 10px;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.8px;
+			color: var(--text-muted);
+			margin-bottom: 0.5rem;
+			display: block;
+		}
 
-	nav ol,
-	nav ul {
-		list-style: none;
-	}
+		ol,
+		ul {
+			list-style: none;
 
-	nav li {
-		margin-bottom: 0.2rem;
-	}
+			li {
+				margin-bottom: 0.2rem;
 
-	nav a {
-		display: block;
-		padding: 0.35rem 0.625rem;
-		color: var(--text-muted);
-		text-decoration: none;
-		border-left: 2px solid transparent;
-		transition:
-			color 0.15s ease,
-			background-color 0.15s ease,
-			border-color 0.15s ease;
-		border-radius: 0 4px 4px 0;
-	}
+				a {
+					display: block;
+					padding: 0.35rem 0.625rem;
+					color: var(--text-muted);
+					text-decoration: none;
+					border-left: 2px solid transparent;
+					transition:
+						color 0.15s ease,
+						background-color 0.15s ease,
+						border-color 0.15s ease;
+					border-radius: 0 4px 4px 0;
 
-	nav a:hover:not([aria-disabled="true"]) {
-		color: var(--text-primary);
-		background-color: var(--hover-bg);
-		border-left-color: var(--text-accent);
-	}
+					&:not([aria-disabled="true"]) {
+						&:hover {
+							color: var(--text-primary);
+							background-color: var(--hover-bg);
+							border-left-color: var(--accent);
+						}
 
-	nav a:active {
-		color: var(--text-accent);
-	}
+						&:active {
+							color: var(--text-accent);
+						}
 
-	nav a[aria-disabled="true"] {
-		color: var(--text-muted);
-		cursor: not-allowed;
-		opacity: 0.4;
-	}
+						&[aria-current="parent"] {
+							color: var(--text-primary);
+							background-color: var(--hover-bg);
+							border-left-color: var(--text-accent);
+							font-weight: 500;
+						}
 
-	nav a[aria-current="page"] {
-		color: var(--text-primary);
-		background-color: var(--hover-bg);
-		border-left-color: var(--code-keyword);
-		font-weight: 500;
-	}
+						&[aria-current="page"] {
+							color: var(--text-primary);
+							background-color: var(--hover-bg);
+							border-left-color: var(--accent2);
+							font-weight: 500;
+						}
+					}
 
-	nav ul ul {
-		margin-left: 1.25rem;
-		margin-top: 0.2rem;
-		border-left: 1px solid var(--border);
-		padding-left: 0.5rem;
-	}
+					&[aria-disabled="true"] {
+						color: var(--text-muted);
+						cursor: not-allowed;
+						opacity: 0.4;
+					}
+				}
+			}
 
-	nav ul ul li {
-		margin-bottom: 0.1rem;
-	}
+			ul li {
+				margin-bottom: 0.1rem;
+				margin-left: 1.25rem;
+				margin-top: 0.2rem;
 
-	nav ul ul a {
-		font-size: 12px;
-		padding: 0.2rem 0.5rem;
-		border-left: none;
-	}
+				a {
+					font-size: 12px;
+					padding: 0.25rem 0.5rem;
+					border-left: 2px solid var(--border);
 
-	nav li:has(a[aria-current="page"]) > a:first-child {
-		color: var(--text-primary);
-		font-weight: 500;
+					&[aria-current="page"] {
+						color: var(--text-primary);
+						background-color: var(--hover-bg);
+						border-left-color: var(--accent2);
+						font-weight: 500;
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -118,24 +124,26 @@ aside {
 		nav {
 			margin-bottom: 1.25rem;
 			padding: 0 1rem;
-		}
 
-		nav a {
-			padding: 0.3rem 0.5rem;
-			font-size: 12px;
+			a {
+				padding: 0.3rem 0.5rem;
+				font-size: 12px;
+			}
 		}
 	}
 
-	body.drawer-open aside {
-		transform: translateX(0);
-	}
+	body.drawer-open {
+		aside {
+			transform: translateX(0);
+		}
 
-	body.drawer-open::before {
-		content: "";
-		position: fixed;
-		inset: 3rem 0 0 0;
-		background: rgba(0, 0, 0, 0.5);
-		z-index: 49;
+		&::before {
+			content: "";
+			position: fixed;
+			inset: 3rem 0 0 0;
+			background: rgba(0, 0, 0, 0.5);
+			z-index: 49;
+		}
 	}
 }
 
@@ -146,20 +154,20 @@ aside {
 		nav {
 			margin-bottom: 1rem;
 			padding: 0 0.75rem;
-		}
 
-		nav h3 {
-			font-size: 10px;
-			margin-bottom: 0.4rem;
-		}
+			h3 {
+				font-size: 10px;
+				margin-bottom: 0.4rem;
+			}
 
-		nav li {
-			margin-bottom: 0.2rem;
-		}
+			li {
+				margin-bottom: 0.2rem;
+			}
 
-		nav a {
-			padding: 0.3rem 0.5rem;
-			font-size: 12px;
+			a {
+				padding: 0.3rem 0.5rem;
+				font-size: 12px;
+			}
 		}
 	}
 }

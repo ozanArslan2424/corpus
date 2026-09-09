@@ -7,8 +7,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 
-import { compileNoWrite } from "@/compile";
-import type { RouteFile } from "@/types";
+import { compileNoWrite, type RouteFile } from "@/compile";
 
 type BrokenHref = {
 	outPath: string;
