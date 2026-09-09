@@ -5,6 +5,7 @@ FROM base AS build
 COPY . .
 RUN bun add -g pnpm
 RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @ozanarslan/corpus build
 RUN pnpm --filter corpus-docs build
 RUN find . -not -path '*/node_modules/*' -not -path '*/.git/*'
 
