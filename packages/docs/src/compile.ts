@@ -10,7 +10,11 @@ import * as marked from "marked";
 
 const BASE_URL = C.Config.isProd ? "https://corpus-docs.fly.dev" : "http://localhost:3000";
 const FILES_DIR = path.join(import.meta.dir, "files");
-const TEMPLATE = path.join(import.meta.dir, "template.html");
+const ASSETS_DIR = path.join(FILES_DIR, "assets");
+const TEMPLATE = path.join(FILES_DIR, "template.html");
+
+const SKIP_COMPILE = [".webp", ".png", ".ico", ".webmanifest"];
+
 const EXT_MAP: Record<string, string> = {
 	".md": ".html",
 	".ts": ".js",
@@ -236,6 +240,10 @@ async function compileRouteFiles(
 	head: string,
 ) {
 	for (const routeFile of routeFiles) {
+		if (SKIP_COMPILE.includes(routeFile.ext)) {
+			continue;
+		}
+
 		if (routeFile.ext === ".css" || routeFile.ext === ".js" || routeFile.ext === ".ts") {
 			const content = fs.readFileSync(routeFile.fpath, "utf8");
 			const transformed = await esbuild.transform(content, {
@@ -243,27 +251,28 @@ async function compileRouteFiles(
 				minify: true,
 			});
 			map.set(routeFile.outPath, transformed.code);
-		} else {
-			const rawContent = fs.readFileSync(routeFile.fpath, "utf8");
-			const content =
-				routeFile.ext === ".md" ? `<main>\n${await marked.marked(rawContent)}</main>` : rawContent;
-			let result = template;
-			const variables = { head, sidebar, content };
-			result = getHydrated(result, variables);
-			result = await getScriptsCompiled(result);
-			result = await getCodesHighlighted(result);
-			result = getHeadersCounted(result);
-			result = await terser.minify(result, {
-				collapseWhitespace: true,
-				removeComments: true,
-				removeOptionalTags: true,
-				removeRedundantAttributes: true,
-				removeScriptTypeAttributes: true,
-				removeStyleLinkTypeAttributes: true,
-				useShortDoctype: true,
-			});
-			map.set(routeFile.outPath, result);
+			continue;
 		}
+
+		const rawContent = fs.readFileSync(routeFile.fpath, "utf8");
+		const content =
+			routeFile.ext === ".md" ? `<main>\n${await marked.marked(rawContent)}</main>` : rawContent;
+		let result = template;
+		const variables = { head, sidebar, content };
+		result = getHydrated(result, variables);
+		result = await getScriptsCompiled(result);
+		result = await getCodesHighlighted(result);
+		result = getHeadersCounted(result);
+		result = await terser.minify(result, {
+			collapseWhitespace: true,
+			removeComments: true,
+			removeOptionalTags: true,
+			removeRedundantAttributes: true,
+			removeScriptTypeAttributes: true,
+			removeStyleLinkTypeAttributes: true,
+			useShortDoctype: true,
+		});
+		map.set(routeFile.outPath, result);
 	}
 }
 
@@ -326,7 +335,9 @@ function getSitemapLoc(rf: RouteFile): string {
 }
 
 function getSitemapXml(routeFiles: Array<RouteFile>): string {
-	const htmlFiles = routeFiles.filter((rf) => rf.outExt === ".html");
+	const htmlFiles = routeFiles.filter(
+		(rf) => rf.outExt === ".html" && !rf.name.includes("template"),
+	);
 	const urls = htmlFiles
 		.map((rf) => `\t<url>\n\t\t<loc>${getSitemapLoc(rf)}</loc>\n\t</url>`)
 		.join("\n");
@@ -413,5 +424,8 @@ export async function compile(outdir: string): Promise<void> {
 	for (const [outPath, html] of map.entries()) {
 		fs.mkdirSync(path.dirname(outPath), { recursive: true });
 		fs.writeFileSync(outPath, html);
+	}
+	if (fs.existsSync(ASSETS_DIR)) {
+		fs.cpSync(ASSETS_DIR, path.join(outdir, "assets"), { recursive: true });
 	}
 }

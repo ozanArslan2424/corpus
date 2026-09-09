@@ -8,7 +8,7 @@ Validation uses [Standard Schema](https://standardschema.dev), so Zod, Valibot, 
 
 ## Install
 
-```bash
+```sh
 bun add @ozanarslan/corpus
 ```
 
@@ -26,7 +26,7 @@ new C.Route("GET /", () => ({ message: "hello" }));
 await app.listen();
 ```
 
-```bash
+```sh
 bun run index.ts
 ```
 
