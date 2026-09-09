@@ -4,14 +4,14 @@ import os from "os";
 import path from "path";
 
 import { App } from "@/App";
-import type { BundleRoute } from "@/BundleRoute";
 import { Controller } from "@/Controller";
-import type { FileRoute } from "@/FileRoute";
 import { Globals } from "@/Globals";
 import { initialize } from "@/initialize";
-import type { Route } from "@/Route";
-import type { StaticRoute } from "@/StaticRoute";
-import type { WebSocketRoute } from "@/WebSocketRoute";
+import type { BundleRoute } from "@/RouteBase/BundleRoute";
+import type { FileRoute } from "@/RouteBase/FileRoute";
+import type { Route } from "@/RouteBase/Route";
+import type { StaticRoute } from "@/RouteBase/StaticRoute";
+import type { WebSocketRoute } from "@/RouteBase/WebSocketRoute";
 
 const PORT = 48183;
 const BASE_URL = `http://localhost:${PORT}`;

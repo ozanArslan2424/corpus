@@ -16,18 +16,19 @@
  * @module App
  */
 
-import { registerApp } from "@/AppsRegistry";
 import { Config } from "@/Config";
 import { type ContextFactory, type ContextHandler, Context } from "@/Context";
-import { getContextAccess } from "@/ContextAccess";
+import { getContextAccess } from "@/Context/ContextAccess";
 import type { CorsInterface } from "@/Cors";
 import { Exception } from "@/Exception";
+import { registerApp } from "@/Globals/AppsRegistry";
+import { getOrInitParsersRegistry } from "@/Globals/ParsersRegistry";
 import { HeaderKey } from "@/Headers";
 import type { MiddlewareHandler, Middleware } from "@/Middleware";
-import { getOrInitParsersRegistry } from "@/ParsersRegistry";
 import { Method } from "@/Request";
 import { Res, Status } from "@/Res";
 import { RouteVariant, type RouteBase } from "@/RouteBase";
+import type { WebSocketRoute } from "@/RouteBase/WebSocketRoute";
 import type { Server, ServerHandler, ServerRouteMap } from "@/Server";
 import { arrIncludes } from "@/utils/array";
 import { noop } from "@/utils/function";
@@ -43,7 +44,6 @@ import {
 	type Optional,
 } from "@/utils/maybe";
 import { withLeadingSlash } from "@/utils/path";
-import type { WebSocketRoute } from "@/WebSocketRoute";
 
 /**
  * TLS material used to serve an {@link App} over HTTPS.

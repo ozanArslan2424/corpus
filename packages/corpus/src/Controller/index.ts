@@ -19,15 +19,15 @@
  * @module Controller
  */
 
-import { BundleRoute } from "@/BundleRoute";
 import type { ContextHandler } from "@/Context";
-import { FileRoute } from "@/FileRoute";
-import { Route } from "@/Route";
 import { resolveRouteAddress } from "@/RouteBase";
-import { StaticRoute } from "@/StaticRoute";
+import { BundleRoute } from "@/RouteBase/BundleRoute";
+import { FileRoute } from "@/RouteBase/FileRoute";
+import { Route } from "@/RouteBase/Route";
+import { StaticRoute } from "@/RouteBase/StaticRoute";
+import { WebSocketRoute } from "@/RouteBase/WebSocketRoute";
 import type { Optional } from "@/utils/maybe";
 import { joinPathSegments, type WithPrefix } from "@/utils/path";
-import { WebSocketRoute } from "@/WebSocketRoute";
 
 /**
  * Registers routes under a shared path prefix.

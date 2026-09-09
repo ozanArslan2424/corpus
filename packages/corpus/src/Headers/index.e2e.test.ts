@@ -4,7 +4,7 @@ import { App } from "@/App";
 import { Globals } from "@/Globals";
 import { HeaderKey } from "@/Headers";
 import { initialize } from "@/initialize";
-import { Route } from "@/Route";
+import { Route } from "@/RouteBase/Route";
 
 const PORT = 48241;
 const BASE_URL = `http://localhost:${PORT}`;

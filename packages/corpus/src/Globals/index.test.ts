@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
 import type { AppInterface } from "@/App";
 import { Globals, type GlobalRegistry } from "@/Globals";
-import type { ParsersRegistry } from "@/ParsersRegistry";
+import type { ParsersRegistry } from "@/Globals/ParsersRegistry";
 
 import pkg from "../../package.json";
 

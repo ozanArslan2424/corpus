@@ -4,7 +4,7 @@ import { App } from "@/App";
 import { Cors } from "@/Cors";
 import { Globals } from "@/Globals";
 import { initialize } from "@/initialize";
-import { Route } from "@/Route";
+import { Route } from "@/RouteBase/Route";
 
 const PORT = 48185;
 const BASE_URL = `http://localhost:${PORT}`;

@@ -27,8 +27,8 @@
 
 import { hash, randomBytes } from "node:crypto";
 
-import { getNearestApp } from "@/AppsRegistry";
 import { Exception } from "@/Exception";
+import { getNearestApp } from "@/Globals/AppsRegistry";
 import { HeaderKey } from "@/Headers";
 import { Middleware, type MiddlewareHandler } from "@/Middleware";
 import { Status } from "@/Res";

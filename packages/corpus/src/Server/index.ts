@@ -13,8 +13,8 @@
  */
 
 import type { Method } from "@/Request";
+import type { WebSocketRoute } from "@/RouteBase/WebSocketRoute";
 import type { Maybe, Optional, MaybePromise } from "@/utils/maybe";
-import type { WebSocketRoute } from "@/WebSocketRoute";
 
 /**
  * A live WebSocket connection. Its `data` is the {@link WebSocketRoute} that

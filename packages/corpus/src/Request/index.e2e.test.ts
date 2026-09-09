@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { App } from "@/App";
 import { Globals } from "@/Globals";
 import { initialize } from "@/initialize";
-import { Route } from "@/Route";
+import { Route } from "@/RouteBase/Route";
 
 const PORT = 48221;
 const BASE_URL = `http://localhost:${PORT}`;

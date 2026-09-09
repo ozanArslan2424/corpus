@@ -7,7 +7,7 @@ import { Globals } from "@/Globals";
 import { HeaderKey } from "@/Headers";
 import { RateLimiter, RateLimiterMemoryStore, type RateLimiterStoreInterface } from "@/RateLimiter";
 import { Status } from "@/Res";
-import { Route } from "@/Route";
+import { Route } from "@/RouteBase/Route";
 
 beforeEach(() => {
 	// RateLimiter (via Middleware.register) calls getNearestApp(), which

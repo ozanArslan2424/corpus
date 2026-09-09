@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
 
 import { App } from "@/App";
-import { BundleRoute } from "@/BundleRoute";
 import type { Context } from "@/Context";
 import { Controller } from "@/Controller";
-import { FileRoute } from "@/FileRoute";
 import { Method } from "@/Request";
-import { Route } from "@/Route";
-import { StaticRoute } from "@/StaticRoute";
-import { WebSocketRoute } from "@/WebSocketRoute";
+import { BundleRoute } from "@/RouteBase/BundleRoute";
+import { FileRoute } from "@/RouteBase/FileRoute";
+import { Route } from "@/RouteBase/Route";
+import { StaticRoute } from "@/RouteBase/StaticRoute";
+import { WebSocketRoute } from "@/RouteBase/WebSocketRoute";
 
 // Route classes call this.register(), which pushes onto the nearest App's
 // routes array via getNearestApp(). A fresh App must exist before each test.

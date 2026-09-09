@@ -30,9 +30,9 @@
  * @module Middleware
  */
 
-import { getNearestApp } from "@/AppsRegistry";
 import type { Context } from "@/Context";
 import type { Controller } from "@/Controller";
+import { getNearestApp } from "@/Globals/AppsRegistry";
 import type { RouteBase } from "@/RouteBase";
 import { assertDefined } from "@/utils/assert";
 import { isString, type OrString } from "@/utils/lexical";

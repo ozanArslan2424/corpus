@@ -6,7 +6,7 @@ import path from "path";
 import { App } from "@/App";
 import { Globals } from "@/Globals";
 import { Status } from "@/Res";
-import { Route } from "@/Route";
+import { Route } from "@/RouteBase/Route";
 
 const PORT = 48230;
 const BASE_URL = `http://localhost:${PORT}`;

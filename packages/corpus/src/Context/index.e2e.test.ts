@@ -8,7 +8,7 @@ import { Globals } from "@/Globals";
 import { initialize } from "@/initialize";
 import { Middleware } from "@/Middleware";
 import { Res } from "@/Res";
-import { Route } from "@/Route";
+import { Route } from "@/RouteBase/Route";
 import { isNil } from "@/utils/maybe";
 
 declare module "@/index" {

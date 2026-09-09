@@ -4,15 +4,15 @@ import os from "os";
 import path from "path";
 
 import { App } from "@/App";
-import { BundleRoute } from "@/BundleRoute";
-import { FileRoute } from "@/FileRoute";
 import { Globals } from "@/Globals";
 import { initialize } from "@/initialize";
 import { Middleware } from "@/Middleware";
 import { RateLimiter } from "@/RateLimiter";
-import { Route } from "@/Route";
-import { StaticRoute } from "@/StaticRoute";
-import { WebSocketRoute } from "@/WebSocketRoute";
+import { BundleRoute } from "@/RouteBase/BundleRoute";
+import { FileRoute } from "@/RouteBase/FileRoute";
+import { Route } from "@/RouteBase/Route";
+import { StaticRoute } from "@/RouteBase/StaticRoute";
+import { WebSocketRoute } from "@/RouteBase/WebSocketRoute";
 
 const PORT = 48173;
 const BASE_URL = `http://localhost:${PORT}`;

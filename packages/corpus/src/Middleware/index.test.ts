@@ -4,7 +4,7 @@ import { App } from "@/App";
 import { Controller } from "@/Controller";
 import { Globals } from "@/Globals";
 import { Middleware } from "@/Middleware";
-import { Route } from "@/Route";
+import { Route } from "@/RouteBase/Route";
 
 let app: App;
 

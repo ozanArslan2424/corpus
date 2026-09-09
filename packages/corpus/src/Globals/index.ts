@@ -17,8 +17,8 @@
  * @module Globals
  */
 
-import type { AppsRegistry } from "@/AppsRegistry";
-import type { ParsersRegistry } from "@/ParsersRegistry";
+import type { AppsRegistry } from "@/Globals/AppsRegistry";
+import type { ParsersRegistry } from "@/Globals/ParsersRegistry";
 import { assertDefined } from "@/utils/assert";
 
 import pkg from "../../package.json";

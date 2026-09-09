@@ -7,7 +7,7 @@ import { Globals } from "@/Globals";
 import { initialize } from "@/initialize";
 import { Middleware } from "@/Middleware";
 import { Res, Status } from "@/Res";
-import { Route } from "@/Route";
+import { Route } from "@/RouteBase/Route";
 
 declare module "@/index" {
 	interface ContextDataInterface {

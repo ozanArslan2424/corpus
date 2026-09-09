@@ -16,11 +16,11 @@
  * @module RouteBase
  */
 
-import { getNearestApp } from "@/AppsRegistry";
 import { Context, type ContextHandler } from "@/Context";
+import { getNearestApp } from "@/Globals/AppsRegistry";
 import { HeaderKey } from "@/Headers";
+import type { Schema } from "@/ParserBase/SchemaParser";
 import { Method } from "@/Request";
-import type { Schema } from "@/SchemaParser";
 import { arrIncludes } from "@/utils/array";
 import { assert } from "@/utils/assert";
 import { enumerate, type ValueOf } from "@/utils/enum";

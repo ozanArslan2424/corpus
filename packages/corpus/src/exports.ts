@@ -21,9 +21,9 @@ export { parseCookieHeader, parseSetCookieHeaders } from "@/Cookies";
 // oxfmt-ignore
 // export {} from "@/FormDataParser";
 // oxfmt-ignore
-export { getOrInitAppsRegistry, registerApp, getNearestApp, type AppsRegistry } from "@/AppsRegistry";
+export { getOrInitAppsRegistry, registerApp, getNearestApp, type AppsRegistry } from "@/Globals/AppsRegistry";
 // oxfmt-ignore
-export { getOrInitParsersRegistry, setParsersRegistry, type ParsersRegistry } from "@/ParsersRegistry";
+export { getOrInitParsersRegistry, setParsersRegistry, type ParsersRegistry } from "@/Globals/ParsersRegistry";
 // oxfmt-ignore
 export { GLOBAL_SYMBOLS, Globals, type GlobalRegistry } from "@/Globals";
 // oxfmt-ignore
@@ -43,7 +43,7 @@ export { patchGlobalRequest } from "@/Request";
 // oxfmt-ignore
 export { resolveRouteAddress } from "@/RouteBase";
 // oxfmt-ignore
-export type { Schema, InferSchemaIn, InferSchemaOut, ValidationIssues } from "@/SchemaParser";
+export type { Schema, InferSchemaIn, InferSchemaOut, ValidationIssues } from "@/ParserBase/SchemaParser";
 // oxfmt-ignore
 // export {} from "@/SearchParamsParser";
 // oxfmt-ignore

@@ -8,10 +8,10 @@
  * @module initialize
  */
 
-import { getOrInitAppsRegistry } from "@/AppsRegistry";
 import { Globals } from "@/Globals";
+import { getOrInitAppsRegistry } from "@/Globals/AppsRegistry";
+import { getOrInitParsersRegistry } from "@/Globals/ParsersRegistry";
 import { patchGlobalHeaders } from "@/Headers";
-import { getOrInitParsersRegistry } from "@/ParsersRegistry";
 import { patchGlobalRequest } from "@/Request";
 
 /**

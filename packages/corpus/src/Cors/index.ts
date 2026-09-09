@@ -21,8 +21,8 @@
  * @module Cors
  */
 
-import { getNearestApp } from "@/AppsRegistry";
 import type { ContextHandler } from "@/Context";
+import { getNearestApp } from "@/Globals/AppsRegistry";
 import { HeaderKey } from "@/Headers";
 import { Res, Status } from "@/Res";
 import { isSomeArray } from "@/utils/array";

@@ -1,9 +1,9 @@
 import { afterEach, beforeAll, describe, expect, test } from "bun:test";
 
 import { App } from "@/App";
-import { getOrInitAppsRegistry } from "@/AppsRegistry";
 import { Exception } from "@/Exception";
 import { Globals } from "@/Globals";
+import { getOrInitAppsRegistry } from "@/Globals/AppsRegistry";
 import { Middleware, type MiddlewareDefinition } from "@/Middleware";
 import { Res, Status } from "@/Res";
 
