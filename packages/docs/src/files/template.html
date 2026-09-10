@@ -70,7 +70,20 @@
 				</nav>
 			</aside>
 
-			<!-- content -->
+			<main>
+				<!-- content -->
+
+				<footer class="site-footer">
+					<p>
+						&copy; <span id="footer-year"></span> Designed and developed by
+						<a href="https://ozanarslan.vercel.app">Ozan Arslan</a>
+					</p>
+				</footer>
+			</main>
 		</div>
+
+		<script>
+			document.getElementById("footer-year").textContent = new Date().getFullYear();
+		</script>
 	</body>
 </html>

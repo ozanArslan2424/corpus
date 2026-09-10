@@ -255,8 +255,7 @@ async function compileRouteFiles(
 		}
 
 		const rawContent = fs.readFileSync(routeFile.fpath, "utf8");
-		const content =
-			routeFile.ext === ".md" ? `<main>\n${await marked.marked(rawContent)}</main>` : rawContent;
+		const content = routeFile.ext === ".md" ? await marked.marked(rawContent) : rawContent;
 		let result = template;
 		const variables = { head, sidebar, content };
 		result = getHydrated(result, variables);

@@ -105,7 +105,7 @@ nav.header {
 			border-bottom: 2px solid transparent;
 			height: 3.5rem;
 			padding: 0 1.25rem;
-			color: var(--text-muted);
+			color: var(--text-secondary);
 			font-size: 13px;
 			text-decoration: none;
 
@@ -133,8 +133,8 @@ nav.header {
 			align-items: center;
 			justify-content: center;
 			border: none;
-			border-radius: 5px;
-			padding: 0.4rem;
+			border-radius: 6px;
+			padding: 0.5rem;
 			background: none;
 			color: var(--text-muted);
 			cursor: pointer;
@@ -151,9 +151,9 @@ nav.header {
 			border: 1px solid var(--border);
 			border-radius: 6px;
 			width: 200px;
-			padding: 0.4rem 0.75rem;
+			padding: 0.5rem 0.75rem;
 			background-color: var(--body-bg);
-			color: var(--text-muted);
+			color: var(--text-secondary);
 			font-family: inherit;
 			font-size: 0.8rem;
 			cursor: pointer;
@@ -165,6 +165,15 @@ nav.header {
 	}
 }
 
+footer.site-footer {
+	margin-top: 3rem;
+	border-top: 1px solid var(--border);
+	padding-top: 1.5rem;
+	color: var(--text-muted);
+	font-size: 0.8rem;
+	text-align: center;
+}
+
 dialog#search-dialog {
 	position: fixed;
 	top: 20%;
@@ -172,7 +181,7 @@ dialog#search-dialog {
 	translate: -50% 0;
 	box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7);
 	border: 1px solid var(--border);
-	border-radius: 10px;
+	border-radius: 12px;
 	width: min(560px, 90vw);
 	padding: 0;
 	background-color: var(--surface);
@@ -214,7 +223,7 @@ dialog#search-dialog {
 				background-color 0.15s ease,
 				color 0.15s ease;
 			border-radius: 6px;
-			padding: 0.6rem 0.75rem;
+			padding: 0.5rem 0.75rem;
 			color: var(--text-secondary);
 			font-size: 0.875rem;
 			text-decoration: none;
@@ -246,7 +255,7 @@ dialog#search-dialog {
 		border-right: 1px solid var(--border);
 		width: 280px;
 		min-height: 100vh;
-		padding: 1.25rem 0;
+		padding: 0.25rem;
 		background-color: var(--surface);
 		color: var(--text-primary);
 		font-family: "JetBrains Mono", "Menlo", monospace;
@@ -255,7 +264,6 @@ dialog#search-dialog {
 
 		nav {
 			margin-bottom: 1.5rem;
-			padding: 0 1.25rem;
 
 			&:last-of-type {
 				margin-bottom: 6rem;
@@ -276,7 +284,7 @@ dialog#search-dialog {
 				list-style: none;
 
 				li {
-					margin-bottom: 0.2rem;
+					margin-bottom: 0.25rem;
 
 					a {
 						display: block;
@@ -286,8 +294,8 @@ dialog#search-dialog {
 							border-color 0.15s ease;
 						border-left: 2px solid transparent;
 						border-radius: 0 4px 4px 0;
-						padding: 0.35rem 0.625rem;
-						color: var(--text-muted);
+						padding: 0.5rem 0.75rem;
+						color: var(--text-secondary);
 						text-decoration: none;
 
 						&:not([aria-disabled="true"]) {
@@ -325,9 +333,7 @@ dialog#search-dialog {
 				}
 
 				ul li {
-					margin-top: 0.2rem;
-					margin-bottom: 0.1rem;
-					margin-left: 1.25rem;
+					margin: 0.25rem 0 0.25rem 1.25rem;
 
 					a {
 						border-left: 2px solid var(--border);
@@ -360,15 +366,16 @@ dialog#search-dialog {
 
 	&.primary {
 		background-color: var(--accent);
-		color: #0d1117;
+		color: var(--code-bg);
 
 		&:hover {
-			background-color: var(--accent2);
+			background-color: color-mix(in srgb, var(--accent) 65%, white);
 		}
 	}
 
 	&.ghost {
 		background-color: transparent;
+		color: var(--text-primary);
 
 		&:hover {
 			border-color: var(--text-muted);
@@ -426,10 +433,10 @@ dialog#search-dialog {
 .hero {
 	display: flex;
 	flex-direction: column;
-	padding-top: 20px;
+	padding-top: 1.25rem;
 
 	.hero-eyebrow {
-		margin-bottom: 28px;
+		margin-bottom: 1.75rem;
 		color: var(--accent);
 		font-family: monospace;
 		font-size: 11px;
@@ -438,7 +445,7 @@ dialog#search-dialog {
 	}
 
 	h1 {
-		margin-bottom: 36px;
+		margin-bottom: 2.25rem;
 		color: var(--text-primary);
 		font-size: clamp(52px, 9vw, 112px);
 		font-weight: 800;
@@ -447,9 +454,9 @@ dialog#search-dialog {
 	}
 
 	.hero-desc {
-		margin-bottom: 48px;
+		margin-bottom: 3rem;
 		max-width: 520px;
-		color: var(--text-muted);
+		color: var(--text-secondary);
 		font-size: 18px;
 		line-height: 1.7;
 
@@ -472,21 +479,21 @@ dialog#search-dialog {
 .stats-strip {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
-	margin: 80px 0;
+	margin: 5rem 0;
 	border-top: 1px solid var(--border);
 	border-bottom: 1px solid var(--border);
-	padding: 40px 0;
+	padding: 2.5rem 0;
 
 	.stat-item {
 		border-right: 1px solid var(--border);
-		padding: 0 40px;
+		padding: 0 2.5rem;
 
 		&:first-child {
 			border-left: 1px solid var(--border);
 		}
 
 		.stat-value {
-			margin-bottom: 6px;
+			margin-bottom: 0.375rem;
 			font-size: 36px;
 			font-weight: 800;
 			line-height: 1;
@@ -518,13 +525,13 @@ dialog#search-dialog {
 /* ── SECTION ── */
 
 section.section {
-	padding: 100px 0;
+	padding: 6.25rem 0;
 
 	.section-tag {
 		display: flex;
 		align-items: center;
-		gap: 12px;
-		margin-bottom: 20px;
+		gap: 0.75rem;
+		margin-bottom: 1.25rem;
 		color: var(--accent);
 		font-family: monospace;
 		font-size: 11px;
@@ -540,7 +547,7 @@ section.section {
 	}
 
 	.section-title {
-		margin-bottom: 20px;
+		margin-bottom: 1.25rem;
 		color: var(--text-primary);
 		font-size: clamp(32px, 5vw, 52px);
 		font-weight: 800;
@@ -549,9 +556,9 @@ section.section {
 	}
 
 	.section-lead {
-		margin-bottom: 64px;
+		margin-bottom: 4rem;
 		max-width: 540px;
-		color: var(--text-muted);
+		color: var(--text-secondary);
 		font-size: 17px;
 		line-height: 1.75;
 	}
@@ -566,7 +573,7 @@ section.section {
 	}
 
 	.feature-card {
-		padding: 36px 32px;
+		padding: 2.25rem 2rem;
 		background: var(--body-bg);
 
 		&:hover {
@@ -575,7 +582,7 @@ section.section {
 
 		.feature-icon {
 			opacity: 0.7;
-			margin-bottom: 20px;
+			margin-bottom: 1.25rem;
 			color: var(--accent);
 			font-family: monospace;
 			font-size: 11px;
@@ -583,7 +590,7 @@ section.section {
 		}
 
 		.feature-body {
-			color: var(--text-muted);
+			color: var(--text-secondary);
 			font-size: 14px;
 			line-height: 1.7;
 		}
@@ -592,7 +599,7 @@ section.section {
 	/* ── PHILOSOPHY ── */
 	.philosophy {
 		border: 1px solid var(--border);
-		padding: 64px;
+		padding: 4rem;
 		background: var(--surface);
 		color: var(--text-primary);
 		font-size: clamp(22px, 3vw, 32px);
@@ -607,7 +614,7 @@ section.section {
 
 		cite {
 			display: block;
-			margin-top: 28px;
+			margin-top: 1.75rem;
 			color: var(--text-muted);
 			font-family: monospace;
 			font-size: 12px;
@@ -627,8 +634,8 @@ section.section {
 	text-align: center;
 
 	.cta-label {
-		margin-bottom: 24px;
-		color: var(--text-muted);
+		margin-bottom: 1.5rem;
+		color: var(--accent);
 		font-family: monospace;
 		font-size: 11px;
 		text-transform: uppercase;
@@ -636,7 +643,7 @@ section.section {
 	}
 
 	.cta-title {
-		margin-bottom: 48px;
+		margin-bottom: 3rem;
 		color: var(--text-primary);
 		font-size: clamp(40px, 6vw, 72px);
 		font-weight: 800;
@@ -653,7 +660,7 @@ section.section {
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: center;
-		gap: 16px;
+		gap: 1rem;
 	}
 }
 
@@ -708,16 +715,19 @@ main {
 	}
 
 	a {
-		transition:
-			color 0.15s ease,
-			border-color 0.15s ease;
-		border-bottom: 1px solid transparent;
-		color: var(--accent);
 		text-decoration: none;
 
-		&:hover {
-			border-bottom-color: var(--code-keyword);
-			color: var(--text-primary);
+		&:not(.btn) {
+			transition:
+				color 0.15s ease,
+				border-color 0.15s ease;
+			border-bottom: 1px solid transparent;
+			color: var(--accent);
+
+			&:hover {
+				border-bottom-color: var(--code-keyword);
+				color: var(--text-primary);
+			}
 		}
 	}
 
@@ -882,7 +892,7 @@ main {
 
 		p {
 			margin-bottom: 0;
-			color: var(--text-muted);
+			color: var(--text-secondary);
 			font-style: italic;
 			line-height: 1.7;
 
@@ -916,7 +926,7 @@ main {
 		}
 
 		li {
-			margin-bottom: 0.125rem;
+			margin-bottom: 0.25rem;
 
 			&:last-child {
 				margin-bottom: 0;
@@ -937,10 +947,7 @@ main {
 }
 
 @media (max-width: 768px) {
-	body {
-		flex-direction: column;
-	}
-
+	body,
 	.container {
 		flex-direction: column;
 	}
@@ -983,17 +990,30 @@ main {
 		}
 	}
 
+	.hero-actions {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+
+		.btn,
+		.code-copy {
+			width: 100%;
+			height: max-content;
+			margin: 0;
+		}
+	}
+
 	.stats-strip {
 		grid-template-columns: 1fr;
-		gap: 0;
+		gap: 1rem;
+		margin: 0;
 
 		.stat-item {
-			border-bottom: 1px solid var(--border);
-			border-right: none;
+			border: none;
 
 			&:first-child {
-				border-top: 1px solid var(--border);
-				border-left: none;
+				border: none;
 			}
 		}
 	}
@@ -1004,7 +1024,7 @@ main {
 		}
 
 		.philosophy {
-			padding: 40px 32px;
+			padding: 2.5rem 2rem;
 		}
 	}
 
@@ -1046,12 +1066,10 @@ main {
 		width: 100% !important;
 		height: calc(100dvh - 3rem);
 		min-height: 0;
-		padding: 1rem 0;
 		overscroll-behavior: contain;
 
 		nav {
 			margin-bottom: 1.25rem;
-			padding: 0 1rem;
 
 			a {
 				padding: 0.3rem 0.5rem;
@@ -1077,11 +1095,8 @@ main {
 
 @media (max-width: 480px) {
 	aside {
-		padding: 0.75rem 0;
-
 		nav {
 			margin-bottom: 1rem;
-			padding: 0 0.75rem;
 
 			h3 {
 				margin-bottom: 0.4rem;

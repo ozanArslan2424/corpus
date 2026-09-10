@@ -7,23 +7,23 @@ app = 'corpus-docs'
 primary_region = 'fra'
 
 [build]
-  dockerfile = 'Dockerfile'
+dockerfile = 'Dockerfile'
 
 [env]
-  NODE_ENV = 'production'
-  PORT = '3000'
+NODE_ENV = 'production'
+PORT = '3000'
 
 [http_service]
-  internal_port = 3000
-  force_https = true
-  auto_stop_machines = 'stop'
-  auto_start_machines = true
-  min_machines_running = 0
-  processes = ['app']
+internal_port = 3000
+force_https = true
+auto_stop_machines = 'stop'
+auto_start_machines = true
+min_machines_running = 0
+processes = ['app']
 
 [[vm]]
-  size = 'shared-cpu-1x'
-  memory = '256mb'
-  cpu_kind = 'shared'
-  cpus = 1
-  memory_mb = 256
+size = 'shared-cpu-1x'
+memory = '256mb'
+cpu_kind = 'shared'
+cpus = 1
+memory_mb = 256
