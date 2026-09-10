@@ -1,8 +1,9 @@
-import { isNumber } from "@/utils/numerical";
-
 export class StringBuilder {
 	private complete: string = "";
 	private lineCount: number = 0;
+	get currentLine(): number {
+		return this.lineCount;
+	}
 
 	inline(s: string): this {
 		this.complete += s;
@@ -12,7 +13,9 @@ export class StringBuilder {
 	line(input: number): (s: string) => this;
 	line(input: string): this;
 	line(input: string | number): this | ((s: string) => this) {
-		return isNumber(input) ? (s: string) => this.push("\t".repeat(input) + s) : this.push(input);
+		return typeof input === "number"
+			? (s: string) => this.push("\t".repeat(input) + s)
+			: this.push(input);
 	}
 
 	get tab(): this {
@@ -42,10 +45,6 @@ export class StringBuilder {
 		return this;
 	}
 
-	get currentLine(): number {
-		return this.lineCount;
-	}
-
 	replaceAll(find: string, change: string): this {
 		this.complete = this.complete.replaceAll(find, change);
 		return this;
@@ -73,31 +72,9 @@ export class StringBuilder {
 		return this;
 	}
 
-	trimEnd(): this {
-		this.complete = this.complete.trimEnd();
-		return this;
-	}
-
-	trimStart(): this {
-		this.complete = this.complete.trimStart();
-		return this;
-	}
-
 	slice(start?: number, end?: number): this {
 		this.complete = this.complete.slice(start, end);
 		return this;
-	}
-
-	includes(s: string): boolean {
-		return this.complete.includes(s);
-	}
-
-	startsWith(s: string): boolean {
-		return this.complete.startsWith(s);
-	}
-
-	endsWith(s: string): boolean {
-		return this.complete.endsWith(s);
 	}
 
 	get length(): number {

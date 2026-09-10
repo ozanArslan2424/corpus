@@ -30,7 +30,7 @@
 		"build": "tsdown",
 		"dev": "NODE_ENV=development bun run ./src/cli.ts",
 		"api": "bun run ./dist/cli.mjs api -m ./test/other/apigen/startServer.ts -o ./test/other/apigen/generated.ts",
-		"test:api": "bun api && bun run ./test/other/integration.ts -s",
+		"test:api": "bun api -s && bun run ./test/other/integration.ts -s",
 		"test:all": "VALI=arktype bun test:api && VALI=zod bun test:api && VALI=yup bun test:api"
 	},
 	"dependencies": {

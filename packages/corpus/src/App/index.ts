@@ -30,20 +30,20 @@ import { Res, Status } from "@/Res";
 import { RouteVariant, type RouteBase } from "@/RouteBase";
 import type { WebSocketRoute } from "@/RouteBase/WebSocketRoute";
 import type { Server, ServerHandler, ServerRouteMap } from "@/Server";
-import { arrIncludes } from "@/utils/array";
-import { noop } from "@/utils/function";
-import type { OrString } from "@/utils/lexical";
-import { logger } from "@/utils/logger";
 import {
 	isEmpty,
-	isNil,
-	isNull,
-	isUndefined,
+	isAbsent,
+	isPresent,
 	type MaybePromise,
 	type Nullable,
 	type Optional,
-} from "@/utils/maybe";
+	isOneOf,
+	type OrString,
+} from "@/utils/is";
+import { logger } from "@/utils/logger";
 import { withLeadingSlash } from "@/utils/path";
+
+const noop = () => {};
 
 /**
  * TLS material used to serve an {@link App} over HTTPS.
@@ -365,7 +365,7 @@ class App implements AppInterface {
 	 * {@link App.tls}, {@link App.hostname} and {@link App.port}.
 	 */
 	get baseUrl(): string {
-		if (!isNull(this.server)) return this.server.url.toString();
+		if (isPresent(this.server)) return this.server.url.toString();
 		const protocol = this.tls ? "https" : "http";
 		return `${protocol}://${this.hostname}${this.port ? `:${this.port}` : ""}`;
 	}
@@ -382,7 +382,7 @@ class App implements AppInterface {
 	 * @returns The running {@link Server}.
 	 */
 	protected createServer(): Server {
-		if (!isNull(this.server)) return this.server;
+		if (isPresent(this.server)) return this.server;
 
 		this.warnUnmatchedMiddlewares();
 
@@ -473,7 +473,7 @@ class App implements AppInterface {
 			const endpoint = withLeadingSlash(route.endpoint);
 			const isWebSocket = route.variant === RouteVariant.websocket;
 			const isWildcard = endpoint.endsWith("*");
-			const isMethodWithoutBody = arrIncludes(route.method, [Method.GET, Method.HEAD]);
+			const isMethodWithoutBody = isOneOf(route.method, [Method.GET, Method.HEAD]);
 			const maxRequestBodySize = route.config?.maxRequestBodySize;
 
 			const handlers = [...this.findMiddlewares(route.id).map((m) => m.handler), route.handler];
@@ -517,7 +517,7 @@ class App implements AppInterface {
 				if (!isMethodWithoutBody) {
 					let input: Request | Response = c.req;
 
-					if (!isUndefined(maxRequestBodySize)) {
+					if (isPresent(maxRequestBodySize)) {
 						input = await enforceBodyLimit(c.req, maxRequestBodySize, access.body);
 					}
 
@@ -682,7 +682,7 @@ class App implements AppInterface {
 	 * {@link Status.NO_CONTENT} {@link Res} when no {@link CorsInterface} is set.
 	 */
 	handlePreflight: ContextHandler = (c) => {
-		if (isNil(this.cors)) {
+		if (isAbsent(this.cors)) {
 			return new Res(undefined, { status: Status.NO_CONTENT });
 		}
 		return this.cors.handlePreflight(c);

@@ -19,7 +19,7 @@
 
 import type { AppsRegistry } from "@/Globals/AppsRegistry";
 import type { ParsersRegistry } from "@/Globals/ParsersRegistry";
-import { assertDefined } from "@/utils/assert";
+import { assert } from "@/utils/assert";
 
 import pkg from "../../package.json";
 
@@ -114,7 +114,7 @@ class Globals {
 	static get<K extends keyof GlobalRegistry>(key: K): GlobalRegistry[K] {
 		const symbolKey = GLOBAL_SYMBOLS[key];
 		const value = this.store[symbolKey];
-		assertDefined(value, `Global "${String(key)}" was accessed before being created`);
+		assert.present(value, `Global "${String(key)}" was accessed before being created`);
 		return value as GlobalRegistry[K];
 	}
 

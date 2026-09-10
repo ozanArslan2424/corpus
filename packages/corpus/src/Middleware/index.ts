@@ -34,9 +34,8 @@ import type { Context } from "@/Context";
 import type { Controller } from "@/Controller";
 import { getNearestApp } from "@/Globals/AppsRegistry";
 import type { RouteBase } from "@/RouteBase";
-import { assertDefined } from "@/utils/assert";
-import { isString, type OrString } from "@/utils/lexical";
-import type { MaybePromise } from "@/utils/maybe";
+import { assert } from "@/utils/assert";
+import type { MaybePromise, OrString } from "@/utils/is";
 
 /**
  * A middleware's handler function. Like a {@link ContextHandler}, but with the
@@ -110,7 +109,7 @@ class Middleware {
 	constructor(definition: MiddlewareDefinition);
 	constructor(definition?: MiddlewareDefinition) {
 		if (new.target !== Middleware) return;
-		assertDefined(definition, "definition is required when Middleware is constructed directly.");
+		assert.present(definition, "definition is required when Middleware is constructed directly.");
 		this.useOn = definition.useOn ?? "*";
 		this.handler = definition.handler;
 		this.register();
@@ -152,7 +151,7 @@ class Middleware {
 		const targets = Array.isArray(this.useOn) ? this.useOn : [this.useOn];
 		const routeIds = new Set<string>();
 		for (const target of targets) {
-			if (isString(target)) {
+			if (typeof target === "string") {
 				routeIds.add(target);
 			} else if ("id" in target) {
 				routeIds.add(target.id);

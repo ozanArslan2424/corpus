@@ -1,4 +1,4 @@
-import type { Optional } from "@/utils/maybe";
+import type { Optional } from "./is";
 
 export type WithLeadingSlash<E extends string> = E extends `/${string}` ? E : `/${E}`;
 

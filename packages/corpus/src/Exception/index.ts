@@ -22,7 +22,7 @@
  */
 
 import { Res, Status } from "@/Res";
-import { assertDefined } from "@/utils/assert";
+import { assert } from "@/utils/assert";
 
 /**
  * An error carrying the {@link Status} it should be answered with.
@@ -53,8 +53,8 @@ class Exception extends Error {
 		super(message);
 		if (new.target !== Exception) return;
 		const msg = "Exception must be constructed with (message, status, data?) or extended.";
-		assertDefined(message, msg);
-		assertDefined(status, msg);
+		assert.present(message, msg);
+		assert.present(status, msg);
 		this.message = message;
 		this.status = status;
 		this.data = data;

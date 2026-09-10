@@ -27,8 +27,8 @@ import type { ContextHandler } from "@/Context";
 import { Method } from "@/Request";
 import { RouteBase, RouteVariant, type RouteConfig } from "@/RouteBase";
 import type { ServerWebSocket } from "@/Server";
-import { assertDefined } from "@/utils/assert";
-import type { MaybePromise } from "@/utils/maybe";
+import { assert } from "@/utils/assert";
+import type { MaybePromise } from "@/utils/is";
 
 /**
  * Runs once a connection has been upgraded and is ready.
@@ -102,8 +102,8 @@ class WebSocketRoute<E extends string = string> extends RouteBase<
 		super();
 		if (new.target !== WebSocketRoute) return;
 		const msg = "WebSocketRoute must be constructed with (path, definition) or extended.";
-		assertDefined(endpoint, msg);
-		assertDefined(definition, msg);
+		assert.present(endpoint, msg);
+		assert.present(definition, msg);
 		this.endpoint = endpoint;
 		this.onOpen = definition.onOpen;
 		this.onClose = definition.onClose;

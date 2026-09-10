@@ -1,19 +1,13 @@
 import fs from "fs";
 
-import {
-	isSomeArray,
-	logger,
-	isEmpty,
-	isNull,
-	objGetKeys,
-	objGetEntries,
-	StringReader,
-} from "@ozanarslan/corpus/utils";
 import type { Node } from "oxc-parser";
 
 import { getConfig } from "@/Config/getConfig";
 import { LISTEN_PATTERN, PATTERNS } from "@/constants";
 import { FileParser } from "@/FileParser";
+import type { StringReader } from "@/internal/StringReader";
+import { isAbsent, isEmpty, isPresent, isSomeArray } from "@/utils/is";
+import { logger } from "@/utils/logger";
 
 type ChunkKind = "import" | "route" | "middleware" | "controller" | "service";
 
@@ -83,7 +77,7 @@ export class MainFileUpdater {
 	}
 
 	getKind(line: string): ChunkKind | null {
-		for (const kind of objGetKeys(PATTERNS)) {
+		for (const kind of Object.keys(PATTERNS)) {
 			if (PATTERNS[kind].test(line)) return kind;
 		}
 		return null;
@@ -94,7 +88,7 @@ export class MainFileUpdater {
 		let index: number | null = null;
 		let at: Place["at"] = "below";
 		let i = 0;
-		while (isNull(index) && i < places.length) {
+		while (isAbsent(index) && i < places.length) {
 			const place = places[i];
 			if (place) {
 				at = place.at;
@@ -107,7 +101,7 @@ export class MainFileUpdater {
 			i++;
 		}
 
-		if (!isNull(index)) {
+		if (isPresent(index)) {
 			return { at, line: this.reader.getLineNumberOfCharIndex(index) };
 		}
 
@@ -149,7 +143,7 @@ export class MainFileUpdater {
 
 			case "ExpressionStatement":
 			case "VariableDeclaration":
-				for (const [kind, pattern] of objGetEntries(PATTERNS)) {
+				for (const [kind, pattern] of Object.entries(PATTERNS)) {
 					if (kind === "import") continue;
 					const content = this.reader.useBetween(node.start, node.end);
 					if (content.useLine(0).contains(pattern)) {

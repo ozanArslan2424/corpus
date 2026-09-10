@@ -1,20 +1,14 @@
 import fs from "fs";
 
-import {
-	assert,
-	isString,
-	quote,
-	isNil,
-	objGetEntries,
-	objGetValues,
-	StringBuilder,
-} from "@ozanarslan/corpus/utils";
-
 import { EXE_NAME, NAME_FLAG_HELP, NEVER_SCHEMAS } from "@/constants";
 import { MainFileUpdater } from "@/FileParser/MainFileUpdater";
 import { Importable } from "@/Importable";
+import { quote } from "@/internal/converters";
+import { parseModelDefinition } from "@/internal/parseModelDefinition";
+import { StringBuilder } from "@/internal/StringBuilder";
 import { ModuleAbstract } from "@/Modules/ModuleAbstract";
-import { parseModelDefinition } from "@/utils/parseModelDefinition";
+import { assert } from "@/utils/assert";
+import { isAbsent } from "@/utils/is";
 
 export class AddControllerModule extends ModuleAbstract {
 	constructor(private readonly mainFileUpdater: MainFileUpdater) {
@@ -100,7 +94,7 @@ export class AddControllerModule extends ModuleAbstract {
 		b.line("");
 		b.line(1)(`override prefix = "/${controller.resourceName}";`);
 
-		for (const { propertyKey, address } of objGetValues(methods)) {
+		for (const { propertyKey, address } of Object.values(methods)) {
 			b.line("");
 			b.line(1)(
 				`${propertyKey} = this.route(${quote(address)}, (c) => { throw new Error("Method not implemented."); });`,
@@ -116,7 +110,7 @@ export class AddControllerModule extends ModuleAbstract {
 		const b = new StringBuilder();
 		const { modelName, modelTypeName, modelDef } = parseModelDefinition(model);
 
-		const noValLib = isNil(this.config.validationLibrary);
+		const noValLib = isAbsent(this.config.validationLibrary);
 
 		b.line(`import { C } from "${this.config.pkgPath}";`);
 
@@ -133,7 +127,7 @@ export class AddControllerModule extends ModuleAbstract {
 		b.line("");
 		b.line(1)(`override prefix = "/${controller.resourceName}";`);
 
-		for (const [key, val] of objGetEntries(modelDef)) {
+		for (const [key, val] of Object.entries(modelDef)) {
 			const ORDER = ["body", "search", "params", "response"] as const;
 			const callArgOrder = ["search", "params", "body"] as const;
 			const callArgs = callArgOrder
@@ -159,13 +153,16 @@ export class AddControllerModule extends ModuleAbstract {
 
 	private isNeverSchema = (schema: string) => NEVER_SCHEMAS.has(schema.trim());
 
+	private hasSchema(model: Record<string, string>, key: string) {
+		return key in model && typeof model[key] === "string" && !NEVER_SCHEMAS.has(model[key].trim());
+	}
+
 	private resolveAddress(model: Record<string, string>) {
 		let method = "GET";
 		let endpoint = "/";
 
-		const hasBody = "body" in model && isString(model.body) && !this.isNeverSchema(model.body);
-		const hasParams =
-			"params" in model && isString(model.params) && !this.isNeverSchema(model.params);
+		const hasBody = this.hasSchema(model, "body");
+		const hasParams = this.hasSchema(model, "params");
 
 		if (hasBody && hasParams) {
 			// body AND params is most likely PUT
@@ -178,7 +175,7 @@ export class AddControllerModule extends ModuleAbstract {
 			method = "DELETE";
 		}
 
-		if (hasParams && isString(model.params)) {
+		if (hasParams && typeof model.params === "string") {
 			// this is an arktype/zod/yup schema or an interface property
 			// the keys should be extracted from it to construct an address
 			// example output: "GET /:id/:param"
@@ -197,7 +194,7 @@ export class AddControllerModule extends ModuleAbstract {
 		const keys: string[] = [];
 		let match: RegExpExecArray | null;
 		while ((match = keyRegex.exec(paramsStr)) !== null) {
-			if (!isNil(match[1])) keys.push(match[1]);
+			if (!isAbsent(match[1])) keys.push(match[1]);
 		}
 		return keys;
 	}

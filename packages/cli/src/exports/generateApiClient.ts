@@ -2,19 +2,15 @@ import fs from "node:fs";
 import path from "path";
 
 import type { RouteBase, Schema } from "@ozanarslan/corpus";
-import {
-	type Maybe,
-	toPascalCase,
-	isNil,
-	isSomeArray,
-	logger,
-	StringBuilder,
-	quote,
-} from "@ozanarslan/corpus/utils";
+import type { Maybe } from "yup";
 
 import type { Config } from "@/Config/Config";
+import { cache } from "@/internal/cache";
+import { toPascalCase, quote } from "@/internal/converters";
+import { StringBuilder } from "@/internal/StringBuilder";
 import { SchemaPrinter } from "@/SchemaPrinter";
-import { cache } from "@/utils/cache";
+import { isAbsent, isSomeArray } from "@/utils/is";
+import { logger } from "@/utils/logger";
 
 const MODEL_KEYS = ["body", "search", "params", "response"] as const;
 const CT_GENERIC = `CT extends "json" | "formData" = "json"`;
@@ -83,7 +79,7 @@ const getTypeName = cache("getTypeName", (pascal: string, ns?: string): string =
 const getTypeBody = cache(
 	"getTypeBody",
 	(endpoint: string, params: string[], modelKey: string, schema: Maybe<Schema>): string | null => {
-		if (isNil(schema)) {
+		if (isAbsent(schema)) {
 			if (modelKey === "params") {
 				if (!isSomeArray(params)) return null;
 				return `{ ${params.map((p) => `${p === "*" ? '"*"' : p}: primitive`).join("; ")} }`;
@@ -231,7 +227,7 @@ function writeRouteModel(b: StringBuilder, route: Route) {
 	b.line(``);
 	b.line(`// #region ${route.id} model`);
 	b.line(`export interface ${getTypeName(route.pascalKey, "Model")}`);
-	if (!isNil(route.config?.body)) b.inline(`<${CT_GENERIC}>`);
+	if (!isAbsent(route.config?.body)) b.inline(`<${CT_GENERIC}>`);
 	b.inline(` {`);
 	for (const modelKey of MODEL_KEYS) {
 		const schema = route.config?.[modelKey];
@@ -315,8 +311,8 @@ function writeApiClientMethod(b: StringBuilder, route: Route, useStaticClass: bo
 	const pfx = useStaticClass ? "static" : "public";
 
 	const endpoint = `this.endpoints.${route.camelKey}${isSomeArray(route.params) ? `(args.params)` : ``}`;
-	const generic = !isNil(route.config?.body) ? `<${CT_GENERIC}>` : ``;
-	const args = `args: args<${getTypeName(route.pascalKey, "Model")}${!isNil(route.config?.body) ? `<CT>` : ``}>`;
+	const generic = !isAbsent(route.config?.body) ? `<${CT_GENERIC}>` : ``;
+	const args = `args: args<${getTypeName(route.pascalKey, "Model")}${!isAbsent(route.config?.body) ? `<CT>` : ``}>`;
 
 	b.line(``);
 	b.line(1)(`/** ${route.id} */`);

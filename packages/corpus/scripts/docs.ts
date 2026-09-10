@@ -3,8 +3,7 @@ import path from "path";
 
 import ts from "typescript";
 
-import { logger } from "@/utils";
-import { slugify } from "@/utils/lexical";
+import { logger } from "@/utils/logger";
 
 const SRC_DIR = path.join(process.cwd(), "src");
 const OUT_DIR = path.join(process.cwd(), "..", "docs", "src", "files");
@@ -60,6 +59,14 @@ type JsDocHost = ts.Node & { jsDoc?: Array<ts.JSDoc> };
 
 /** Members whose docs are longer than this get their own subsection. */
 const TABLE_MAX_DESCRIPTION = 200;
+
+function slugify(text: string): string {
+	return text
+		.replace(/`/g, "")
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/^-|-$/g, "");
+}
 
 function getJsDocNodes(node: ts.Node): Array<ts.JSDoc> {
 	return (node as JsDocHost).jsDoc ?? [];

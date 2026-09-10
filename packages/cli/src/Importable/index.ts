@@ -1,20 +1,14 @@
 import fs from "fs";
 import path from "path";
 
-import {
-	toCamelCase,
-	toKebabCase,
-	toPascalCase,
-	type OrString,
-	logFatal,
-	objGetEntries,
-} from "@ozanarslan/corpus/utils";
-
 import type { Config } from "@/Config/Config";
 import { getConfig } from "@/Config/getConfig";
 import { getTsConfig } from "@/Config/getTsConfig";
 import { FileParser, type FileParserCallback } from "@/FileParser";
-import { resolveCwdPath } from "@/utils/resolveCwdPath";
+import { toPascalCase, toCamelCase, toKebabCase } from "@/internal/converters";
+import { resolveCwdPath } from "@/internal/resolveCwdPath";
+import type { OrString } from "@/utils/is";
+import { logFatal } from "@/utils/logger";
 
 export type ImportableKind = OrString<"model" | "service" | "controller" | "route" | "exception">;
 
@@ -76,7 +70,7 @@ export class Importable {
 		const fileNoExt = filePath.replace(/\.ts$/, "").replace(/^\.\//, "");
 		let bestAlias: string | null = null;
 		let bestTargetLen = -1;
-		for (const [alias, targets] of objGetEntries(paths)) {
+		for (const [alias, targets] of Object.entries(paths)) {
 			const target = targets[0] ?? "";
 			const targetDir = target.replace(/\/\*$/, "").replace(/^\.\//, "");
 			if (!fileNoExt.startsWith(targetDir)) continue;

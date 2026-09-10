@@ -21,11 +21,9 @@ import { getNearestApp } from "@/Globals/AppsRegistry";
 import { HeaderKey } from "@/Headers";
 import type { Schema } from "@/ParserBase/SchemaParser";
 import { Method } from "@/Request";
-import { arrIncludes } from "@/utils/array";
 import { assert } from "@/utils/assert";
-import { enumerate, type ValueOf } from "@/utils/enum";
-import type { MaybePromise } from "@/utils/maybe";
-import { isObject, objGetEntries, objGetValues } from "@/utils/object";
+import { isObject, isOneOf, type MaybePromise } from "@/utils/is";
+import type { ValueOf } from "@/utils/object";
 import { joinPathSegments } from "@/utils/path";
 
 /**
@@ -33,7 +31,7 @@ import { joinPathSegments } from "@/utils/path";
  * `websocket` route upgrades instead of responding, and a `bundle` route is
  * excluded from {@link RateLimiter} by default.
  */
-const RouteVariant = enumerate({
+const RouteVariant = {
 	/** A file whose contents feed a handler. See {@link StaticRoute}. */
 	static: "static",
 	/** A single file served as-is. See {@link FileRoute}. */
@@ -44,7 +42,7 @@ const RouteVariant = enumerate({
 	websocket: "websocket",
 	/** A directory of built files. See {@link BundleRoute}. */
 	bundle: "bundle",
-});
+} as const;
 
 /** One of the {@link RouteVariant} values. */
 type RouteVariant = ValueOf<typeof RouteVariant>;
@@ -138,7 +136,7 @@ function resolveRouteAddress<E extends string>(
 
 	const [method, endpoint] = address.split(" ");
 	assert(
-		arrIncludes(method?.toUpperCase(), Array.from(objGetValues(Method))),
+		isOneOf(method?.toUpperCase(), Object.values(Method)),
 		`Route address cannot include whitespaces unless it starts with an HTTP verb. Received: ${address}`,
 	);
 	assert(
@@ -257,14 +255,14 @@ abstract class RouteBase<B = any, S = any, P = any, R = any, E extends string = 
 
 		if (isObject(data.params)) {
 			for (const [key, value] of Object.entries(data.params)) {
-				endpoint = endpoint.replace(`:${key}`, String(value));
+				endpoint = endpoint.replace(`:${String(key)}`, String(value));
 			}
 		}
 
 		const url = new URL(endpoint, app.baseUrl);
 
 		if (isObject(data.search)) {
-			for (const [key, value] of objGetEntries(data.search)) {
+			for (const [key, value] of Object.entries(data.search)) {
 				url.searchParams.set(String(key), String(value));
 			}
 		}

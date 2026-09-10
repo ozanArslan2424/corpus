@@ -4,7 +4,6 @@ import { replaceTscAliasPaths } from "tsc-alias";
 import ts from "typescript";
 
 import { logger } from "@/utils/logger";
-import { Timer } from "@/utils/Timer";
 
 async function cleanDist(outdir: string) {
 	const exists = await fs.exists(outdir);
@@ -70,25 +69,42 @@ async function buildDts(tsconfig: string) {
 	});
 }
 
+let t: number = 0;
+
+function ms() {
+	const elapsed = performance.now() - t;
+	return elapsed >= 1000
+		? `\x1b[31m${(elapsed / 1000).toFixed(2)}s\x1b[0m`
+		: `\x1b[33m${elapsed.toFixed(2)}ms\x1b[0m`;
+}
+
+function step(label: string) {
+	logger.step(`${label} ${ms()}`);
+	t = performance.now();
+}
+
+function done(label: string) {
+	logger.success(`${label} ${ms()}`);
+}
+
 try {
-	const t = new Timer();
-	const entrypoints = ["./src/index.ts", "./src/utils.ts"];
+	const entrypoints = ["./src/index.ts"];
 	const outdir = "./dist";
 	const tsconfig = "./tsconfig.json";
 	const tsconfigDts = "./tsconfig.dts.json";
 	// const srcdir = "./src";
 
-	t.step("cleaning dist");
+	step("cleaning dist");
 	await cleanDist(outdir);
-	t.done("cleaned dist");
+	done("cleaned dist");
 
-	t.step("building esm");
+	step("building esm");
 	await buildJs(entrypoints, outdir, tsconfig);
-	t.done("built esm");
+	done("built esm");
 
-	t.step("building dts");
+	step("building dts");
 	await buildDts(tsconfigDts);
-	t.done("built dts");
+	done("built dts");
 } catch (err) {
 	logger.error(err);
 	process.exit(1);

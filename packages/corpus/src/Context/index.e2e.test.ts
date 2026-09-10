@@ -9,7 +9,7 @@ import { initialize } from "@/initialize";
 import { Middleware } from "@/Middleware";
 import { Res } from "@/Res";
 import { Route } from "@/RouteBase/Route";
-import { isNil } from "@/utils/maybe";
+import { isPresent } from "@/utils/is";
 
 declare module "@/index" {
 	interface ContextDataInterface {
@@ -45,7 +45,7 @@ beforeAll(async () => {
 		method: c.req.method,
 		custom: c.req.headers.get("x-custom"),
 		isRequest: c.req instanceof Request,
-		hasServer: !isNil(c.server),
+		hasServer: isPresent(c.server),
 	}));
 
 	new Route("GET /ctx/defaults", (c) => ({

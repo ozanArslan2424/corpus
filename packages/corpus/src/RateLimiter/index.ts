@@ -33,9 +33,7 @@ import { HeaderKey } from "@/Headers";
 import { Middleware, type MiddlewareHandler } from "@/Middleware";
 import { Status } from "@/Res";
 import { RouteVariant } from "@/RouteBase";
-import type { OrString } from "@/utils/lexical";
-import { isEmpty, type Maybe, type MaybePromise } from "@/utils/maybe";
-import { objGetValues } from "@/utils/object";
+import { isEmpty, type Maybe, type MaybePromise, type OrString } from "@/utils/is";
 import { tuple, type Tuple } from "@/utils/tuple";
 
 /** One caller's counter for the current window. */
@@ -435,7 +433,7 @@ class RateLimiter extends Middleware {
 		resHeaders.set(keys.limit, limit.toString());
 		resHeaders.set(keys.remaining, remaining.toString());
 		resHeaders.set(keys.reset, reset.toString());
-		for (const exposed of objGetValues(keys)) {
+		for (const exposed of Object.values(keys)) {
 			resHeaders.append(HeaderKey.AccessControlExposeHeaders, exposed);
 		}
 

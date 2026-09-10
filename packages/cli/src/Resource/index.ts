@@ -1,15 +1,8 @@
-import {
-	toPascalCase,
-	toCamelCase,
-	toKebabCase,
-	quote,
-	isNil,
-	type OrString,
-} from "@ozanarslan/corpus/utils";
-
 import type { Config } from "@/Config/Config";
 import { getConfig } from "@/Config/getConfig";
 import { Importable } from "@/Importable";
+import { toPascalCase, toCamelCase, toKebabCase, quote } from "@/internal/converters";
+import { type OrString, isAbsent } from "@/utils/is";
 
 export class Resource {
 	constructor(key: string) {
@@ -44,7 +37,7 @@ export class Resource {
 
 	route(methodKey: keyof Config["defaultMethods"], body: string): string {
 		const ms = this.config.defaultMethods;
-		const noValLib = isNil(this.config.validationLibrary);
+		const noValLib = isAbsent(this.config.validationLibrary);
 		const order = ["body", "search", "params", "response"];
 		const generics = noValLib
 			? `<${order.map((acc) => `\n\t\t${this.type(methodKey, acc)}`).join(",")}\n\t>`

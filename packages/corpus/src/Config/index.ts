@@ -18,8 +18,7 @@
  * @module Config
  */
 
-import type { OrString } from "@/utils/lexical";
-import { isUndefined } from "@/utils/maybe";
+import { isPresent, isAbsent, type OrString } from "@/utils/is";
 
 /**
  * Declaration target for an application's environment variables.
@@ -113,7 +112,7 @@ class Config {
 	 * defined.
 	 */
 	static has(key: EnvKey): boolean {
-		return !isUndefined(this.env[key]);
+		return isPresent(this.env[key]);
 	}
 
 	/**
@@ -153,7 +152,7 @@ class Config {
 		opts?: { parser?: (raw: string) => T; fallback?: T },
 	): T | undefined {
 		const value = this.env[key];
-		if (!isUndefined(value)) {
+		if (isPresent(value)) {
 			return opts?.parser ? opts.parser(value) : (value as T);
 		}
 		if (opts && "fallback" in opts) {
@@ -182,7 +181,7 @@ class Config {
 	static require<T = string>(key: EnvKey, parser: (raw: string) => T): T;
 	static require<T = string>(key: EnvKey, parser?: (raw: string) => T): T | string {
 		const value = parser ? this.get(key, { parser }) : this.get(key);
-		if (isUndefined(value)) {
+		if (isAbsent(value)) {
 			throw new Error(`Required environment variable "${key}" is not set`);
 		}
 		return value;

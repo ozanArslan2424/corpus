@@ -28,10 +28,6 @@
 			"types": "./dist/index.d.ts",
 			"default": "./dist/index.js"
 		},
-		"./utils": {
-			"types": "./dist/utils.d.ts",
-			"default": "./dist/utils.js"
-		},
 		"./package.json": "./package.json"
 	},
 	"publishConfig": {
@@ -42,7 +38,7 @@
 		"fm": "oxfmt --write",
 		"lint": "oxlint --fix",
 		"test:simulations": "bun run ./test/ws-simulation.ts -s && bun run ./test/http-simulation.ts -s",
-		"test:all": "bun test --only-failures && bun run test:simulations 2>&1 | grep -E '\\((pass|fail)\\)|[0-9]+ (pass|fail)|Failures:|^\\s+'"
+		"test:all": "bun test --only-failures && bun run test:simulations"
 	},
 	"devDependencies": {
 		"@standard-schema/spec": "^1.1.0",

@@ -1,7 +1,10 @@
 import fs from "fs";
 
-import { isUndefined, logger, objGetValues, StringReader } from "@ozanarslan/corpus/utils";
 import { parseSync, type Node, type Program } from "oxc-parser";
+
+import { StringReader } from "@/internal/StringReader";
+import { isAbsent, type Optional } from "@/utils/is";
+import { logger } from "@/utils/logger";
 
 export type FileParserCallback<N extends Node = Node> = (
 	node: N,
@@ -39,21 +42,21 @@ export class FileParser {
 		return program;
 	}
 
-	private _reader: StringReader | undefined;
+	private _reader: Optional<StringReader>;
 	public get reader(): StringReader {
-		if (isUndefined(this._reader)) this._reader = this.initReader();
+		if (isAbsent(this._reader)) this._reader = this.initReader();
 		return this._reader;
 	}
 
-	private _contents: string | undefined;
+	private _contents: Optional<string>;
 	public get contents(): string {
-		if (isUndefined(this._contents)) this._contents = this.initFileContent();
+		if (isAbsent(this._contents)) this._contents = this.initFileContent();
 		return this._contents;
 	}
 
-	private _program: Program | undefined;
+	private _program: Optional<Program>;
 	public get program(): Program {
-		if (isUndefined(this._program)) this._program = this.initProgram();
+		if (isAbsent(this._program)) this._program = this.initProgram();
 		return this._program;
 	}
 
@@ -100,7 +103,7 @@ export class FileParser {
 		}
 
 		// recurse
-		for (const inner of objGetValues(node)) {
+		for (const inner of Object.values(node)) {
 			if (Array.isArray(inner)) {
 				for (const ii of inner) {
 					this.handleNode(ii, nextCb);

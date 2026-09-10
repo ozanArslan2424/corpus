@@ -34,8 +34,8 @@ import {
 import { Method } from "@/Request";
 import { Status, type Res } from "@/Res";
 import { RouteBase, RouteVariant, type RouteConfig } from "@/RouteBase";
-import { assertDefined } from "@/utils/assert";
-import { isUndefined, isNull, type MaybePromise } from "@/utils/maybe";
+import { assert } from "@/utils/assert";
+import { isAbsent, type MaybePromise, isPresent } from "@/utils/is";
 import { tuple, type Tuple } from "@/utils/tuple";
 import { XFile } from "@/XFile";
 
@@ -158,12 +158,12 @@ class BundleRoute<E extends string = string> extends RouteBase<
 		super();
 
 		if (new.target !== BundleRoute) return;
-		assertDefined(endpoint, "endpoint is required when BundleRoute is constructed directly.");
-		assertDefined(dir, "dir is required when BundleRoute is constructed directly.");
+		assert.present(endpoint, "endpoint is required when BundleRoute is constructed directly.");
+		assert.present(dir, "dir is required when BundleRoute is constructed directly.");
 
 		this.endpoint = endpoint;
 		this.dir = dir;
-		if (!isUndefined(definition)) this.definition = definition;
+		if (isPresent(definition)) this.definition = definition;
 		this.register();
 	}
 
@@ -434,7 +434,7 @@ class BundleRoute<E extends string = string> extends RouteBase<
 		}
 
 		const file = this.resolveFile(targetPath);
-		if (isNull(file)) return this.onFileNotFound(subPath);
+		if (isAbsent(file)) return this.onFileNotFound(subPath);
 
 		const [data, headers] = this.resolveResponseData(file);
 		c.res.headers.setMany(headers);

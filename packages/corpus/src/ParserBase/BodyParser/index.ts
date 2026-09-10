@@ -15,7 +15,7 @@ import { Exception } from "@/Exception";
 import { getOrInitParsersRegistry } from "@/Globals/ParsersRegistry";
 import { HeaderKey } from "@/Headers";
 import { Res, Status } from "@/Res";
-import type { Nullable } from "@/utils/maybe";
+import type { Nullable } from "@/utils/is";
 import { createSafeObject } from "@/utils/object";
 
 /**

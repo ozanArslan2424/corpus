@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 
 import { C } from "@ozanarslan/corpus";
-import { slugify } from "@ozanarslan/corpus/utils";
 import * as esbuild from "esbuild";
 import hljs from "highlight.js";
 import terser from "html-minifier-terser";
@@ -24,7 +23,7 @@ const SPECIAL_NAME_MAP: Record<string, string> = {
 	index: "Home",
 };
 
-class RouteFile {
+export class RouteFile {
 	constructor(dirent: fs.Dirent, outdir: string) {
 		const parsed = path.parse(dirent.name);
 		const file = parsed.base;
@@ -90,6 +89,14 @@ function unescapeHtml(code: string): string {
 		.replace(/&amp;/g, "&")
 		.replace(/&quot;/g, '"')
 		.replace(/&#39;/g, "'");
+}
+
+function slugify(text: string): string {
+	return text
+		.replace(/`/g, "")
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/^-|-$/g, "");
 }
 
 function initMarked() {

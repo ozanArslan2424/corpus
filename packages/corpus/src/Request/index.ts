@@ -14,13 +14,12 @@
 
 import { Cookies, parseCookieHeader } from "@/Cookies";
 import { readHeader, HeaderKey } from "@/Headers";
-import { enumerate, type ValueOf } from "@/utils/enum";
-import type { OrString } from "@/utils/lexical";
-import { createSafeObject } from "@/utils/object";
-import { lazy, type LazyMut } from "@/utils/variable";
+import type { OrString } from "@/utils/is";
+import { lazy, type LazyMut } from "@/utils/lazy";
+import { createSafeObject, type ValueOf } from "@/utils/object";
 
 /** Commonly used HTTP verbs. See [MDN Reference](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods) for the full spec. */
-const Method = enumerate({
+const Method = {
 	/** Retrieve a resource from the server. */
 	GET: "GET",
 	/** Submit data to create a new resource. */
@@ -39,7 +38,7 @@ const Method = enumerate({
 	CONNECT: "CONNECT",
 	/** Echo back received request. */
 	TRACE: "TRACE",
-});
+} as const;
 
 /**
  * An HTTP method. The {@link Method} constants are suggested, but

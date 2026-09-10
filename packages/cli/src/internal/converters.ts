@@ -1,7 +1,13 @@
-import { isNil } from "@/utils/maybe";
+import { assert } from "@/utils/assert";
+import type { Optional, OrString } from "@/utils/is";
 
 // ---- type-level helpers ----
-export type OrString<T> = T | (string & {});
+
+type WithLeading<E extends string> = E extends `/${string}` ? E : `/${E}`;
+
+export type WithPrefix<Px extends Optional<string>, E extends string> = Px extends string
+	? `${WithLeading<Px>}${WithLeading<E>}`
+	: WithLeading<E>;
 
 type Separator = " " | "_" | "-" | "/" | ".";
 
@@ -112,16 +118,8 @@ export function singlequote(s: string) {
 	return `'${s}'`;
 }
 
-export function isString<T>(input: T): input is Extract<T, string> {
-	return typeof input === "string";
-}
-
 export function isPattern<T extends string>(value: string, pattern: RegExp): value is T {
 	return pattern.test(value);
-}
-
-export function isRegex<T>(input: T): input is Extract<T, RegExp> {
-	return !isNil(input) && input instanceof RegExp;
 }
 
 export function strAfterMark(mark: string, input: string): string {
@@ -142,10 +140,16 @@ export function strRemoveWhitespace(str: string) {
 	return str.trim().replace(/\s+/g, "");
 }
 
-export function slugify(text: string): string {
-	return text
-		.replace(/`/g, "")
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, "-")
-		.replace(/^-|-$/g, "");
+export function strSplit(mark: string, input: string, minLength?: number): string[] {
+	const parts = input
+		.split(mark)
+		.map((part) => part.trim())
+		.filter(Boolean);
+
+	if (minLength) {
+		assert(parts.length >= minLength, `insufficient length: ${input}`);
+		return parts;
+	}
+
+	return parts;
 }

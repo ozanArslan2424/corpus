@@ -1,51 +1,53 @@
-import { isRegex } from "@/utils/lexical";
-import { isNumber } from "@/utils/numerical";
-import { isObject } from "@/utils/object";
+import { isObject } from "@/utils/is";
 
 type SearchOrIndex = string | number | RegExp;
 type Search = string | RegExp;
 
 export class StringReader {
-	constructor(private source: string) {}
+	constructor(readonly source: string) {
+		this.state = source;
+	}
+
+	private state: string;
 
 	toString(): string {
-		return this.source;
+		return this.state;
 	}
 
 	// #region SEARCH
 	private resolveIndex(searchOrIndex: SearchOrIndex): number {
-		if (isNumber(searchOrIndex)) return searchOrIndex;
-		if (isRegex(searchOrIndex)) return this.source.search(searchOrIndex);
-		return this.source.indexOf(searchOrIndex);
+		if (typeof searchOrIndex === "number") return searchOrIndex;
+		if (searchOrIndex instanceof RegExp) return this.state.search(searchOrIndex);
+		return this.state.indexOf(searchOrIndex);
 	}
 
 	private resolveLineNumber(searchOrLine: SearchOrIndex | { charIndex: number }): number {
-		if (isNumber(searchOrLine)) return searchOrLine;
+		if (typeof searchOrLine === "number") return searchOrLine;
 		const index = isObject(searchOrLine) ? searchOrLine.charIndex : this.resolveIndex(searchOrLine);
 		if (index === -1) return -1;
-		return this.source.slice(0, index).split("\n").length - 1;
+		return this.state.slice(0, index).split("\n").length - 1;
 	}
 
 	static contains(text: string, search: Search): boolean {
-		return isRegex(search) ? search.test(text) : text.includes(search);
+		return search instanceof RegExp ? search.test(text) : text.includes(search);
 	}
 
 	contains(search: Search): boolean {
-		return StringReader.contains(this.source, search);
+		return StringReader.contains(this.state, search);
 	}
 
 	containsAnyOf(...searches: Search[]): boolean {
-		return searches.some((search) => StringReader.contains(this.source, search));
+		return searches.some((search) => StringReader.contains(this.state, search));
 	}
 
 	containsAllOf(...searches: Search[]): boolean {
-		return searches.every((search) => StringReader.contains(this.source, search));
+		return searches.every((search) => StringReader.contains(this.state, search));
 	}
 	// #endregion
 
 	// #region GETTERS
 	getSplitLines(): string[] {
-		return this.source.split("\n");
+		return this.state.split("\n");
 	}
 
 	getLineNumberOfCharIndex(charIndex: number): number {
@@ -73,29 +75,29 @@ export class StringReader {
 	}
 
 	getCharAt(charIndex: number): string | null {
-		return this.source[charIndex] ?? null;
+		return this.state[charIndex] ?? null;
 	}
 
 	getBetween(start: SearchOrIndex, end: SearchOrIndex): string {
 		const fromIndex = this.resolveIndex(start);
 		if (fromIndex === -1) return "";
 		const from = typeof start === "string" ? fromIndex + start.length : fromIndex;
-		const toIndex = this.source.indexOf(typeof end === "string" ? end : "", from);
+		const toIndex = this.state.indexOf(typeof end === "string" ? end : "", from);
 		if (toIndex === -1) return "";
-		return this.source.slice(from, typeof end === "number" ? end : toIndex).trim();
+		return this.state.slice(from, typeof end === "number" ? end : toIndex).trim();
 	}
 
 	getFrom(startOrIndex: SearchOrIndex): string {
 		const index = this.resolveIndex(startOrIndex);
 		if (index === -1) return "";
 		const from = typeof startOrIndex === "string" ? index + startOrIndex.length : index;
-		return this.source.slice(from);
+		return this.state.slice(from);
 	}
 
 	getUntil(endOrIndex: SearchOrIndex): string {
 		const index = this.resolveIndex(endOrIndex);
-		if (index === -1) return this.source;
-		return this.source.slice(0, index);
+		if (index === -1) return this.state;
+		return this.state.slice(0, index);
 	}
 
 	getLinesBetween(startSearchOrLine: SearchOrIndex, endSearchOrLine: SearchOrIndex): string[] {
@@ -107,11 +109,12 @@ export class StringReader {
 			return [];
 		}
 
-		const toLine = isNumber(endSearchOrLine)
-			? endSearchOrLine
-			: lines.findIndex(
-					(line, index) => index > fromLine && StringReader.contains(line, endSearchOrLine),
-				);
+		const toLine =
+			typeof endSearchOrLine === "number"
+				? endSearchOrLine
+				: lines.findIndex(
+						(line, index) => index > fromLine && StringReader.contains(line, endSearchOrLine),
+					);
 
 		return lines.slice(fromLine + 1, toLine);
 	}
@@ -163,17 +166,17 @@ export class StringReader {
 
 	// #region MUTATE
 	collapse(): this {
-		this.source = this.source.trim().replace(/\s+/g, " ");
+		this.state = this.state.trim().replace(/\s+/g, " ");
 		return this;
 	}
 
 	replace(search: Search, replacement: string): this {
-		this.source = this.source.replace(search, replacement);
+		this.state = this.state.replace(search, replacement);
 		return this;
 	}
 
 	replaceAll(search: Search, replacement: string): this {
-		this.source = this.source.replaceAll(search, replacement);
+		this.state = this.state.replaceAll(search, replacement);
 		return this;
 	}
 
@@ -181,7 +184,7 @@ export class StringReader {
 		const lineNumber = this.resolveLineNumber(searchOrLine);
 		const lines = this.getSplitLines();
 		lines[lineNumber] = text;
-		this.source = lines.join("\n");
+		this.state = lines.join("\n");
 		return this;
 	}
 
@@ -189,12 +192,12 @@ export class StringReader {
 		const lineNumber = this.resolveLineNumber(searchOrLine);
 		const lines = this.getSplitLines();
 		lines[lineNumber] = modifier(lines[lineNumber] ?? "");
-		this.source = lines.join("\n");
+		this.state = lines.join("\n");
 		return this;
 	}
 
 	addLine(text: string): this {
-		this.source = this.source + "\n" + text;
+		this.state = this.state + "\n" + text;
 		return this;
 	}
 
@@ -202,7 +205,7 @@ export class StringReader {
 		const lineNumber = this.resolveLineNumber(searchOrLine);
 		const lines = this.getSplitLines();
 		lines[lineNumber] = lines[lineNumber] + text;
-		this.source = lines.join("\n");
+		this.state = lines.join("\n");
 		return this;
 	}
 
@@ -223,7 +226,7 @@ export class StringReader {
 		const lines = this.getSplitLines();
 		const indent = this.getIndentation(lines[lineNumber] ?? "");
 		lines.splice(lineNumber + 1, 0, this.indentText(text, indent));
-		this.source = lines.join("\n");
+		this.state = lines.join("\n");
 		return this;
 	}
 
@@ -232,7 +235,7 @@ export class StringReader {
 		const lines = this.getSplitLines();
 		const indent = this.getIndentation(lines[lineNumber] ?? "");
 		lines.splice(lineNumber, 0, this.indentText(text, indent));
-		this.source = lines.join("\n");
+		this.state = lines.join("\n");
 		return this;
 	}
 	// #endregion

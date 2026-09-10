@@ -21,7 +21,7 @@ import type { StandardSchemaV1 } from "@standard-schema/spec";
 import { Exception } from "@/Exception";
 import { Status } from "@/Res";
 import type { RouteConfig } from "@/RouteBase";
-import { isObjectWith, type Prettify } from "@/utils/object";
+import type { Prettify } from "@/utils/object";
 
 /**
  * Any Standard Schema validator producing `T`. This is the type
@@ -185,7 +185,7 @@ class SchemaParser implements SchemaParserInterface {
 				}
 				// Extract the string representation of the path
 				const pathKeys = issue.path.map((segment) =>
-					isObjectWith<{ key: string }>(segment, "key")
+					typeof segment === "object" && segment !== null && "key" in segment
 						? String(segment.key)
 						: String(segment as string),
 				);

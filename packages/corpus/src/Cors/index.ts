@@ -25,8 +25,7 @@ import type { ContextHandler } from "@/Context";
 import { getNearestApp } from "@/Globals/AppsRegistry";
 import { HeaderKey } from "@/Headers";
 import { Res, Status } from "@/Res";
-import { isSomeArray } from "@/utils/array";
-import { boolString } from "@/utils/boolean";
+import { isPresent, isSomeArray } from "@/utils/is";
 
 /**
  * The CORS policy. Every field is optional; an omitted field means the
@@ -159,31 +158,39 @@ class Cors implements CorsInterface {
 			credentials,
 			maxAge = 86400,
 		} = this.opts ?? {};
+
 		const isWildcard = !allowedOrigins || allowedOrigins.includes("*");
 		const originAllowed = !isWildcard && allowedOrigins.includes(reqOrigin);
 		// Credentials mode forbids wildcard origin — reflect actual origin instead
-		if (credentials && isWildcard && reqOrigin) {
+		const reflectOrigin = originAllowed || (isWildcard && credentials && reqOrigin);
+
+		if (reflectOrigin) {
 			headers.set(HeaderKey.AccessControlAllowOrigin, reqOrigin);
 			headers.append(HeaderKey.Vary, "Origin");
 		} else if (isWildcard) {
 			headers.set(HeaderKey.AccessControlAllowOrigin, "*");
-		} else if (originAllowed) {
-			headers.set(HeaderKey.AccessControlAllowOrigin, reqOrigin);
-			headers.append(HeaderKey.Vary, "Origin");
 		}
+
 		if (isSomeArray(allowedMethods)) {
 			headers.set(HeaderKey.AccessControlAllowMethods, allowedMethods.join(", "));
 		}
+
 		if (isSomeArray(allowedHeaders)) {
 			headers.set(HeaderKey.AccessControlAllowHeaders, allowedHeaders.join(", "));
 		}
+
 		if (isSomeArray(exposedHeaders)) {
 			headers.set(HeaderKey.AccessControlExposeHeaders, exposedHeaders.join(", "));
 		}
+
 		if (includeMaxAge) {
-			headers.set(HeaderKey.AccessControlMaxAge, maxAge.toString());
+			headers.set(HeaderKey.AccessControlMaxAge, maxAge);
 		}
-		headers.set(HeaderKey.AccessControlAllowCredentials, boolString(credentials));
+
+		headers.set(
+			HeaderKey.AccessControlAllowCredentials,
+			isPresent(credentials) ? credentials : false,
+		);
 	}
 }
 

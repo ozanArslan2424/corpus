@@ -1,7 +1,8 @@
 import { type } from "arktype";
 
 import { C } from "@/index";
-import { TestHelper } from "@/utils/TestHelper";
+
+import { TestHelper } from "./TestHelper";
 
 // ── config ────────────────────────────────────────────────────────────────────
 

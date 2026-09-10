@@ -28,7 +28,7 @@ import {
 	type RouteAddress,
 	type RouteConfig,
 } from "@/RouteBase";
-import { assertDefined } from "@/utils/assert";
+import { assert } from "@/utils/assert";
 
 /**
  * A route handled by a function.
@@ -82,8 +82,8 @@ class Route<
 	) {
 		super();
 		if (new.target !== Route) return;
-		assertDefined(address, "address is required when Route is constructed directly.");
-		assertDefined(callback, "callback is required when Route is constructed directly.");
+		assert.present(address, "address is required when Route is constructed directly.");
+		assert.present(callback, "callback is required when Route is constructed directly.");
 		const addr = resolveRouteAddress(address);
 		this.method = addr.method;
 		this.endpoint = addr.endpoint;

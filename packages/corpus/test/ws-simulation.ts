@@ -1,6 +1,7 @@
 import { C } from "@/index";
 import type { Logger } from "@/utils/logger";
-import { TestHelper } from "@/utils/TestHelper";
+
+import { TestHelper } from "./TestHelper";
 
 process.env.NODE_ENV = "test";
 

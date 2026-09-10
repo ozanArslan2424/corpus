@@ -33,8 +33,8 @@ import {
 	type RouteAddress,
 	type RouteConfig,
 } from "@/RouteBase";
-import { assertDefined } from "@/utils/assert";
-import { isUndefined, type Nullable, isNull, type MaybePromise } from "@/utils/maybe";
+import { assert } from "@/utils/assert";
+import { type Nullable, isAbsent, type MaybePromise } from "@/utils/is";
 import { XFile } from "@/XFile";
 
 /**
@@ -130,8 +130,8 @@ class StaticRoute<
 	) {
 		super();
 		if (new.target !== StaticRoute) return;
-		assertDefined(address, "address is required when StaticRoute is constructed directly.");
-		assertDefined(filePath, "filePath is required when StaticRoute is constructed directly.");
+		assert.present(address, "address is required when StaticRoute is constructed directly.");
+		assert.present(filePath, "filePath is required when StaticRoute is constructed directly.");
 		const resolved = resolveRouteAddress(address);
 		this.endpoint = resolved.endpoint;
 		this.method = resolved.method;
@@ -210,12 +210,12 @@ class StaticRoute<
 	 * was missing at construction.
 	 */
 	override handler: ContextHandler<B, S, P, StaticRouteRes> = (c) => {
-		if (isNull(this.file)) return this.onFileNotFound();
-		if (isNull(this.bytes)) return this.onFileNotFound();
+		if (isAbsent(this.file)) return this.onFileNotFound();
+		if (isAbsent(this.bytes)) return this.onFileNotFound();
 		c.res.headers.set(HeaderKey.ContentType, this.file.mimeType);
 		c.res.headers.set(HeaderKey.CacheControl, this.cacheHeader);
 		c.res.headers.set(HeaderKey.ContentLength, this.bytes.byteLength.toString());
-		if (isUndefined(this.callback)) return this.bytes;
+		if (isAbsent(this.callback)) return this.bytes;
 		const decoder = new TextDecoder();
 		return this.callback(c, decoder.decode(this.bytes));
 	};

@@ -30,22 +30,21 @@ import {
 	HeaderKey,
 	type ContentDispositionDefinition,
 } from "@/Headers";
-import { enumerate, type ValueOf } from "@/utils/enum";
 import {
 	type MaybePromise,
 	type Nullable,
 	type Optional,
-	isNil,
-	isNull,
-	isUndefined,
-} from "@/utils/maybe";
-import { isPrimitive } from "@/utils/primitive";
+	isPresent,
+	isAbsent,
+	isPrimitive,
+} from "@/utils/is";
+import { lazy, type Lazy, type LazyMut } from "@/utils/lazy";
+import type { ValueOf } from "@/utils/object";
 import { type Tuple, tuple } from "@/utils/tuple";
-import { lazy, type Lazy, type LazyMut } from "@/utils/variable";
 import { XFile } from "@/XFile";
 
 /** Commonly used HTTP status codes. */
-const Status = enumerate({
+const Status = {
 	/** Continue: Request received, please continue */
 	CONTINUE: 100,
 	/** Switching Protocols: Protocol change request approved */
@@ -170,7 +169,7 @@ const Status = enumerate({
 	NOT_EXTENDED: 510,
 	/** Network Authentication Required */
 	NETWORK_AUTHENTICATION_REQUIRED: 511,
-});
+} as const;
 
 /**
  * An HTTP status code. The {@link Status} constants are suggested, but any
@@ -193,7 +192,7 @@ type Status = ValueOf<typeof Status> | (number & {});
  * either of which may be `null`.
  */
 function resolveResBody(b: unknown): Tuple<Nullable<BodyInit>, Nullable<string>> {
-	if (isNil(b)) return tuple(null, null);
+	if (isAbsent(b)) return tuple(null, null);
 
 	if (isPrimitive(b)) return tuple(String(b), "text/plain");
 
@@ -392,7 +391,7 @@ class Res<R = unknown> {
 	 * {@link ResInit}.
 	 */
 	constructor(body?: Nullable<BodyInit | R>, init?: ResInit) {
-		this.body = isUndefined(body) ? null : body;
+		this.body = isAbsent(body) ? null : body;
 
 		this.status = init?.status ?? Status.OK;
 
@@ -489,7 +488,7 @@ class Res<R = unknown> {
 		const status = this.status;
 		const statusText = this.statusText;
 		const [body, contentType] = resolveResBody(data);
-		if (!isNull(contentType) && !headers.has(HeaderKey.ContentType)) {
+		if (isPresent(contentType) && !headers.has(HeaderKey.ContentType)) {
 			headers.set(HeaderKey.ContentType, contentType);
 		}
 		// Browsers will otherwise MIME-sniff a text/plain body that looks like
@@ -519,7 +518,7 @@ class Res<R = unknown> {
 			return source((event) => {
 				if (isCancelled()) return;
 				let chunk = "";
-				if (!isUndefined(retry)) chunk += `retry: ${retry}\n`;
+				if (isPresent(retry)) chunk += `retry: ${retry}\n`;
 				if (event.id) chunk += `id: ${event.id}\n`;
 				if (event.event) chunk += `event: ${event.event}\n`;
 				chunk += `data: ${JSON.stringify(event.data)}\n\n`;

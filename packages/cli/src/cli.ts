@@ -1,7 +1,5 @@
 #!/usr/bin/env bun
 
-import { logFatal } from "@ozanarslan/corpus/utils";
-
 import { APP_NAME, EXE_NAME } from "@/constants";
 import { MainFileUpdater } from "@/FileParser/MainFileUpdater";
 import { AddControllerModule } from "@/Modules/AddControllerModule";
@@ -10,6 +8,7 @@ import { AddModelModule } from "@/Modules/AddModelModule";
 import { AddResourceModule } from "@/Modules/AddResourceModule";
 import { AddServiceModule } from "@/Modules/AddServiceModule";
 import { ApiClientModule } from "@/Modules/ApiClientModule";
+import { logFatal } from "@/utils/logger";
 
 const mainFileUpdater = new MainFileUpdater();
 

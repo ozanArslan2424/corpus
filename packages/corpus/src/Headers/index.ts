@@ -17,11 +17,8 @@
  * @module Headers
  */
 
-import { boolString } from "@/utils/boolean";
-import { enumerate, type ValueOf } from "@/utils/enum";
-import { isString, type OrString } from "@/utils/lexical";
-import type { MaybeArray, Nullable, Optional } from "@/utils/maybe";
-import { isNumber } from "@/utils/numerical";
+import type { MaybeArray, Nullable, Optional, OrString } from "@/utils/is";
+import type { ValueOf } from "@/utils/object";
 
 /**
  * A value accepted by the patched header setters. Numbers and booleans are
@@ -36,7 +33,7 @@ type HeadersInitValue = string | number | boolean;
 type CustomHeadersInit = [string, HeadersInitValue][] | Record<string, HeadersInitValue> | Headers;
 
 /** Just some common headers. See [MDN Reference](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers) for the full spec. */
-const HeaderKey = enumerate({
+const HeaderKey = {
 	/** Controls caching mechanisms for requests and responses. */
 	CacheControl: "Cache-Control",
 	/** Specifies the media type of the resource or data. */
@@ -101,7 +98,7 @@ const HeaderKey = enumerate({
 	Vary: "Vary",
 	/** Set to "nosniff" by default in {@link Res}. */
 	XContentTypeOptions: "X-Content-Type-Options",
-});
+} as const;
 
 /**
  * A header name. The {@link HeaderKey} constants are suggested, but
@@ -241,9 +238,9 @@ function patchGlobalHeaders() {
 	 * @returns The string, with booleans rendered by {@link boolString}.
 	 */
 	function strHeaderValue(value: HeadersInitValue): string {
-		if (isString(value)) return value;
-		else if (isNumber(value)) return value.toString();
-		else return boolString(value);
+		if (typeof value === "string") return value;
+		else if (typeof value === "number") return value.toString();
+		else return String(value);
 	}
 
 	/**

@@ -21,7 +21,7 @@
  */
 
 import type { RouteConfig } from "@/RouteBase";
-import { isUndefined, type Nullable, type Optional } from "@/utils/maybe";
+import { isPresent, type Nullable, type Optional } from "@/utils/is";
 
 /**
  * The context properties whose population can be skipped. Order is irrelevant;
@@ -321,9 +321,9 @@ function getContextAccess(
 	// A configured schema runs whether or not a handler reads the value —
 	// skipping it would let an invalid payload through unvalidated.
 	return {
-		params: result.params || !isUndefined(config?.params),
-		search: result.search || !isUndefined(config?.search),
-		body: result.body || !isUndefined(config?.body),
+		params: result.params || isPresent(config?.params),
+		search: result.search || isPresent(config?.search),
+		body: result.body || isPresent(config?.body),
 	};
 }
 

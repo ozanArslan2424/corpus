@@ -9,9 +9,6 @@ const outDir = path.join(root, "dist");
 const filesDir = path.join(srcDir, "files");
 const filesDirOut = path.join(outDir, "files");
 
-const templateHtml = path.join(srcDir, "template.html");
-const templateHtmlOut = path.join(outDir, "template.html");
-
 const entrypoint = path.join(srcDir, "index.ts");
 
 async function clean(dir: string) {
@@ -40,7 +37,6 @@ async function build(entry: string, dir: string) {
 try {
 	await clean(outDir);
 	await copy(filesDir, filesDirOut);
-	await copy(templateHtml, templateHtmlOut);
 	await build(entrypoint, outDir);
 } catch (err) {
 	console.error(err);

@@ -1,19 +1,14 @@
 import fs from "fs";
 import path from "path";
 
-import {
-	isString,
-	quote,
-	logger,
-	objGetEntries,
-	isObject,
-	StringBuilder,
-} from "@ozanarslan/corpus/utils";
-
 import type { Config } from "@/Config/Config";
 import { CONFIG_FILE_NAME } from "@/constants";
-import { cache } from "@/utils/cache";
-import { resolveCwdPath } from "@/utils/resolveCwdPath";
+import { cache } from "@/internal/cache";
+import { quote } from "@/internal/converters";
+import { resolveCwdPath } from "@/internal/resolveCwdPath";
+import { StringBuilder } from "@/internal/StringBuilder";
+import { isObject } from "@/utils/is";
+import { logger } from "@/utils/logger";
 
 export function getDefaultConfig(): Config {
 	return {
@@ -79,13 +74,13 @@ export const getConfig = cache("getConfig", (): Config => {
 	}
 
 	function writeConfigEntries(b: StringBuilder, obj: object, indent: number) {
-		for (const [key, val] of objGetEntries(obj)) {
+		for (const [key, val] of Object.entries(obj)) {
 			if (isObject(val)) {
 				b.line(indent)(`${key}: {`);
 				writeConfigEntries(b, val, indent + 1);
 				b.line(indent)(`},`);
 			} else {
-				b.line(indent)(`${key}: ${isString(val) ? quote(val) : val},`);
+				b.line(indent)(`${key}: ${typeof val === "string" ? quote(val) : val},`);
 			}
 		}
 	}

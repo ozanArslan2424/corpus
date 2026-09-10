@@ -1,10 +1,10 @@
 import path from "path";
 
-import { isEmpty, isNumber, type Maybe } from "@ozanarslan/corpus/utils";
+import { isEmpty, type Maybe } from "@/utils/is";
 
 export function resolveCwdPath(...segments: Maybe<string | number>[]): string {
 	const joined = segments
-		.map((segment) => (isNumber(segment) ? segment.toString() : segment))
+		.map((segment) => (typeof segment === "number" ? segment.toString() : segment))
 		.filter((segment): segment is string => !isEmpty(segment))
 		.flatMap((segment) => segment.split("/"))
 		.map((segment) => segment.replace(/^\/+|\/+$/g, ""))

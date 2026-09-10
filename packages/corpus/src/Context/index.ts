@@ -17,9 +17,9 @@
 
 import { Res } from "@/Res";
 import type { Server } from "@/Server";
-import type { Maybe, MaybePromise } from "@/utils/maybe";
+import type { Maybe, MaybePromise } from "@/utils/is";
+import { lazy, type Lazy, type LazyMut } from "@/utils/lazy";
 import { createSafeObject } from "@/utils/object";
-import { lazy, type Lazy, type LazyMut } from "@/utils/variable";
 
 /**
  * Declaration target for {@link Context.data}, the request-scoped state shared

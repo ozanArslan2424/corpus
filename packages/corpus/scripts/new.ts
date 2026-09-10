@@ -1,12 +1,12 @@
 import fs from "fs";
 import path from "path";
 
-import { assert, assertDefined } from "@/utils/assert";
+import { assert } from "@/utils/assert";
 import { logFatal, logger } from "@/utils/logger";
 
 try {
 	const address = process.argv[2];
-	assertDefined(address, "You need to provide an address for the generated module");
+	assert.present(address, "You need to provide an address for the generated module");
 
 	const segments = address.split("/").filter(Boolean);
 	assert(segments.length > 0, "Address needs to be a slash separated path");

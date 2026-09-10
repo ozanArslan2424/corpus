@@ -26,7 +26,7 @@ import { FileRoute } from "@/RouteBase/FileRoute";
 import { Route } from "@/RouteBase/Route";
 import { StaticRoute } from "@/RouteBase/StaticRoute";
 import { WebSocketRoute } from "@/RouteBase/WebSocketRoute";
-import type { Optional } from "@/utils/maybe";
+import type { Optional } from "@/utils/is";
 import { joinPathSegments, type WithPrefix } from "@/utils/path";
 
 /**

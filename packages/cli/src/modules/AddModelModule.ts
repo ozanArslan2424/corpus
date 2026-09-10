@@ -1,9 +1,11 @@
-import { assert, StringBuilder, quote, isNil } from "@ozanarslan/corpus/utils";
-
 import type { Config } from "@/Config/Config";
 import { EXE_NAME, NAME_FLAG_HELP } from "@/constants";
 import { Importable } from "@/Importable";
+import { quote } from "@/internal/converters";
+import { StringBuilder } from "@/internal/StringBuilder";
 import { ModuleAbstract } from "@/Modules/ModuleAbstract";
+import { assert } from "@/utils/assert";
+import { isAbsent } from "@/utils/is";
 
 export class AddModelModule extends ModuleAbstract {
 	override keys: string[] = ["model", "mdl"];
@@ -63,7 +65,7 @@ export class AddModelModule extends ModuleAbstract {
 			return `${modelTypeName}[${quote(key)}]${accessors.map((accessor) => `[${quote(accessor)}]`).join("")}`;
 		};
 
-		if (isNil(validationLibrary)) {
+		if (isAbsent(validationLibrary)) {
 			return `export interface ${modelTypeName} {
     entity: {
         id: string;

@@ -1,13 +1,13 @@
 import fs from "fs";
 
-import { assert, objGetEntries, objGetValues, StringBuilder } from "@ozanarslan/corpus/utils";
-
 import { EXE_NAME, NAME_FLAG_HELP, NEVER_SCHEMAS } from "@/constants";
 import { MainFileUpdater } from "@/FileParser/MainFileUpdater";
 import { Importable } from "@/Importable";
+import { checkNotImplementedExceptionExists } from "@/internal/checkNotImplementedExceptionExists";
+import { parseModelDefinition } from "@/internal/parseModelDefinition";
+import { StringBuilder } from "@/internal/StringBuilder";
 import { ModuleAbstract } from "@/Modules/ModuleAbstract";
-import { checkNotImplementedExceptionExists } from "@/utils/checkNotImplementedExceptionExists";
-import { parseModelDefinition } from "@/utils/parseModelDefinition";
+import { assert } from "@/utils/assert";
 
 export class AddServiceModule extends ModuleAbstract {
 	constructor(private readonly mainFileUpdater: MainFileUpdater) {
@@ -87,7 +87,7 @@ export class AddServiceModule extends ModuleAbstract {
 		b.line(`export class ${service.pascalName} {`);
 		b.line(1)(`constructor() {}`);
 
-		for (const { propertyKey } of objGetValues(methods)) {
+		for (const { propertyKey } of Object.values(methods)) {
 			b.line(``);
 			b.line(1)(`async ${propertyKey}(): Promise<void> {`);
 			if (notImplementedExceptionExists) {
@@ -122,7 +122,7 @@ export class AddServiceModule extends ModuleAbstract {
 
 		const isNeverSchema = (schema: string) => NEVER_SCHEMAS.has(schema.trim());
 
-		for (const [key, val] of objGetEntries(modelDef)) {
+		for (const [key, val] of Object.entries(modelDef)) {
 			const ORDER = ["params", "search", "body"] as const;
 			const usedParams = ORDER.filter((k) => k in val && !isNeverSchema(val[k]!));
 			const funcParams = usedParams

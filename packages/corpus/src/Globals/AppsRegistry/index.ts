@@ -13,7 +13,7 @@
 
 import type { AppInterface } from "@/App";
 import { Globals } from "@/Globals";
-import { assertDefined } from "@/utils/assert";
+import { assert } from "@/utils/assert";
 
 /**
  * The registry itself: every {@link AppInterface} in construction order, oldest
@@ -50,7 +50,7 @@ function getOrInitAppsRegistry(): AppsRegistry {
 function getNearestApp(): AppInterface {
 	const apps = getOrInitAppsRegistry();
 	const current = apps[apps.length - 1];
-	assertDefined(current, "No active App, instantiate one first");
+	assert.present(current, "No active App, instantiate one first");
 	return current;
 }
 

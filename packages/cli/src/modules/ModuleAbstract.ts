@@ -3,11 +3,11 @@ import { createInterface } from "node:readline/promises";
 import path from "path";
 import { parseArgs } from "util";
 
-import { type Nullable, logger, isUndefined, setLoggerNoop } from "@ozanarslan/corpus/utils";
-
 import type { Config } from "@/Config/Config";
 import { getConfig } from "@/Config/getConfig";
-import { resolveCwdPath } from "@/utils/resolveCwdPath";
+import { resolveCwdPath } from "@/internal/resolveCwdPath";
+import { isPresent, type Nullable } from "@/utils/is";
+import { logger, setLoggerNoop } from "@/utils/logger";
 
 export interface ModuleInterface {
 	help: string[];
@@ -108,9 +108,9 @@ export abstract class ModuleAbstract implements ModuleInterface {
 
 		this.flags.name = values.name ?? positionals[0] ?? null;
 		this.flags.empty = values.empty;
-		if (!isUndefined(values.silent)) this.config.silent = values.silent;
-		if (!isUndefined(values.main)) this.config.main = values.main;
-		if (!isUndefined(values.output)) this.config.output = values.output;
+		if (isPresent(values.silent)) this.config.silent = values.silent;
+		if (isPresent(values.main)) this.config.main = values.main;
+		if (isPresent(values.output)) this.config.output = values.output;
 	}
 
 	protected async promptConfirm(question: string): Promise<boolean> {
