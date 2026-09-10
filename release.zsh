@@ -64,9 +64,9 @@ echo "Done. To rollback, restore manually from $BACKUP_DIR/"
 pause "Step ${STEP} complete. Ready to install dependencies?"
 
 # Install dependencies
-echo -e "${GREEN}Step 3: Running pnpm i...${RESET}"
+echo -e "${GREEN}Step ${STEP}: Running pnpm i...${RESET}"
 pnpm i
-pause "Step ${STEP} complete. Ready to build?"
+pause "Step ${STEP} complete. Ready to format?"
 
 # Format
 echo -e "${GREEN}Step ${STEP}: Running pnpm run fm...${RESET}"
@@ -76,12 +76,12 @@ pause "Step ${STEP} complete. Ready to lint?"
 # Lint
 echo -e "${GREEN}Step ${STEP}: Running pnpm run lint...${RESET}"
 pnpm run lint
-pause "Step ${STEP} complete. Ready to test?"
+pause "Step ${STEP} complete. Ready to build?"
 
 # Build all packages
 echo -e "${GREEN}Step ${STEP}: Running pnpm -r run build...${RESET}"
 pnpm -r run build
-pause "Step ${STEP} complete. Ready to format?"
+pause "Step ${STEP} complete. Ready to test?"
 
 # Test all packages
 echo -e "${GREEN}Step ${STEP}: Running pnpm -r test:all...${RESET}"
