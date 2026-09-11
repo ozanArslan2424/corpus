@@ -41,7 +41,6 @@
 		"test:all": "bun test --only-failures && bun run test:simulations"
 	},
 	"devDependencies": {
-		"@standard-schema/spec": "^1.1.0",
 		"@types/bun": "^1.4.0",
 		"arktype": "^2.2.3",
 		"oxc-parser": "^0.147.0",
@@ -50,8 +49,5 @@
 	},
 	"peerDependencies": {
 		"typescript": "6.0.3"
-	},
-	"inlinedDependencies": {
-		"@standard-schema/spec": "1.1.0"
 	}
 }
