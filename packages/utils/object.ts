@@ -7,11 +7,3 @@ export type DeepRequired<T> = T extends object ? { [K in keyof T]-?: DeepRequire
 export function createSafeObject<T = Record<string, unknown>>(): T {
 	return Object.create(null);
 }
-
-declare global {
-	interface ObjectConstructor {
-		keys<O extends object>(o: O): Array<keyof O>;
-		values<O extends object>(o: O): Array<O[keyof O]>;
-		entries<O extends object>(o: O): Array<[keyof O, O[keyof O]]>;
-	}
-}

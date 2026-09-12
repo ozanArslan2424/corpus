@@ -337,7 +337,7 @@ function getContextAccess(
 	config: Optional<RouteConfig>,
 ): ContextAccess {
 	const result = none();
-	const keys = Object.keys(none());
+	const keys = Object.keys(none()) as Array<ContextAccessKey>;
 
 	for (const handler of handlers) {
 		const access = getSingleContextAccess(handler, keys);
