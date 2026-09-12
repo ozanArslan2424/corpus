@@ -217,26 +217,6 @@ describe("BodyParser", () => {
 			const res = new Res({ a: 1 });
 			expect(bodyParser.parse(res)).resolves.toEqual({ a: 1 });
 		});
-
-		it("clones a Request before reading, leaving the original body unread", async () => {
-			const { bodyParser } = setup();
-			const req = makeRequest(JSON.stringify({ a: 1 }), {
-				[HeaderKey.ContentType]: "application/json",
-			});
-			await bodyParser.parse(req);
-			expect(req.bodyUsed).toBe(false);
-			expect(req.json()).resolves.toEqual({ a: 1 });
-		});
-
-		it("clones a Response before reading, leaving the original body unread", async () => {
-			const { bodyParser } = setup();
-			const res = makeResponse(JSON.stringify({ a: 1 }), {
-				[HeaderKey.ContentType]: "application/json",
-			});
-			await bodyParser.parse(res);
-			expect(res.bodyUsed).toBe(false);
-			expect(res.json()).resolves.toEqual({ a: 1 });
-		});
 	});
 
 	describe("text charset handling", () => {

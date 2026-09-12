@@ -20,21 +20,17 @@
  * @module ContextAccess
  */
 
+import type { Context } from "@/Context";
 import type { RouteConfig } from "@/RouteBase";
 import { isPresent, type Nullable, type Optional } from "@/utils/is";
 
-/**
- * The context properties whose population can be skipped. Order is irrelevant;
- * this exists so the key list, the record type, and the runtime loops can never
- * drift apart.
- */
-const KEYS = ["body", "search", "params"] as const;
-
 /** One of the skippable {@link Context} properties: `body`, `search` or `params`. */
-type ContextAccessKey = (typeof KEYS)[number];
+type ContextAccessKey = keyof Context | "reqBody";
 
 /** Which properties to parse. `true` means the handler chain might read it. */
 type ContextAccess = Record<ContextAccessKey, boolean>;
+
+const BODY_METHODS = new Set(["json", "text", "arrayBuffer", "formData", "body", "clone", "bytes"]);
 
 /**
  * The conservative fallback: every property is parsed. Returned whenever the
@@ -43,7 +39,17 @@ type ContextAccess = Record<ContextAccessKey, boolean>;
  * @returns A record with every key set to `true`.
  */
 function all(): ContextAccess {
-	return { body: true, search: true, params: true };
+	return {
+		body: true,
+		search: true,
+		params: true,
+		data: true,
+		server: true,
+		req: true,
+		res: true,
+		url: true,
+		reqBody: true,
+	};
 }
 
 /**
@@ -52,7 +58,17 @@ function all(): ContextAccess {
  * @returns A record with every key set to `false`.
  */
 function none(): ContextAccess {
-	return { body: false, search: false, params: false };
+	return {
+		body: false,
+		search: false,
+		params: false,
+		data: false,
+		server: false,
+		req: false,
+		res: false,
+		url: false,
+		reqBody: false,
+	};
 }
 
 /**
@@ -158,11 +174,11 @@ function getSignature(source: string): Nullable<{ firstParam: string; body: stri
  * @returns Which keys it binds, or `null` when the pattern has a rest element —
  * that captures everything left over, so no key can be ruled out.
  */
-function getPatternAccess(pattern: string): Nullable<ContextAccess> {
+function getPatternAccess(pattern: string, keys: Array<ContextAccessKey>): Nullable<ContextAccess> {
 	if (pattern.includes("...")) return null;
 
 	const access = none();
-	for (const key of KEYS) {
+	for (const key of keys) {
 		// The trailing class matches the four ways a destructured binding can
 		// end: `body,` `body:` `body}` `body=`. The lookbehind rejects
 		// `req.body` and the lookahead rejects `bodyParser`.
@@ -203,7 +219,7 @@ function getOpeningBrace(source: string, closing: number): number {
  * @param fn - The handler to analyze.
  * @returns Which properties this function might read.
  */
-function getSingleContextAccess(fn: Function): ContextAccess {
+function getSingleContextAccess(fn: Function, keys: Array<ContextAccessKey>): ContextAccess {
 	const source = fn.toString();
 	// Bound, native, or otherwise opaque functions expose no readable body.
 	if (source.includes("[native code]")) return all();
@@ -216,7 +232,7 @@ function getSingleContextAccess(fn: Function): ContextAccess {
 	// Destructured context: `({ body, search }) => ...`. The pattern itself
 	// names everything the function can reach, so the body needs no scanning.
 	if (firstParam.startsWith("{")) {
-		const patternAccess = getPatternAccess(firstParam);
+		const patternAccess = getPatternAccess(firstParam, keys);
 		return patternAccess ?? all();
 	}
 
@@ -252,8 +268,19 @@ function getSingleContextAccess(fn: Function): ContextAccess {
 		const dot = /^\s*\??\.\s*([A-Za-z_$][\w$]*)/.exec(tail);
 		if (dot) {
 			const key = dot[1] as ContextAccessKey;
-			// A property outside KEYS is a read this module does not care about.
-			if (KEYS.includes(key)) access[key] = true;
+			if (keys.includes(key)) access[key] = true;
+
+			if (key === "req") {
+				const afterReq = tail.slice(dot[0].length);
+				const nested = /^\s*\??\.\s*([A-Za-z_$][\w$]*)/.exec(afterReq);
+				if (nested && BODY_METHODS.has(nested[1]!)) {
+					access.reqBody = true;
+				} else if (!nested) {
+					// c.req used bare (passed somewhere, awaited directly, etc.) —
+					// can't rule out body access
+					access.reqBody = true;
+				}
+			}
 			continue;
 		}
 
@@ -263,7 +290,7 @@ function getSingleContextAccess(fn: Function): ContextAccess {
 		const bracket = /^\s*\??\.?\[\s*(["'])([^"'\\]*)\1\s*\]/.exec(tail);
 		if (bracket) {
 			const key = bracket[2] as ContextAccessKey;
-			if (KEYS.includes(key)) access[key] = true;
+			if (keys.includes(key)) access[key] = true;
 			continue;
 		}
 
@@ -274,9 +301,9 @@ function getSingleContextAccess(fn: Function): ContextAccess {
 			if (target.endsWith("}")) {
 				const opening = getOpeningBrace(target, target.length - 1);
 				if (opening !== -1) {
-					const patternAccess = getPatternAccess(target.slice(opening));
+					const patternAccess = getPatternAccess(target.slice(opening), keys);
 					if (patternAccess === null) return all();
-					for (const key of KEYS) access[key] ||= patternAccess[key];
+					for (const key of keys) access[key] ||= patternAccess[key];
 					continue;
 				}
 			}
@@ -310,17 +337,19 @@ function getContextAccess(
 	config: Optional<RouteConfig>,
 ): ContextAccess {
 	const result = none();
+	const keys = Object.keys(none());
 
 	for (const handler of handlers) {
-		const access = getSingleContextAccess(handler);
-		for (const key of KEYS) result[key] ||= access[key];
+		const access = getSingleContextAccess(handler, keys);
+		for (const key of keys) result[key] ||= access[key];
 		// Every key is already set; no later handler can widen this further.
-		if (KEYS.every((key) => result[key])) break;
+		if (keys.every((key) => result[key])) break;
 	}
 
 	// A configured schema runs whether or not a handler reads the value —
 	// skipping it would let an invalid payload through unvalidated.
 	return {
+		...result,
 		params: result.params || isPresent(config?.params),
 		search: result.search || isPresent(config?.search),
 		body: result.body || isPresent(config?.body),

@@ -468,6 +468,7 @@ class App implements AppInterface {
 	 */
 	protected composeRoutes(): ServerRouteMap {
 		const routes: ServerRouteMap = {};
+		const parsers = getOrInitParsersRegistry();
 
 		for (const route of this.routes) {
 			const endpoint = withLeadingSlash(route.endpoint);
@@ -477,11 +478,8 @@ class App implements AppInterface {
 			const maxRequestBodySize = route.config?.maxRequestBodySize;
 
 			const handlers = [...this.findMiddlewares(route.id).map((m) => m.handler), route.handler];
-
 			const access = getContextAccess(handlers, route.config);
-			const parsers = getOrInitParsersRegistry();
-
-			const handler = composeHandlerChain(...handlers);
+			const handle = composeHandlerChain(...handlers);
 
 			routes[endpoint] ??= {};
 			routes[endpoint]![route.method] = this.finalize(async (c) => {
@@ -508,26 +506,28 @@ class App implements AppInterface {
 				// TODO: upgrade in WebSocketRoute
 				if (isWebSocket) {
 					const upgraded = c.server?.upgrade(c.req, {
-						data: (await handler(c, noop)) as WebSocketRoute,
+						data: (await handle(c, noop)) as WebSocketRoute,
 					});
 					if (upgraded === false) throw new Exception("Upgrade failed", Status.UPGRADE_REQUIRED);
 					return undefined;
 				}
 
 				if (!isMethodWithoutBody) {
-					let input: Request | Response = c.req;
+					// If a handler consumes request body directly, the limiter and parser
+					// use a clone to avoid already consumed errors. If the handler doesn't
+					// consume request body, cloning is skipped.
+					let input: Request | Response = access.reqBody ? c.req.clone() : c.req;
 
 					if (isPresent(maxRequestBodySize)) {
-						input = await enforceBodyLimit(c.req, maxRequestBodySize, access.body);
+						input = await enforceBodyLimit(input, maxRequestBodySize, access.body);
 					}
-
 					if (access.body) {
 						c.body = await parsers.bodyParser.parse(input);
 						c.body = await parsers.schemaParser.parse("body", c.body, route.config?.body);
 					}
 				}
 
-				return await handler(c, noop);
+				return await handle(c, noop);
 			});
 		}
 

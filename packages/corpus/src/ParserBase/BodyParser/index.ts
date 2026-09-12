@@ -117,19 +117,15 @@ class BodyParser implements BodyParserInterface {
 	 */
 	async parse(received: Request | Response | Res): Promise<ParsedBody> {
 		const isRes = received instanceof Res;
-		const source = isRes ? received.toNativeResponse() : received;
+		const input = isRes ? received.toNativeResponse() : received;
 
 		// Read the content-type from the source: Bun derives it lazily for
 		// FormData-backed requests, and a clone taken before that derivation
 		// does not carry it.
-		const contentType = source.headers.get(HeaderKey.ContentType) ?? "";
+		const contentType = input.headers.get(HeaderKey.ContentType) ?? "";
 		const contentTypeDisco = getContentTypeDisco(contentType);
 
-		if (!source.body) return createSafeObject();
-
-		// A Res-derived Response is freshly constructed and unshared, so it
-		// needs no clone; anything caller-supplied must stay readable.
-		const input = isRes ? source : source.clone();
+		if (!input.body) return createSafeObject();
 
 		try {
 			switch (contentTypeDisco) {
