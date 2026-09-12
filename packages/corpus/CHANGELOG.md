@@ -1,5 +1,11 @@
 # @ozanarslan/corpus
 
+## 0.0.3
+
+### Patch Changes
+
+- remove incompatible object declaration from utils
+
 ## 0.0.2
 
 ### Patch Changes
