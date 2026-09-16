@@ -77,7 +77,7 @@ export class MainFileUpdater {
 	}
 
 	getKind(line: string): ChunkKind | null {
-		for (const kind of Object.keys(PATTERNS)) {
+		for (const kind of Object.keys(PATTERNS) as Array<keyof typeof PATTERNS>) {
 			if (PATTERNS[kind].test(line)) return kind;
 		}
 		return null;
@@ -143,7 +143,7 @@ export class MainFileUpdater {
 
 			case "ExpressionStatement":
 			case "VariableDeclaration":
-				for (const [kind, pattern] of Object.entries(PATTERNS)) {
+				for (const [kind, pattern] of Object.entries(PATTERNS) as Array<[ChunkKind, RegExp]>) {
 					if (kind === "import") continue;
 					const content = this.reader.useBetween(node.start, node.end);
 					if (content.useLine(0).contains(pattern)) {

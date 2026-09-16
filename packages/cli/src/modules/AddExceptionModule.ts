@@ -53,9 +53,9 @@ export class AddExceptionModule extends ModuleAbstract {
 		b.line(`import { C } from ${quote(this.config.pkgPath)};`);
 		b.line("");
 		b.line(`export class ${exception.pascalName} {`);
-		b.line(1)(
-			`static NotImplemented = new C.Exception("NotImplemented", C.Status.INTERNAL_SERVER_ERROR);`,
-		);
+		b.line(1)(`static NotImplemented: () => never = () => {`);
+		b.line(2)(`throw new C.Exception("NotImplemented", C.Status.INTERNAL_SERVER_ERROR);`);
+		b.line(1)(`};`);
 		b.line(`}`);
 
 		return b.toString();

@@ -42,20 +42,50 @@ export class ArkSchemaPrinter extends SchemaPrinterAbstract {
 			return this.sortUnion(unions.map((u) => this.strip(u))).join(" | ");
 		}
 		const parts = this.split(expr, "&").map((p) => this.rewriteGroup(p));
-		if (parts.length === 1) return parts[0]!;
+		if (parts.length === 1) {
+			const p = parts[0]!;
+			return this.isTsToken(p) ? p : this.constraintFallback(p);
+		}
 		const kept = parts.filter((s) => this.isTsToken(s));
 		return kept.length > 0 ? kept.join(" & ") : "unknown";
 	}
 
-	private isTsToken(s: string): boolean {
+	/** Reduce a bare runtime constraint (regex, `<=`, `%`, `.email`, etc.) to its underlying base type. */
+	private constraintFallback(s: string): string {
+		if (s.startsWith("/")) return "string"; // pattern constraints render as regex literals
+		for (const base of KEEP) {
+			if (s.startsWith(base) && !this.isWordChar(s[base.length])) return base;
+		}
+		return "unknown";
+	}
+
+	private isWordChar(c: string | undefined): boolean {
+		if (!c) return false;
 		return (
-			KEEP.has(s) || // primitives / known classes
-			/^".*"$/.test(s) || // string literals
-			/^-?[\d.]+n?$/.test(s) || // numeric / bigint literals
-			/^(?:true|false)$/.test(s) || // boolean literals
-			/^[({[]/.test(s) || // nested object / tuple / grouped
-			/^Array<[\s\S]*>$/.test(s) || // arrays
-			/^[A-Z][\w$]*</.test(s) // generics e.g. Record<...>
+			(c >= "a" && c <= "z") ||
+			(c >= "A" && c <= "Z") ||
+			(c >= "0" && c <= "9") ||
+			c === "_" ||
+			c === "$"
+		);
+	}
+
+	private isTsToken(s: string): boolean {
+		let base = s;
+		while (base.endsWith("[]")) {
+			base = base.slice(0, -2);
+		}
+
+		if (base.length === 0) return false;
+
+		return (
+			KEEP.has(base) || // primitives / known classes
+			/^".*"$/.test(base) || // string literals
+			/^-?[\d.]+n?$/.test(base) || // numeric / bigint literals
+			/^(?:true|false)$/.test(base) || // boolean literals
+			/^[({[]/.test(base) || // nested object / tuple / grouped
+			/^Array<[\s\S]*>$/.test(base) || // arrays
+			/^[A-Z][\w$]*</.test(base) // generics e.g. Record<...>
 		);
 	}
 

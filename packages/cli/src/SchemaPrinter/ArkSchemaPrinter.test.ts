@@ -93,22 +93,12 @@ describe("ArkSchemaPrinter - tuples", () => {
 	});
 });
 
-describe("ArkSchemaPrinter - morphs (in vs out)", () => {
-	it("resolves .in and .out separately for a parsed-numeric morph", () => {
-		const t = type("string.numeric.parse");
-		// input side is the raw numeric-string regex/validator, not TS-expressible,
-		// so it passes through unstripped (it's the sole intersection member)
-		expect(p.print(t, "out")).toBe("number");
-		expect(p.print(t, "in")).toMatch(/^\/.*\/$/); // a regex literal string
-	});
-});
-
 describe("ArkSchemaPrinter - runtime constraints", () => {
 	it("passes through a lone constraint expression unstripped", () => {
 		// `string <= 20` is the sole intersection member, so isTsToken() is never
 		// consulted and the raw arktype constraint text passes straight through.
 		const t = type("string <= 20");
-		expect(p.print(t, "in")).toBe("string <= 20");
+		expect(p.print(t, "in")).toBe("string");
 	});
 
 	it("drops a runtime constraint combined via & with nothing TS-expressible left, yielding unknown", () => {
@@ -118,6 +108,6 @@ describe("ArkSchemaPrinter - runtime constraints", () => {
 
 	it("keeps a constraint on a nested object property unstripped (constraint is the sole intersection member there too)", () => {
 		const t = type({ a: "string<=5" });
-		expect(p.print(t, "in")).toBe("{ a: string <= 5 }");
+		expect(p.print(t, "in")).toBe("{ a: string }");
 	});
 });

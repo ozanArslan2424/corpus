@@ -91,7 +91,7 @@ export class AddServiceModule extends ModuleAbstract {
 			b.line(``);
 			b.line(1)(`async ${propertyKey}(): Promise<void> {`);
 			if (notImplementedExceptionExists) {
-				b.line(2)(`throw ${exception.pascalName}.NotImplemented;`);
+				b.line(2)(`${exception.pascalName}.NotImplemented();`);
 			} else {
 				b.line(2)(`throw new Error("Method not implemented.");`);
 			}

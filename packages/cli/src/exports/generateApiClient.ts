@@ -5,6 +5,7 @@ import type { RouteBase, Schema } from "@ozanarslan/corpus";
 import type { Maybe } from "yup";
 
 import type { Config } from "@/Config/Config";
+import { getConfig } from "@/Config/getConfig";
 import { cache } from "@/internal/cache";
 import { toPascalCase, quote } from "@/internal/converters";
 import { StringBuilder } from "@/internal/StringBuilder";
@@ -76,6 +77,12 @@ const getTypeName = cache("getTypeName", (pascal: string, ns?: string): string =
 	return `${pascal}${toPascalCase(ns)}`;
 });
 
+const getModelInterfaceKey = cache("getModelInterfaceKey", (pascal: string): string => {
+	const config = getConfig();
+	if (config.exportModelsNamespace) return `Models.${pascal}`;
+	return `${pascal}Model`;
+});
+
 const getTypeBody = cache(
 	"getTypeBody",
 	(endpoint: string, params: string[], modelKey: string, schema: Maybe<Schema>): string | null => {
@@ -143,13 +150,31 @@ export function generateApiClient(prefix: string, routesArr: Array<RouteBase>, c
 	}) satisfies Array<Route>;
 
 	writeBase(b, routes);
+	b.line(``);
 
 	for (const route of routes) {
 		writeRouteTypes(b, route);
+		b.line(``);
 	}
 
-	for (const route of routes) {
-		writeRouteModel(b, route);
+	if (config.exportModelsNamespace) {
+		b.line(`export namespace Models {`);
+	}
+	for (const [i, route] of routes.entries()) {
+		if (i !== 0) b.line(``);
+		writeRouteModel(b, route, config.exportModelsNamespace);
+	}
+	if (config.exportModelsNamespace) {
+		b.line(`};`);
+	}
+
+	if (config.exportArgsNamespace) {
+		b.line(``);
+		b.line(`export namespace Args {`);
+		for (const route of routes) {
+			b.line(1)(`export type ${route.pascalKey} = args<${getModelInterfaceKey(route.pascalKey)}>;`);
+		}
+		b.line(`};`);
 	}
 
 	b.line(``);
@@ -199,6 +224,7 @@ function writeBase(b: StringBuilder, routes: Array<Route>) {
 	b.line(`type args<T> = Omit<T, "response"> & { init?: RequestInit; };`);
 
 	b.line(``);
+
 	b.line(`export interface RequestDescriptor {`);
 	b.line(1)(`endpoint: string;`);
 	b.line(1)(`method: string;`);
@@ -207,11 +233,9 @@ function writeBase(b: StringBuilder, routes: Array<Route>) {
 	b.line(1)(`init?: RequestInit;`);
 	b.line(`}`);
 	b.line(`// #endregion`);
-	b.line(``);
 }
 
 function writeRouteTypes(b: StringBuilder, route: Route) {
-	b.line(``);
 	b.line(`// #region ${route.id} types`);
 	for (const modelKey of MODEL_KEYS) {
 		const schema = route.config?.[modelKey];
@@ -223,10 +247,12 @@ function writeRouteTypes(b: StringBuilder, route: Route) {
 	b.line(`// #endregion`);
 }
 
-function writeRouteModel(b: StringBuilder, route: Route) {
-	b.line(``);
-	b.line(`// #region ${route.id} model`);
-	b.line(`export interface ${getTypeName(route.pascalKey, "Model")}`);
+function writeRouteModel(b: StringBuilder, route: Route, exportModelsNamespace: boolean) {
+	const tab = exportModelsNamespace ? 1 : 0;
+	const name = exportModelsNamespace ? route.pascalKey : `${route.pascalKey}Model`;
+
+	b.line(tab)(`// #region ${route.id} model`);
+	b.line(tab)(`export interface ${name}`);
 	if (!isAbsent(route.config?.body)) b.inline(`<${CT_GENERIC}>`);
 	b.inline(` {`);
 	for (const modelKey of MODEL_KEYS) {
@@ -234,14 +260,14 @@ function writeRouteModel(b: StringBuilder, route: Route) {
 		const name = getTypeName(route.pascalKey, modelKey);
 		const type = getTypeBody(route.endpoint, route.params, modelKey, schema);
 		if (!type) continue;
-		b.line(1)(getTypeLine(modelKey, name, type, true));
+		b.line(tab + 1)(getTypeLine(modelKey, name, type, true));
 	}
-	b.line(`}`);
-	b.line(`// #endregion`);
+	b.line(tab)(`}`);
+	b.line(tab)(`// #endregion`);
 }
 
 function writeEndpoint(b: StringBuilder, route: Route) {
-	const modelInterfaceKey = getTypeName(route.pascalKey, "Model");
+	const modelInterfaceKey = getModelInterfaceKey(route.pascalKey);
 	const endpoint = isSomeArray(route.params)
 		? `(p: ${modelInterfaceKey}["params"]) => \`${route.endpoint
 				.split(/:([a-zA-Z_][a-zA-Z0-9_]*)/)
@@ -312,7 +338,7 @@ function writeApiClientMethod(b: StringBuilder, route: Route, useStaticClass: bo
 
 	const endpoint = `this.endpoints.${route.camelKey}${isSomeArray(route.params) ? `(args.params)` : ``}`;
 	const generic = !isAbsent(route.config?.body) ? `<${CT_GENERIC}>` : ``;
-	const args = `args: args<${getTypeName(route.pascalKey, "Model")}${!isAbsent(route.config?.body) ? `<CT>` : ``}>`;
+	const args = `args: args<${getModelInterfaceKey(route.pascalKey)}${!isAbsent(route.config?.body) ? `<CT>` : ``}>`;
 
 	b.line(``);
 	b.line(1)(`/** ${route.id} */`);

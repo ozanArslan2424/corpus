@@ -5,7 +5,7 @@ export function objMerge<T extends object>(base: T, override: Maybe<Partial<T>>)
 
 	const result = { ...base };
 
-	for (const key of Object.keys(override)) {
+	for (const key of Object.keys(override) as Array<keyof Partial<T>>) {
 		const overrideVal = override[key];
 		const baseVal = base[key];
 
