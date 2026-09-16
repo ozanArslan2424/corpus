@@ -287,7 +287,8 @@ function compareRank(a: RouteFile, b: RouteFile) {
 		const n = (SPECIAL_NAME_MAP[rf.name] ?? rf.name).toLowerCase();
 		if (n === "home") return 0;
 		if (n === "quick start") return 1;
-		return 2;
+		if (n === "cli") return 2;
+		return 3;
 	}
 	const diff = rank(a) - rank(b);
 	return diff !== 0 ? diff : a.name.localeCompare(b.name);
