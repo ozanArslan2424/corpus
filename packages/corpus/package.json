@@ -20,7 +20,7 @@
 	},
 	"files": [
 		"dist",
-		"LICENSE.txt"
+		"LICENSE"
 	],
 	"type": "module",
 	"exports": {
