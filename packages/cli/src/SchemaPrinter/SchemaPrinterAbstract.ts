@@ -89,7 +89,11 @@ export abstract class SchemaPrinterAbstract {
 
 	/** Sort union members: structural types first (alphabetically), then null/undefined last. */
 	protected sortUnion(members: string[]): string[] {
-		const rank = (s: string) => (s === "undefined" ? 2 : s === "null" ? 1 : 0);
-		return [...members].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
+		function rank(s: string): number {
+			if (s === "undefined") return 2;
+			if (s === "null") return 1;
+			return 0;
+		}
+		return [...new Set(members)].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
 	}
 }

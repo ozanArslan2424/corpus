@@ -1,5 +1,34 @@
 # @ozanarslan/corpus-cli
 
+## 0.0.4
+
+### Patch Changes
+
+- Rewrite ArkSchemaPrinter constraint stripping and expand test coverage
+
+  - strip: correctly strip two-sided bound expressions (e.g. `8 <= string
+<= 72`) by reducing every intersection member through getBaseType,
+    not just the sole-member case; drop the previous unstripped
+    pass-through of lone constraints.
+  - strip: when a union already resolves to a bare "string", swallow
+    sibling regex patterns and string literals into it instead of
+    listing them separately (e.g. UUID pattern | literal | literal ->
+    string).
+  - getBaseType: rename from constraintFallback; match a constraint's
+    base type via word-boundary check anywhere in the string (not just
+    a leading prefix) so two-sided bounds resolve correctly.
+  - isTsToken: extend string-literal detection to single-quoted strings,
+    not just double-quoted.
+  - rewriteGroup: join non-object bracketed groups (tuples, arrays) with
+    ", " instead of "; ", matching arktype's actual tuple syntax; keep
+    "; " only for `{}` object bodies.
+  - sortUnion: dedupe members before sorting.
+  - Rename KEEP -> TS_TYPE; extract isStringLiteral/isPattern helpers.
+  - test: replace the ad-hoc primitives/tuples/runtime-constraints specs
+    with parametrized .in/.out expression tables covering primitives,
+    single- and two-sided constraints, dot-suffixed keyword constraints,
+    regex patterns, intersections, morphs, nested objects, and unions.
+
 ## 0.0.3
 
 ### Patch Changes

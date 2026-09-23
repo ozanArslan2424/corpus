@@ -4,7 +4,7 @@ import type { Type } from "arktype";
 import { SchemaPrinterAbstract } from "@/SchemaPrinter/SchemaPrinterAbstract";
 
 /** Bare identifiers that are already valid TS. */
-const KEEP = new Set([
+const TS_TYPE = new Set([
 	"string",
 	"number",
 	"boolean",
@@ -37,26 +37,73 @@ export class ArkSchemaPrinter extends SchemaPrinterAbstract {
 	 * and dropping runtime constraints (`string <= 20`, `number % 2`, regexes).
 	 */
 	private strip(expr: string): string {
-		const unions = this.split(expr, "|");
+		let unions = this.split(expr, "|");
 		if (unions.length > 1) {
-			return this.sortUnion(unions.map((u) => this.strip(u))).join(" | ");
+			unions = unions.map((u) => this.strip(u));
+
+			// If union already has string, patterns and string literals are swallowed.
+			// This might be a hack but I haven't found any edge cases where this shouldn't apply.
+			if (unions.some((u) => u === "string")) {
+				unions = unions.filter((u) => !this.isPattern(u) && !this.isStringLiteral(u));
+			}
+			return this.sortUnion(unions).join(" | ");
 		}
+
 		const parts = this.split(expr, "&").map((p) => this.rewriteGroup(p));
 		if (parts.length === 1) {
 			const p = parts[0]!;
-			return this.isTsToken(p) ? p : this.constraintFallback(p);
+			return this.getBaseType(p);
 		}
-		const kept = parts.filter((s) => this.isTsToken(s));
-		return kept.length > 0 ? kept.join(" & ") : "unknown";
+
+		const kept = parts.map((s) => this.getBaseType(s));
+		const unique = new Set(kept.filter((s) => s !== "unknown"));
+		return unique.size > 0 ? Array.from(unique).join(" & ") : "unknown";
 	}
 
-	/** Reduce a bare runtime constraint (regex, `<=`, `%`, `.email`, etc.) to its underlying base type. */
-	private constraintFallback(s: string): string {
-		if (s.startsWith("/")) return "string"; // pattern constraints render as regex literals
-		for (const base of KEEP) {
+	/**
+	 * Reduce a bare runtime constraint to its underlying base type.
+	 * NOTE: two-sided bounds (e.g. "0 < number < 10") are expressed
+	 * with "&" through .expression so they pass this method individually.
+	 */
+	private getBaseType(s: string): string {
+		if (this.isTsToken(s)) return s;
+		if (this.isPattern(s)) return "string";
+
+		for (const base of TS_TYPE) {
 			if (s.startsWith(base) && !this.isWordChar(s[base.length])) return base;
 		}
+
 		return "unknown";
+	}
+
+	private isStringLiteral(s: string): boolean {
+		return /^["'].*["']$/.test(s);
+	}
+
+	// pattern constraints render as regex literals
+	private isPattern(s: string): boolean {
+		return s.startsWith("/");
+	}
+
+	private isTsToken(s: string): boolean {
+		let base = s;
+
+		// deep arrays are written using Array, this is a fallback
+		while (base.endsWith("[]")) {
+			base = base.slice(0, -2);
+		}
+
+		if (base.length === 0) return false;
+
+		return (
+			TS_TYPE.has(base) || // primitives / known classes
+			this.isStringLiteral(base) || // string literals
+			/^-?[\d.]+n?$/.test(base) || // numeric / bigint literals
+			/^(?:true|false)$/.test(base) || // boolean literals
+			/^[({[]/.test(base) || // nested object / tuple / grouped
+			/^Array<[\s\S]*>$/.test(base) || // arrays
+			/^[A-Z][\w$]*</.test(base) // generics e.g. Record<...>
+		);
 	}
 
 	private isWordChar(c: string | undefined): boolean {
@@ -67,25 +114,6 @@ export class ArkSchemaPrinter extends SchemaPrinterAbstract {
 			(c >= "0" && c <= "9") ||
 			c === "_" ||
 			c === "$"
-		);
-	}
-
-	private isTsToken(s: string): boolean {
-		let base = s;
-		while (base.endsWith("[]")) {
-			base = base.slice(0, -2);
-		}
-
-		if (base.length === 0) return false;
-
-		return (
-			KEEP.has(base) || // primitives / known classes
-			/^".*"$/.test(base) || // string literals
-			/^-?[\d.]+n?$/.test(base) || // numeric / bigint literals
-			/^(?:true|false)$/.test(base) || // boolean literals
-			/^[({[]/.test(base) || // nested object / tuple / grouped
-			/^Array<[\s\S]*>$/.test(base) || // arrays
-			/^[A-Z][\w$]*</.test(base) // generics e.g. Record<...>
 		);
 	}
 
@@ -130,12 +158,15 @@ export class ArkSchemaPrinter extends SchemaPrinterAbstract {
 	private rewriteGroup(p: string): string {
 		const closeIdx = this.findMatchingClose(p);
 		if (closeIdx === -1) return p;
+
 		const open = p[0]!;
 		const close = p[closeIdx]!;
 		const inner = p.slice(1, closeIdx);
 		const suffix = p.slice(closeIdx + 1);
+
 		// anything after the matching close must be only repeated array suffixes
 		if (!/^(?:\[\])*$/.test(suffix)) return p;
+
 		const members = this.split(inner, ",")
 			.sort()
 			.map((member) => {
@@ -147,13 +178,19 @@ export class ArkSchemaPrinter extends SchemaPrinterAbstract {
 				const keyOut = isIndexKey ? this.rewriteIndexKey(rawKey) : member.slice(0, idx + 1);
 				return `${keyOut}${isIndexKey ? ":" : ""} ${this.strip(member.slice(idx + 1).trim())}`;
 			});
+
 		const arrayDepth = suffix.length / 2;
+		let base: string;
+
 		if (members.length === 0) {
-			const base = `${open}${close}`;
-			return arrayDepth > 0 ? this.wrapArray(base, arrayDepth) : base;
+			base = `${open}${close}`;
+		} else if (open === "{") {
+			// curlies get spaces
+			base = `{ ${members.join("; ")} }`;
+		} else {
+			base = `${open}${members.join(", ")}${close}`;
 		}
-		const body = members.join("; ");
-		const base = open === "{" ? `{ ${body} }` : `${open}${body}${close}`;
+
 		return arrayDepth > 0 ? this.wrapArray(base, arrayDepth) : base;
 	}
 
