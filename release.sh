@@ -101,20 +101,7 @@ pause "Step ${STEP} complete. Ready to publish?"
 # Release
 echo -e "${GREEN}Step ${STEP}: Running pnpm run release...${RESET}"
 pnpm run release
-pause "Step ${STEP} complete. Ready to format, commit, and push?"
-
-# Format, commit and push
-echo -e "${GREEN}Step ${STEP}: Formatting, committing, and pushing...${RESET}"
-pnpm run fm
-echo -n "  Commit message: "
-read -r COMMIT_MSG
-if [[ -z "$COMMIT_MSG" ]]; then
-    echo -e "${RED}Commit message cannot be empty. Aborting.${RESET}"
-    exit 1
-fi
-git add .
-git commit -m "$COMMIT_MSG"
-git push
+pause "Step ${STEP} complete. Ready to clean backups?"
 
 # Cleanup backup
 echo ""
@@ -122,4 +109,4 @@ echo -e "${GREEN}Cleaning up backup directory $BACKUP_DIR...${RESET}"
 rm -rf "$BACKUP_DIR"
 
 echo ""
-echo -e "${GREEN}=== Release complete! ===${RESET}"
+echo -e "${GREEN}=== Release complete, don't forget to push your changes. ===${RESET}"
