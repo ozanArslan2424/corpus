@@ -45,9 +45,10 @@ export class AddResourceModule extends ModuleAbstract {
 		this.writeFile(this.addServiceModule.buildServiceFile(r.service, r.model, r.exception), [
 			r.service.filePath,
 		]);
-		this.writeFile(this.addControllerModule.buildControllerFile(r.controller, r.model, r.service), [
-			r.controller.filePath,
-		]);
+		this.writeFile(
+			this.addControllerModule.buildControllerFile(r.controller, r.model, r.service, r.exception),
+			[r.controller.filePath],
+		);
 
 		this.mainFileUpdater.addLines(
 			"import",

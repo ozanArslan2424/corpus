@@ -1,5 +1,3 @@
-import fs from "fs";
-
 import { EXE_NAME, NAME_FLAG_HELP, NEVER_SCHEMAS } from "@/constants";
 import { MainFileUpdater } from "@/FileParser/MainFileUpdater";
 import { Importable } from "@/Importable";
@@ -8,6 +6,7 @@ import { parseModelDefinition } from "@/internal/parseModelDefinition";
 import { StringBuilder } from "@/internal/StringBuilder";
 import { ModuleAbstract } from "@/Modules/ModuleAbstract";
 import { assert } from "@/utils/assert";
+import { isAbsent } from "@/utils/is";
 
 export class AddServiceModule extends ModuleAbstract {
 	constructor(private readonly mainFileUpdater: MainFileUpdater) {
@@ -36,7 +35,7 @@ export class AddServiceModule extends ModuleAbstract {
 
 		const service = new Importable(name, "service");
 		const model = new Importable(name, "model");
-		const exception = new Importable(service.resourceName, "exception");
+		const exception = new Importable(name, "exception");
 
 		this.writeFile(this.buildServiceFile(service, model, exception), [service.filePath]);
 
@@ -51,8 +50,7 @@ export class AddServiceModule extends ModuleAbstract {
 	}
 
 	buildServiceFile(service: Importable, model: Importable, exception: Importable): string {
-		const modelExists = fs.existsSync(model.filePath);
-		if (modelExists) {
+		if (model.exists) {
 			return this.buildServiceFileWithModel(service, model, exception);
 		}
 
@@ -114,7 +112,16 @@ export class AddServiceModule extends ModuleAbstract {
 			);
 		}
 
-		b.line(`import type { ${modelTypeName} } from "${model.importFrom(service.filePath)}";`);
+		const noValLib = isAbsent(this.config.validationLibrary);
+		b.line(
+			`import type { ${noValLib ? modelTypeName : model.pascalName} } from "${model.importFrom(service.filePath)}";`,
+		);
+
+		if (!noValLib) {
+			b.line(`import { C } from "${this.config.pkgPath}";`);
+			b.line("");
+			b.line(`type ${modelTypeName} = C.InferModel<typeof ${model.pascalName}>`);
+		}
 
 		b.line("");
 		b.line(`export class ${service.pascalName} {`);
@@ -138,7 +145,7 @@ export class AddServiceModule extends ModuleAbstract {
 				b.line(2)(`void ${param};`);
 			}
 			if (notImplementedExceptionExists) {
-				b.line(2)(`throw ${exception.pascalName}.NotImplemented;`);
+				b.line(2)(`${exception.pascalName}.NotImplemented();`);
 			} else {
 				b.line(2)(`throw new Error("Method not implemented.");`);
 			}

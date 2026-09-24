@@ -10,7 +10,9 @@ import { resolveCwdPath } from "@/internal/resolveCwdPath";
 import type { OrString } from "@/utils/is";
 import { logFatal } from "@/utils/logger";
 
-export type ImportableKind = OrString<"model" | "service" | "controller" | "route" | "exception">;
+export type ImportableKind = OrString<
+	"model" | "service" | "controller" | "route" | "middleware" | "exception"
+>;
 
 export class Importable {
 	constructor(
@@ -24,8 +26,24 @@ export class Importable {
 	private readonly config: Config;
 	private readonly targetDirPath: string;
 
+	private get resourceSegments(): string[] {
+		return this.resourceName.split(/[\\/]/).filter(Boolean);
+	}
+
+	get resourceBaseName(): string {
+		return this.resourceSegments.at(-1) ?? this.resourceName;
+	}
+
+	get resourceDir(): string {
+		return this.resourceSegments.slice(0, -1).join("/");
+	}
+
+	get resourcePath(): string {
+		return this.resourceSegments.join("/");
+	}
+
 	get name(): string {
-		return `${this.resourceName}-${this.kind}`;
+		return `${this.resourceBaseName}-${this.kind}`;
 	}
 
 	get pascalName(): string {
@@ -39,7 +57,8 @@ export class Importable {
 	get filePath(): string {
 		const template = this.config.folderStructure?.[this.kind] ?? "{resource}/{resource}-{kind}.ts";
 		const relPath = template
-			.replaceAll("{resource}", this.resourceName)
+			.replace("{resource}", this.resourcePath)
+			.replaceAll("{resource}", this.resourceBaseName)
 			.replaceAll("{kind}", this.kind)
 			.split("/")
 			.map((segment) => {
@@ -49,6 +68,10 @@ export class Importable {
 			})
 			.join("/");
 		return path.join(path.relative(process.cwd(), this.targetDirPath), relPath);
+	}
+
+	get exists(): boolean {
+		return fs.existsSync(this.filePath);
 	}
 
 	parseFile(cb: FileParserCallback) {

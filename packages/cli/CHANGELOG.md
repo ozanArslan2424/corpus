@@ -1,5 +1,17 @@
 # @ozanarslan/corpus-cli
 
+## 0.1.0
+
+### Minor Changes
+
+- - Add `middleware` as an `ImportableKind` and wire up a new `AddMiddlewareModule` in the CLI.
+  - Add nested/scoped resource path support to `Importable`; add `Importable.exists` to replace scattered `fs.existsSync(x.filePath)` checks.
+
+  - `AddControllerModule`: rename `buildControllerFileWithModel` to `buildControllerFileWithModelAndService`; pass the resolved `service` into `new Controller(...)` in the main file only when the service file actually exists; move prefix to `super()` instead of `override prefix` assignment; generate a `NotImplemented()` exception call instead of a generic thrown `Error` when defaults are scaffolded, importing the exception when available.
+  - `AddServiceModule`: fix exception `Importable` to use `name` instead of `service.resourceName`; only generate the `C.InferModel<...>` type and import `C` when a validation library is configured, otherwise import the model's own type directly; switch `NotImplemented` usage to the callable form (`Exception.NotImplemented()`).
+  - `AddModelModule`: stop emitting the `${modelTypeName}` type alias and `C.InferModel` import from the model file itself — that responsibility moves to the consuming service.
+  - `parseModelDefinition`: fall back to `${modelName}Type` when no model type name could be parsed.
+
 ## 0.0.4
 
 ### Patch Changes

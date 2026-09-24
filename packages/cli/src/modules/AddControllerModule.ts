@@ -1,8 +1,7 @@
-import fs from "fs";
-
 import { EXE_NAME, NAME_FLAG_HELP, NEVER_SCHEMAS } from "@/constants";
 import { MainFileUpdater } from "@/FileParser/MainFileUpdater";
 import { Importable } from "@/Importable";
+import { checkNotImplementedExceptionExists } from "@/internal/checkNotImplementedExceptionExists";
 import { quote } from "@/internal/converters";
 import { parseModelDefinition } from "@/internal/parseModelDefinition";
 import { StringBuilder } from "@/internal/StringBuilder";
@@ -37,32 +36,38 @@ export class AddControllerModule extends ModuleAbstract {
 		const controller = new Importable(name, "controller");
 		const model = new Importable(name, "model");
 		const service = new Importable(name, "service");
+		const exception = new Importable(name, "exception");
 
-		this.writeFile(this.buildControllerFile(controller, model, service), [controller.filePath]);
+		this.writeFile(this.buildControllerFile(controller, model, service, exception), [
+			controller.filePath,
+		]);
 
 		this.mainFileUpdater.addLines(
 			"import",
 			`import { ${controller.pascalName} } from "${controller.importFrom(this.config.main)}";`,
 		);
+
 		this.mainFileUpdater.addLines(
 			"controller",
-			`new ${controller.pascalName}(${service.camelName});`,
+			`new ${controller.pascalName}(${service.exists ? service.camelName : ""});`,
 		);
 	}
 
-	buildControllerFile(controller: Importable, model: Importable, service: Importable): string {
-		const modelExists = fs.existsSync(model.filePath);
-		const serviceExists = fs.existsSync(service.filePath);
-
-		if (modelExists && serviceExists) {
-			return this.buildControllerFileWithModel(controller, model, service);
+	buildControllerFile(
+		controller: Importable,
+		model: Importable,
+		service: Importable,
+		exception: Importable,
+	): string {
+		if (model.exists && service.exists) {
+			return this.buildControllerFileWithModelAndService(controller, model, service);
 		}
 
 		if (this.flags.empty) {
 			return this.buildEmptyControllerFile(controller);
 		}
 
-		return this.buildControllerFileWithDefaults(controller);
+		return this.buildControllerFileWithDefaults(controller, exception);
 	}
 
 	private buildEmptyControllerFile(controller: Importable) {
@@ -71,42 +76,52 @@ export class AddControllerModule extends ModuleAbstract {
 		b.line(`import { C } from "${this.config.pkgPath}";`);
 		b.line("");
 		b.line(`export class ${controller.pascalName} extends C.Controller {`);
-		b.line(1)(`constructor(private readonly service: unknown) {`);
-		b.line(2)(`super();`);
+		b.line(1)(`constructor() {`);
+		b.line(2)(`super("/${controller.resourceName}");`);
 		b.line(1)(`}`);
-		b.line("");
-		b.line(1)(`override prefix = "/${controller.resourceName}";`);
 		b.line(`}`);
 
 		return b.toString();
 	}
 
-	private buildControllerFileWithDefaults(controller: Importable) {
+	private buildControllerFileWithDefaults(controller: Importable, exception: Importable) {
 		const b = new StringBuilder();
 		const methods = this.config.defaultMethods;
+		const notImplementedExceptionExists = checkNotImplementedExceptionExists(exception);
 
 		b.line(`import { C } from "${this.config.pkgPath}";`);
+		if (notImplementedExceptionExists) {
+			b.line(
+				`import { ${exception.pascalName} } from "${exception.importFrom(controller.filePath)}";`,
+			);
+		}
 		b.line("");
+
 		b.line(`export class ${controller.pascalName} extends C.Controller {`);
-		b.line(1)(`constructor(private readonly service: unknown) {`);
-		b.line(2)(`super();`);
+		b.line(1)(`constructor() {`);
+		b.line(2)(`super("/${controller.resourceName}");`);
 		b.line(1)(`}`);
-		b.line("");
-		b.line(1)(`override prefix = "/${controller.resourceName}";`);
 
 		for (const { propertyKey, address } of Object.values(methods)) {
 			b.line("");
-			b.line(1)(
-				`${propertyKey} = this.route(${quote(address)}, (c) => { throw new Error("Method not implemented."); });`,
-			);
+			b.line(1)(`${propertyKey} = this.route(${quote(address)}, (c) => {`);
+			if (notImplementedExceptionExists) {
+				b.inline(`${exception.pascalName}.NotImplemented();`);
+			} else {
+				b.inline(`throw new Error("Method not implemented.");`);
+			}
+			b.inline(`});`);
 		}
-
 		b.line(`}`);
 
 		return b.toString();
 	}
 
-	buildControllerFileWithModel(controller: Importable, model: Importable, service: Importable) {
+	buildControllerFileWithModelAndService(
+		controller: Importable,
+		model: Importable,
+		service: Importable,
+	) {
 		const b = new StringBuilder();
 		const { modelName, modelTypeName, modelDef } = parseModelDefinition(model);
 
@@ -122,10 +137,8 @@ export class AddControllerModule extends ModuleAbstract {
 		b.line("");
 		b.line(`export class ${controller.pascalName} extends C.Controller {`);
 		b.line(1)(`constructor(private readonly service: ${service.pascalName}) {`);
-		b.line(2)(`super();`);
+		b.line(2)(`super("/${controller.resourceName}");`);
 		b.line(1)(`}`);
-		b.line("");
-		b.line(1)(`override prefix = "/${controller.resourceName}";`);
 
 		for (const [key, val] of Object.entries(modelDef)) {
 			const ORDER = ["body", "search", "params", "response"] as const;

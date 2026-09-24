@@ -83,6 +83,10 @@ export function parseModelDefinition(model: Importable) {
 		}
 	});
 
+	if (modelTypeName === "") {
+		modelTypeName = `${modelName}Type`;
+	}
+
 	return {
 		modelName,
 		modelTypeName,

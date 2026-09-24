@@ -126,9 +126,6 @@ export class AddModelModule extends ModuleAbstract {
 		const schemas = this.getSchemas(validationLibrary);
 
 		return `${schemas.import}
-import type { C } from ${quote(this.config.pkgPath)};
-
-export type ${modelTypeName} = C.InferModel<typeof ${model.pascalName}>
 
 export abstract class ${model.pascalName} {${validationLibrary === "yup" ? `\n\tstatic readonly never = y.mixed().oneOf([undefined] as const);\n` : ``}
     static readonly entity = ${schemas.entity};

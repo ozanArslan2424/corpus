@@ -4,6 +4,7 @@ import { APP_NAME, EXE_NAME } from "@/constants";
 import { MainFileUpdater } from "@/FileParser/MainFileUpdater";
 import { AddControllerModule } from "@/Modules/AddControllerModule";
 import { AddExceptionModule } from "@/Modules/AddExceptionModule";
+import { AddMiddlewareModule } from "@/Modules/AddMiddlewareModule";
 import { AddModelModule } from "@/Modules/AddModelModule";
 import { AddResourceModule } from "@/Modules/AddResourceModule";
 import { AddServiceModule } from "@/Modules/AddServiceModule";
@@ -15,6 +16,7 @@ const mainFileUpdater = new MainFileUpdater();
 const apiClientModule = new ApiClientModule();
 const addServiceModule = new AddServiceModule(mainFileUpdater);
 const addControllerModule = new AddControllerModule(mainFileUpdater);
+const addMiddlewareModule = new AddMiddlewareModule(mainFileUpdater);
 const addModelModule = new AddModelModule();
 const addExceptionModule = new AddExceptionModule();
 const addResourceModule = new AddResourceModule(
@@ -29,6 +31,7 @@ const mods = [
 	apiClientModule,
 	addServiceModule,
 	addControllerModule,
+	addMiddlewareModule,
 	addModelModule,
 	addExceptionModule,
 	addResourceModule,
