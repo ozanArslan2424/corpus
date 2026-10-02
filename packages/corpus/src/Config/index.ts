@@ -60,7 +60,7 @@ type EnvKey = OrString<keyof Env>;
  * {@link Config.get} returns `undefined` or a fallback, {@link Config.require}
  * throws, and {@link Config.has} only reports presence.
  */
-class Config {
+abstract class Config {
 	/**
 	 * The live `process.env` object.
 	 *

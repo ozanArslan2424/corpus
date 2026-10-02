@@ -7,7 +7,7 @@
 // oxfmt-ignore
 export type { Env } from "@/Config";
 // oxfmt-ignore
-export type { ContextDataInterface } from "@/Context";
+export type { ContextDataInterface, ContextHandler } from "@/Context";
 // oxfmt-ignore
 // export {} from "@/Controller";
 // oxfmt-ignore

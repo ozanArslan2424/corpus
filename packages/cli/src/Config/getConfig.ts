@@ -61,7 +61,7 @@ export const getConfig = cache("getConfig", (): Config => {
 
 	function writeConfigFile(config: Config) {
 		const b = new StringBuilder();
-		b.line(`import { defineConfig } from "@ozanarslan/corpus-cli/config";`);
+		b.line(`import { defineConfig } from "@ozanarslan/corpus-cli";`);
 		b.line(``);
 		b.line(`export default defineConfig({`);
 		writeConfigEntries(b, config, 1);

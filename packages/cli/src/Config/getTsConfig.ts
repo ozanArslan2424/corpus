@@ -16,6 +16,6 @@ export function getTsConfig(): Nullable<PartialTsConfig> {
 		logger.log(`No tsconfig.json found.`);
 		return null;
 	}
-	const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, "utf-8"));
-	return tsconfig;
+	const tsconfig = Bun.JSONC.parse(fs.readFileSync(tsconfigPath, "utf-8"));
+	return tsconfig as PartialTsConfig;
 }

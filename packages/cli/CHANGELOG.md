@@ -1,5 +1,12 @@
 # @ozanarslan/corpus-cli
 
+## 0.1.1
+
+### Patch Changes
+
+- - `getConfig`: fix the generated config file importing `defineConfig` from `@ozanarslan/corpus-cli/config`, a subpath that does not exist — import from `@ozanarslan/corpus-cli` instead.
+  - `getTsConfig`: parse `tsconfig.json` with `Bun.JSONC.parse` instead of `JSON.parse`, so comments and trailing commas no longer throw.
+
 ## 0.1.0
 
 ### Minor Changes

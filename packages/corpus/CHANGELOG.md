@@ -1,5 +1,13 @@
 # @ozanarslan/corpus
 
+## 0.0.4
+
+### Patch Changes
+
+- - `Config`: mark the class `abstract` — it is a static-only namespace and was never meant to be instantiated.
+  - `Controller`: declare `beforeEach` as `Optional<ContextHandler>` instead of an optional property, so it is always present on the instance.
+  - `exports`: export the `ContextHandler` type from the package root.
+
 ## 0.0.3
 
 ### Patch Changes

@@ -87,7 +87,7 @@ class Controller<Px extends Optional<string> = Optional<string>> {
 	 * request time. For behaviour that must wrap the response as well as precede
 	 * it, use a {@link Middleware} targeting {@link Controller.routeIds} instead.
 	 */
-	beforeEach?: ContextHandler;
+	beforeEach: Optional<ContextHandler>;
 
 	/**
 	 * Registers a dynamic route under this controller. Behaves identically to {@link Route}

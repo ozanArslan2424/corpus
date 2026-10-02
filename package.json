@@ -13,7 +13,8 @@
 		"test:all": "pnpm -r --reporter=append-only test:all",
 		"changeset": "changeset",
 		"version": "changeset version",
-		"release": "changeset publish"
+		"release": "changeset publish",
+		"prepublishOnly": "pnpm fm && pnpm lint && pnpm test && pnpm build && pnpm test:all"
 	},
 	"devDependencies": {
 		"@changesets/cli": "^3.0.1",
