@@ -390,6 +390,19 @@ Default [ContextFactory](../Context/index.md#contextfactory). Replace it to have
 
 **Returns** — A new `Context`.
 
+### App.addRoute()
+
+```ts
+addRoute(route: RouteBase): void
+```
+
+Registers a `RouteBase` on this `App`, rewriting its
+[RouteBase.endpoint](../RouteBase/index.md#routebase-endpoint) to sit beneath [App.prefix](#app-prefix).
+
+**Parameters**
+
+- `route` — The `RouteBase` to register.
+
 ### App.addMiddleware()
 
 ```ts
@@ -588,6 +601,14 @@ contextFactory: ContextFactory;
 ```
 
 [ContextFactory](../Context/index.md#contextfactory) that builds the `Context` for each incoming request.
+
+### AppInterface.addRoute()
+
+```ts
+addRoute(route: RouteBase): void
+```
+
+Registers a `RouteBase` to the App.
 
 ### AppInterface.addMiddleware()
 

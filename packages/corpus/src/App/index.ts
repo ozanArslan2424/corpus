@@ -41,7 +41,7 @@ import {
 	type OrString,
 } from "@/utils/is";
 import { logger } from "@/utils/logger";
-import { withLeadingSlash } from "@/utils/path";
+import { joinPathSegments } from "@/utils/path";
 
 const noop = () => {};
 
@@ -269,6 +269,8 @@ interface AppInterface {
 	handlePreflight: ContextHandler;
 	/** {@link ContextFactory} that builds the {@link Context} for each incoming request. */
 	contextFactory: ContextFactory;
+	/** Registers a {@link RouteBase} to the App. */
+	addRoute(route: RouteBase): void;
 	/** Registers a {@link Middleware} against each {@link RouteBase.id} it targets. */
 	addMiddleware(middleware: Middleware): void;
 	/** Resolves the {@link Middleware} instances that apply to a {@link RouteBase.id}. */
@@ -471,7 +473,7 @@ class App implements AppInterface {
 		const parsers = getOrInitParsersRegistry();
 
 		for (const route of this.routes) {
-			const endpoint = withLeadingSlash(route.endpoint);
+			const endpoint = route.endpoint;
 			const isWebSocket = route.variant === RouteVariant.websocket;
 			const isWildcard = endpoint.endsWith("*");
 			const isMethodWithoutBody = isOneOf(route.method, [Method.GET, Method.HEAD]);
@@ -699,6 +701,22 @@ class App implements AppInterface {
 	contextFactory: ContextFactory = (request, server) => {
 		return new Context(request, server);
 	};
+
+	/**
+	 * Registers a {@link RouteBase} on this {@link App}, rewriting its
+	 * {@link RouteBase.endpoint} to sit beneath {@link App.prefix}.
+	 *
+	 * @param route - The {@link RouteBase} to register.
+	 */
+	addRoute(route: RouteBase): void {
+		// endpoint is readonly to consumers, but the app owns prefixing, so it
+		// writes through a narrow mutable view rather than exposing a setter.
+		(route as { endpoint: RouteBase["endpoint"] }).endpoint = joinPathSegments(
+			this.prefix,
+			route.endpoint,
+		);
+		this.routes.push(route);
+	}
 
 	/**
 	 * Registers a {@link Middleware} under every {@link RouteBase.id} in

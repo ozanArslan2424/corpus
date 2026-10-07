@@ -84,7 +84,7 @@ new Middleware([...users.routeIds], handler);
 ### Controller.beforeEach
 
 ```ts
-beforeEach?: ContextHandler
+beforeEach: Optional<ContextHandler>;
 ```
 
 Runs before the handler of every [Controller.route](#controller-route) and

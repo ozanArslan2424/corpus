@@ -14,7 +14,7 @@
 		"changeset": "changeset",
 		"version": "changeset version",
 		"release": "changeset publish",
-		"prepublishOnly": "pnpm fm && pnpm lint && pnpm test && pnpm build && pnpm test:all"
+		"check": "pnpm fm && pnpm lint && pnpm build && pnpm test:all"
 	},
 	"devDependencies": {
 		"@changesets/cli": "^3.0.1",

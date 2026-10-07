@@ -209,7 +209,7 @@ abstract class RouteBase<B = any, S = any, P = any, R = any, E extends string = 
 	 * must call it itself, after those fields are initialized.
 	 */
 	register() {
-		getNearestApp().routes.push(this);
+		getNearestApp().addRoute(this);
 	}
 
 	/**

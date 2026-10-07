@@ -18,7 +18,3 @@ export function joinPathSegments<P extends string>(
 
 	return `/${joined}` as P;
 }
-
-export function withLeadingSlash<E extends string>(rawEndpoint: E): WithLeadingSlash<E> {
-	return (rawEndpoint.startsWith("/") ? rawEndpoint : `/${rawEndpoint}`) as WithLeadingSlash<E>;
-}

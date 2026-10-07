@@ -30,7 +30,7 @@ const secret = Config.require("JWT_SECRET");
 _class_
 
 ```ts
-class Config
+abstract class Config
 ```
 
 Static accessor for environment variables.

@@ -84,11 +84,12 @@ git commit -m "corpus v${CORPUS_VERSION} & cli v${CLI_VERSION}"
 pause "Step ${STEP} complete. Ready to publish?"
 
 # Release
-print -P "${GREEN}Step ${STEP}: Running pnpm run release...${RESET}"
+print -P "${GREEN}Step ${STEP}: Running checks and publishing...${RESET}"
+pnpm run check
 pnpm run release
 next
 
 # Push
-echo -e "${GREEN}Step ${STEP}: Pushing commit and tags...${RESET}"
+print -P "${GREEN}Step ${STEP}: Pushing commit and tags...${RESET}"
 git push --follow-tags
-echo -e "${GREEN}=== Release complete ===${RESET}"
+print -P "${GREEN}=== Release complete ===${RESET}"
