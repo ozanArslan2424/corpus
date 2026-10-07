@@ -1,5 +1,11 @@
 # @ozanarslan/corpus-cli
 
+## 1.0.0
+
+### Major Changes
+
+- **Version reset to 1.0.0.** Earlier releases in the `0.x` range were unpublished from npm, and npm permanently reserves deleted version numbers and they can never be republished. Rather than resume from an arbitrary point above that range, both packages move to `1.0.0`. This is a numbering change, not a rewrite: there is no API break associated with the bump itself.
+
 ## 0.1.1
 
 ### Patch Changes
