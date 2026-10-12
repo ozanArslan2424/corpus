@@ -766,4 +766,4 @@ class App implements AppInterface {
 	}
 }
 
-export { App, type AppInterface };
+export { App, type AppInterface, type AppOptions };

@@ -1,5 +1,5 @@
 // oxfmt-ignore
-// export {} from "@/App";
+export type { AppOptions } from "@/App";
 // oxfmt-ignore
 // export {} from "@/BodyParser";
 // oxfmt-ignore
