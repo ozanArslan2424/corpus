@@ -18,7 +18,8 @@
  * @module Config
  */
 
-import { isPresent, isAbsent, type OrString } from "@/utils/is";
+import { assert } from "@/utils/assert";
+import { isPresent, type OrString } from "@/utils/is";
 
 /**
  * Declaration target for an application's environment variables.
@@ -78,14 +79,14 @@ abstract class Config {
 	 * unconfigured process is treated as a development one.
 	 */
 	static get nodeEnv(): NodeEnv {
-		return this.env.NODE_ENV ?? "development";
+		return Config.env.NODE_ENV ?? "development";
 	}
 
 	/**
 	 * @returns `true` when {@link Config.nodeEnv} is `"production"`.
 	 */
 	static get isProd(): boolean {
-		return this.nodeEnv === "production";
+		return Config.nodeEnv === "production";
 	}
 
 	/**
@@ -93,15 +94,15 @@ abstract class Config {
 	 * when `NODE_ENV` is unset.
 	 */
 	static get isDev(): boolean {
-		return this.nodeEnv === "development";
+		return Config.nodeEnv === "development";
 	}
 
 	/**
 	 * @returns `true` when {@link Config.nodeEnv} is `"test"`. {@link App.close}
-	 * checks this to avoid exiting the process out from under a test runner.
+	 * checks Config to avoid exiting the process out from under a test runner.
 	 */
 	static get isTest(): boolean {
-		return this.nodeEnv === "test";
+		return Config.nodeEnv === "test";
 	}
 
 	/**
@@ -112,7 +113,7 @@ abstract class Config {
 	 * defined.
 	 */
 	static has(key: EnvKey): boolean {
-		return isPresent(this.env[key]);
+		return isPresent(Config.env[key]);
 	}
 
 	/**
@@ -147,11 +148,12 @@ abstract class Config {
 		key: EnvKey,
 		opts: { parser: (raw: string) => T; fallback?: T },
 	): T | undefined;
+	// TODO: default parsers for primitive fallback value types
 	static get<T = string>(
 		key: EnvKey,
 		opts?: { parser?: (raw: string) => T; fallback?: T },
 	): T | undefined {
-		const value = this.env[key];
+		const value = Config.env[key];
 		if (isPresent(value)) {
 			return opts?.parser ? opts.parser(value) : (value as T);
 		}
@@ -180,11 +182,9 @@ abstract class Config {
 	 */
 	static require<T = string>(key: EnvKey, parser: (raw: string) => T): T;
 	static require<T = string>(key: EnvKey, parser?: (raw: string) => T): T | string {
-		const value = parser ? this.get(key, { parser }) : this.get(key);
-		if (isAbsent(value)) {
-			throw new Error(`Required environment variable "${key}" is not set`);
-		}
-		return value;
+		const raw = Config.env[key];
+		assert.present(raw, `Required environment variable "${key}" is not set`);
+		return parser ? parser(raw) : raw;
 	}
 
 	/**
@@ -199,7 +199,7 @@ abstract class Config {
 	 * their string form.
 	 */
 	static set(key: string, value: string | number | boolean): void {
-		this.env[key] = String(value);
+		Config.env[key] = String(value);
 	}
 }
 
