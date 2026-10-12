@@ -18,7 +18,6 @@
 import { Res } from "@/Res";
 import type { Server } from "@/Server";
 import type { Maybe, MaybePromise } from "@/utils/is";
-import { lazy, type Lazy, type LazyMut } from "@/utils/lazy";
 import { createSafeObject } from "@/utils/object";
 
 /**
@@ -106,26 +105,28 @@ class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	 * was dispatched without one, which is why {@link Context.server} is optional
 	 * at every use site — including the WebSocket upgrade.
 	 */
-	constructor(
-		/**
-		 * The untouched incoming request. Read it for headers and for the raw body;
-		 * the parsed views live on {@link Context.body} and its siblings.
-		 */
-		readonly req: Request,
-		/**
-		 * The {@link Server} that accepted the request. Needed to upgrade a connection
-		 * to a {@link WebSocketRoute}; absent when the request was dispatched without
-		 * a server.
-		 */
-		readonly server: Maybe<Server>,
-	) {}
+	constructor(req: Request, server: Maybe<Server>) {
+		this.req = req;
+		this.server = server;
+	}
 
-	private _body: LazyMut<B> = lazy.mut(() => createSafeObject());
-	private _params: LazyMut<P> = lazy.mut(() => createSafeObject());
-	private _search: LazyMut<S> = lazy.mut(() => createSafeObject());
-	private _data: LazyMut<ContextDataInterface> = lazy.mut(() => createSafeObject());
-	private _res: LazyMut<Res<R>> = lazy.mut(() => new Res<R>());
-	private _url: Lazy<URL> = lazy(() => new URL(this.req.url));
+	/**
+	 * The untouched incoming request. Read it for headers and for the raw body;
+	 * the parsed views live on {@link Context.body} and its siblings.
+	 */
+	readonly req: Request;
+	/**
+	 * The {@link Server} that accepted the request. Needed to upgrade a connection
+	 * to a {@link WebSocketRoute}; absent when the request was dispatched without
+	 * a server.
+	 */
+	readonly server: Maybe<Server>;
+	private _body?: B;
+	private _params?: P;
+	private _search?: S;
+	private _data?: ContextDataInterface;
+	private _res?: Res<R>;
+	private _url?: URL;
 
 	/**
 	 * The parsed request body, decoded by {@link BodyParser} and validated against
@@ -135,10 +136,10 @@ class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	 * route whose handlers never read it.
 	 */
 	get body(): B {
-		return this._body();
+		return (this._body ??= createSafeObject());
 	}
 	set body(value: B) {
-		this._body.set(value);
+		this._body = value;
 	}
 
 	/**
@@ -147,10 +148,10 @@ class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	 * params schema. A wildcard segment is available under the `*` key.
 	 */
 	get params(): P {
-		return this._params();
+		return (this._params ??= createSafeObject());
 	}
 	set params(value: P) {
-		this._params.set(value);
+		this._params = value;
 	}
 
 	/**
@@ -159,10 +160,10 @@ class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	 * no query string.
 	 */
 	get search(): S {
-		return this._search();
+		return (this._search ??= createSafeObject());
 	}
 	set search(value: S) {
-		this._search.set(value);
+		this._search = value;
 	}
 
 	/**
@@ -172,10 +173,10 @@ class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	 * it. Type it by augmenting {@link ContextDataInterface}.
 	 */
 	get data(): ContextDataInterface {
-		return this._data();
+		return (this._data ??= createSafeObject());
 	}
 	set data(value: ContextDataInterface) {
-		this._data.set(value);
+		this._data = value;
 	}
 
 	/**
@@ -188,10 +189,10 @@ class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	 * @returns The response object, created on first access.
 	 */
 	get res(): Res<R> {
-		return this._res();
+		return (this._res ??= new Res<R>());
 	}
 	set res(value: Res<R>) {
-		this._res.set(value);
+		this._res = value;
 	}
 
 	/**
@@ -202,7 +203,7 @@ class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	 * need the pathname or origin itself, as {@link BundleRoute} does.
 	 */
 	get url(): URL {
-		return this._url();
+		return (this._url ??= new URL(this.req.url));
 	}
 }
 

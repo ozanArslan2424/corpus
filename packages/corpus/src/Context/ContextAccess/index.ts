@@ -23,6 +23,7 @@
 import type { Context } from "@/Context";
 import type { RouteConfig } from "@/RouteBase";
 import { isPresent, type Nullable, type Optional } from "@/utils/is";
+import { memo } from "@/utils/memo";
 
 /** One of the skippable {@link Context} properties: `body`, `search` or `params`. */
 type ContextAccessKey = keyof Context | "reqBody";
@@ -33,24 +34,75 @@ type ContextAccess = Record<ContextAccessKey, boolean>;
 const BODY_METHODS = new Set(["json", "text", "arrayBuffer", "formData", "body", "clone", "bytes"]);
 
 /**
+ * Every key of {@link ContextAccess}, in a fixed order. Hoisted so the merge
+ * loops do not rebuild it per route; `satisfies` keeps it checked against the
+ * key type without widening the tuple.
+ */
+const KEYS = [
+	"body",
+	"search",
+	"params",
+	"data",
+	"server",
+	"req",
+	"res",
+	"url",
+	"reqBody",
+] as const satisfies ReadonlyArray<ContextAccessKey>;
+
+/** Membership test for a key read out of source text. */
+const KEY_SET: ReadonlySet<string> = new Set(KEYS);
+
+/**
+ * One regex per key, matching that key as a binding inside a destructuring
+ * pattern. Built once: the pattern depends only on the key, and recompiling
+ * nine of them per call was the bulk of {@link getPatternAccess}.
+ *
+ * The trailing class matches the four ways a destructured binding can end:
+ * `body,` `body:` `body}` `body=`. The lookbehind rejects `req.body` and the
+ * lookahead rejects `bodyParser`.
+ */
+const PATTERN_KEY: ReadonlyMap<ContextAccessKey, RegExp> = new Map(
+	KEYS.map((key) => [key, new RegExp(`(?<![\\w$.])${key}(?![\\w$])\\s*[,:}=]`)] as const),
+);
+
+/**
+ * `c.body`, `c?.body`. Sticky, so it can be aimed at an index in the body text
+ * rather than at a freshly sliced tail.
+ */
+const DOT = /\s*\??\.\s*([A-Za-z_$][\w$]*)/y;
+
+/**
+ * `c["body"]`, `c?.["body"]`. The backreference forces matching quotes and the
+ * character class rejects escapes, so only literal static keys are accepted.
+ * Sticky, for the same reason as {@link DOT}.
+ */
+const BRACKET = /\s*\??\.?\[\s*(["'])([^"'\\]*)\1\s*\]/y;
+
+/** A bare identifier, used to validate the context parameter's name. */
+const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
+
+/** Splits a parameter on whitespace or `=`, to strip defaults and annotations. */
+const PARAM_SPLIT = /[\s=]/;
+
+/**
  * The conservative fallback: every property is parsed. Returned whenever the
  * analysis cannot prove a property is unused.
  *
- * @returns A record with every key set to `true`.
+ * Frozen and shared — the analysis results are cached, so a caller that mutated
+ * one would corrupt every later lookup.
  */
-function all(): ContextAccess {
-	return {
-		body: true,
-		search: true,
-		params: true,
-		data: true,
-		server: true,
-		req: true,
-		res: true,
-		url: true,
-		reqBody: true,
-	};
-}
+const ALL: ContextAccess = Object.freeze({
+	body: true,
+	search: true,
+	params: true,
+	data: true,
+	server: true,
+	req: true,
+	res: true,
+	url: true,
+	reqBody: true,
+});
 
 /**
  * Fresh zeroed record. A factory, not a shared constant — callers mutate it.
@@ -69,6 +121,31 @@ function none(): ContextAccess {
 		url: false,
 		reqBody: false,
 	};
+}
+
+/**
+ * @param char - The character to test.
+ * @returns `true` for the whitespace this scanner cares about.
+ */
+function isSpace(char: string): boolean {
+	return char === " " || char === "\t" || char === "\n" || char === "\r";
+}
+
+/**
+ * Walks backwards past whitespace.
+ *
+ * Replaces slicing the whole text before a match and calling `trimEnd` on it —
+ * that allocated a copy of the body per mention of the context parameter.
+ *
+ * @param source - The text to scan.
+ * @param from - Index to start before; the character at `from` is not examined.
+ * @returns The index of the last non-whitespace character before `from`, or -1
+ * when there is none.
+ */
+function prevNonSpace(source: string, from: number): number {
+	let i = from - 1;
+	while (i >= 0 && isSpace(source[i]!)) i--;
+	return i;
 }
 
 /**
@@ -174,15 +251,12 @@ function getSignature(source: string): Nullable<{ firstParam: string; body: stri
  * @returns Which keys it binds, or `null` when the pattern has a rest element —
  * that captures everything left over, so no key can be ruled out.
  */
-function getPatternAccess(pattern: string, keys: Array<ContextAccessKey>): Nullable<ContextAccess> {
+function getPatternAccess(pattern: string): Nullable<ContextAccess> {
 	if (pattern.includes("...")) return null;
 
 	const access = none();
-	for (const key of keys) {
-		// The trailing class matches the four ways a destructured binding can
-		// end: `body,` `body:` `body}` `body=`. The lookbehind rejects
-		// `req.body` and the lookahead rejects `bodyParser`.
-		if (new RegExp(`(?<![\\w$.])${key}(?![\\w$])\\s*[,:}=]`).test(pattern)) access[key] = true;
+	for (const key of KEYS) {
+		if (PATTERN_KEY.get(key)!.test(pattern)) access[key] = true;
 	}
 	return access;
 }
@@ -194,7 +268,7 @@ function getPatternAccess(pattern: string, keys: Array<ContextAccessKey>): Nulla
  * @param source - The text to search.
  * @param closing - Index of the closing brace.
  * @returns The opening brace's index, or -1 when the brackets do not pair up —
- * which sends the caller to {@link all}.
+ * which sends the caller to {@link ALL}.
  */
 function getOpeningBrace(source: string, closing: number): number {
 	let depth = 0;
@@ -214,33 +288,39 @@ function getOpeningBrace(source: string, closing: number): number {
  *
  * Finds the context parameter, then walks every mention of it in the body. A
  * mention it can read as a property access records that key; a mention it
- * cannot falls back to {@link all}.
+ * cannot falls back to {@link ALL}.
+ *
+ * Memoized on the function's identity: the same {@link Middleware} handler
+ * appears in every route it guards, and re-reading its source per route was
+ * pure repetition. The cache is weak, so a handler that goes away takes its
+ * entry with it. The results it hands back are shared, so no caller may mutate
+ * one.
  *
  * @param fn - The handler to analyze.
  * @returns Which properties this function might read.
  */
-function getSingleContextAccess(fn: Function, keys: Array<ContextAccessKey>): ContextAccess {
+const getSingleContextAccess = memo((fn: Function): ContextAccess => {
 	const source = fn.toString();
 	// Bound, native, or otherwise opaque functions expose no readable body.
-	if (source.includes("[native code]")) return all();
+	if (source.includes("[native code]")) return ALL;
 
 	const signature = getSignature(source);
-	if (signature === null) return all();
+	if (signature === null) return ALL;
 
 	const { firstParam, body } = signature;
 
 	// Destructured context: `({ body, search }) => ...`. The pattern itself
 	// names everything the function can reach, so the body needs no scanning.
 	if (firstParam.startsWith("{")) {
-		const patternAccess = getPatternAccess(firstParam, keys);
-		return patternAccess ?? all();
+		const patternAccess = getPatternAccess(firstParam);
+		return patternAccess ?? ALL;
 	}
 
 	// Strip any default value or type annotation to leave a bare identifier.
-	const name = firstParam.split(/[\s=]/)[0] ?? "";
+	const name = firstParam.split(PARAM_SPLIT)[0] ?? "";
 	// Anything that is not a plain identifier — an array pattern, an empty
 	// parameter list, minifier output this parser does not model — is unanalyzable.
-	if (!/^[A-Za-z_$][\w$]*$/.test(name)) return all();
+	if (!IDENTIFIER.test(name)) return ALL;
 
 	const access = none();
 	// Property positions (`x.c`) are excluded below rather than in the pattern,
@@ -249,30 +329,40 @@ function getSingleContextAccess(fn: Function, keys: Array<ContextAccessKey>): Co
 	// (`ctx2`) are still rejected here.
 	const identifier = new RegExp(`(?<![\\w$])${name}(?![\\w$])`, "g");
 
-	for (const match of body.matchAll(identifier)) {
+	// An exec loop rather than `matchAll`, which allocates an iterator on top of
+	// the match objects.
+	let match: Nullable<RegExpExecArray>;
+	while ((match = identifier.exec(body)) !== null) {
 		// Bun's transpiler merges consecutive property reads into one
 		// destructuring assignment, so `const a = c.body; const b = c.params`
 		// arrives here as `const { body: a, params: b } = c`. The pattern names
 		// everything the statement can reach, so it is read rather than
 		// treated as an escape.
-		const head = body.slice(0, match.index).trimEnd();
+		//
+		// The text before the match is addressed by index instead of being
+		// sliced out: `head` ends at `h`, and every test below is a character
+		// comparison there.
+		const h = prevNonSpace(body, match.index);
+		const headChar = h >= 0 ? body[h]! : "";
 
 		// `x.c` is a property that happens to share the parameter's name. `...c`
 		// is the parameter itself being spread, and its third dot must not be
 		// mistaken for member access.
-		if (head.endsWith(".") && !head.endsWith("...")) continue;
+		if (headChar === "." && !(body[h - 1] === "." && body[h - 2] === ".")) continue;
 
-		const tail = body.slice(match.index + name.length);
+		const after = match.index + name.length;
 
 		// `c.body`, `c?.body`
-		const dot = /^\s*\??\.\s*([A-Za-z_$][\w$]*)/.exec(tail);
+		DOT.lastIndex = after;
+		const dot = DOT.exec(body);
 		if (dot) {
 			const key = dot[1] as ContextAccessKey;
-			if (keys.includes(key)) access[key] = true;
+			if (KEY_SET.has(key)) access[key] = true;
 
 			if (key === "req") {
-				const afterReq = tail.slice(dot[0].length);
-				const nested = /^\s*\??\.\s*([A-Za-z_$][\w$]*)/.exec(afterReq);
+				// `DOT.lastIndex` already sits just past `.req`, so this picks up
+				// where the first match left off without slicing a tail.
+				const nested = DOT.exec(body);
 				if (nested && BODY_METHODS.has(nested[1]!)) {
 					access.reqBody = true;
 				} else if (!nested) {
@@ -284,26 +374,31 @@ function getSingleContextAccess(fn: Function, keys: Array<ContextAccessKey>): Co
 			continue;
 		}
 
-		// `c["body"]`, `c?.["body"]`. The backreference forces matching quotes
-		// and the character class rejects escapes, so only literal static keys
-		// are accepted.
-		const bracket = /^\s*\??\.?\[\s*(["'])([^"'\\]*)\1\s*\]/.exec(tail);
+		// `c["body"]`, `c?.["body"]`.
+		BRACKET.lastIndex = after;
+		const bracket = BRACKET.exec(body);
 		if (bracket) {
 			const key = bracket[2] as ContextAccessKey;
-			if (keys.includes(key)) access[key] = true;
+			if (KEY_SET.has(key)) access[key] = true;
 			continue;
 		}
 
 		// A bare `=` only. `==`, `===`, `!=`, `>=` and `<=` are comparisons, in
 		// which the context is being used as a value.
-		if (head.endsWith("=") && !/[=!<>]=$/.test(head)) {
-			const target = head.slice(0, -1).trimEnd();
-			if (target.endsWith("}")) {
-				const opening = getOpeningBrace(target, target.length - 1);
+		const beforeHead = h >= 1 ? body[h - 1]! : "";
+		const isComparison =
+			beforeHead === "=" || beforeHead === "!" || beforeHead === "<" || beforeHead === ">";
+		if (headChar === "=" && !isComparison) {
+			// `target` is everything before the `=`, trimmed; `t` is its last
+			// character. Scanning backwards from `t` in the full body visits the
+			// same characters at the same indices that scanning `target` did.
+			const t = prevNonSpace(body, h);
+			if (t >= 0 && body[t] === "}") {
+				const opening = getOpeningBrace(body, t);
 				if (opening !== -1) {
-					const patternAccess = getPatternAccess(target.slice(opening), keys);
-					if (patternAccess === null) return all();
-					for (const key of keys) access[key] ||= patternAccess[key];
+					const patternAccess = getPatternAccess(body.slice(opening, t + 1));
+					if (patternAccess === null) return ALL;
+					for (const key of KEYS) access[key] ||= patternAccess[key];
 					continue;
 				}
 			}
@@ -312,11 +407,11 @@ function getSingleContextAccess(fn: Function, keys: Array<ContextAccessKey>): Co
 		// The context escapes as a value here: passed to another function,
 		// destructured, returned, or indexed with a computed key. Nothing
 		// can be ruled out, so everything is parsed.
-		return all();
+		return ALL;
 	}
 
 	return access;
-}
+});
 
 /**
  * Combines every handler in a route's chain into one answer.
@@ -337,13 +432,16 @@ function getContextAccess(
 	config: Optional<RouteConfig>,
 ): ContextAccess {
 	const result = none();
-	const keys = Object.keys(none()) as Array<ContextAccessKey>;
 
 	for (const handler of handlers) {
-		const access = getSingleContextAccess(handler, keys);
-		for (const key of keys) result[key] ||= access[key];
+		const access = getSingleContextAccess(handler);
 		// Every key is already set; no later handler can widen this further.
-		if (keys.every((key) => result[key])) break;
+		let complete = true;
+		for (const key of KEYS) {
+			result[key] ||= access[key];
+			if (!result[key]) complete = false;
+		}
+		if (complete) break;
 	}
 
 	// A configured schema runs whether or not a handler reads the value —
