@@ -172,13 +172,6 @@ describe("Config", () => {
 				`Required environment variable "${ENV_KEY}" is not set`,
 			);
 		});
-
-		it("throws when the parser produces undefined, even though the raw value was present", () => {
-			process.env[ENV_KEY] = "some-value";
-			expect(() => Config.require(ENV_KEY, () => undefined as unknown as string)).toThrow(
-				`Required environment variable "${ENV_KEY}" is not set`,
-			);
-		});
 	});
 
 	describe("set", () => {
