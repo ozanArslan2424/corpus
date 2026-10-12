@@ -83,6 +83,23 @@ describe("Cors e2e", () => {
 			expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
 		});
 
+		it("varies on origin even for an origin outside the allowlist", async () => {
+			const res = await fetch(`${BASE_URL}/data`, { headers: { Origin: OTHER_ORIGIN } });
+			expect(res.headers.get("Vary")).toContain("Origin");
+		});
+
+		it("varies on origin when the request carries none", async () => {
+			const res = await fetch(`${BASE_URL}/data`);
+			expect(res.status).toBe(200);
+			expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
+			expect(res.headers.get("Vary")).toContain("Origin");
+		});
+
+		it("omits allow-credentials when the policy does not set it", async () => {
+			const res = await fetch(`${BASE_URL}/data`, { headers: { Origin: ORIGIN } });
+			expect(res.headers.get("Access-Control-Allow-Credentials")).toBeNull();
+		});
+
 		it("still answers the preflight for a disallowed origin, without allowing it", async () => {
 			const res = await preflight(OTHER_ORIGIN);
 			expect(res.status).toBe(204);
@@ -100,7 +117,12 @@ describe("Cors e2e", () => {
 			const res = await fetch(`${BASE_URL}/data`, { headers: { Origin: OTHER_ORIGIN } });
 			expect(res.status).toBe(200);
 			expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
-			expect(res.headers.get("Access-Control-Allow-Credentials")).toBe("false");
+			expect(res.headers.get("Access-Control-Allow-Credentials")).toBeNull();
+		});
+
+		it("does not vary on origin, since every origin gets the same response", async () => {
+			const res = await fetch(`${BASE_URL}/data`, { headers: { Origin: OTHER_ORIGIN } });
+			expect(res.headers.get("Vary")).toBeNull();
 		});
 
 		it("defaults to a 24 hour preflight cache when maxAge is not configured", async () => {
@@ -109,12 +131,12 @@ describe("Cors e2e", () => {
 		});
 	});
 
-	describe("with credentials enabled", () => {
+	describe("with credentials and an explicit allowlist", () => {
 		beforeAll(() => {
-			new Cors({ allowedOrigins: ["*"], credentials: true, allowedMethods: ["GET", "POST"] });
+			new Cors({ allowedOrigins: [ORIGIN], credentials: true, allowedMethods: ["GET", "POST"] });
 		});
 
-		it("reflects the request origin instead of a wildcard and varies on it", async () => {
+		it("echoes the listed origin and varies on it", async () => {
 			const res = await fetch(`${BASE_URL}/data`, { headers: { Origin: ORIGIN } });
 			expect(res.status).toBe(200);
 			expect(res.headers.get("Access-Control-Allow-Origin")).toBe(ORIGIN);
@@ -122,17 +144,41 @@ describe("Cors e2e", () => {
 			expect(res.headers.get("Vary")).toContain("Origin");
 		});
 
-		it("falls back to a wildcard when the request carries no origin", async () => {
+		it("sends no allow-origin when the request carries no origin", async () => {
 			const res = await fetch(`${BASE_URL}/data`);
 			expect(res.status).toBe(200);
-			expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
+			expect(res.headers.get("Access-Control-Allow-Origin")).toBeNull();
+			expect(res.headers.get("Vary")).toContain("Origin");
 		});
 
-		it("sends a Set-Cookie through alongside the credentialed policy", async () => {
+		it("carries the credentialed policy through a preflight", async () => {
 			const res = await preflight(ORIGIN);
 			expect(res.status).toBe(204);
 			expect(res.headers.get("Access-Control-Allow-Origin")).toBe(ORIGIN);
 			expect(res.headers.get("Access-Control-Allow-Credentials")).toBe("true");
+		});
+	});
+
+	describe("with credentials and a wildcard origin", () => {
+		beforeAll(() => {
+			new Cors({ allowedOrigins: ["*"], credentials: true, allowedMethods: ["GET", "POST"] });
+		});
+
+		it("sends '*' rather than reflecting the caller, leaving the browser to reject it", async () => {
+			// Reflecting here would hand any site a readable credentialed
+			// response. The browser refuses the wildcard/credentials pair, which
+			// is the outcome this configuration deserves.
+			const res = await fetch(`${BASE_URL}/data`, { headers: { Origin: OTHER_ORIGIN } });
+			expect(res.status).toBe(200);
+			expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
+			expect(res.headers.get("Access-Control-Allow-Credentials")).toBe("true");
+			expect(res.headers.get("Vary")).toBeNull();
+		});
+
+		it("sends '*' on a preflight too", async () => {
+			const res = await preflight(ORIGIN);
+			expect(res.status).toBe(204);
+			expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
 		});
 	});
 });
