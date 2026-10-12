@@ -25,7 +25,7 @@ import type { ContextHandler } from "@/Context";
 import { getNearestApp } from "@/Globals/AppsRegistry";
 import { HeaderKey } from "@/Headers";
 import { Res, Status } from "@/Res";
-import { isPresent, isSomeArray } from "@/utils/is";
+import { isSomeArray, type Optional } from "@/utils/is";
 
 /**
  * The CORS policy. Every field is optional; an omitted field means the
@@ -48,12 +48,6 @@ type CorsOptions = {
 	credentials?: boolean;
 	/** How long (in seconds) browsers can cache preflight results. Default: 86400 (24 hours) */
 	maxAge?: number;
-	/**
-	 * Whether {@link HeaderKey.AccessControlMaxAge} is sent on ordinary responses
-	 * as well as on preflights. Preflights always carry it; browsers ignore it
-	 * elsewhere.
-	 */
-	includeMaxAgeResponseHeader?: boolean;
 };
 
 /**
@@ -68,6 +62,38 @@ interface CorsInterface {
 	handlePreflight: ContextHandler;
 	/** Applies CORS headers to an outgoing response. */
 	handler: ContextHandler;
+}
+
+/**
+ * Whether a policy allows any origin: no list at all, or a list containing the
+ * wildcard.
+ *
+ * @param allowedOrigins - The configured origins, if any.
+ * @returns `true` when no origin is being restricted.
+ */
+function isWildcardPolicy(allowedOrigins: Optional<string[]>): boolean {
+	return !allowedOrigins || allowedOrigins.includes("*");
+}
+
+/**
+ * Whether `Vary` already accounts for the origin.
+ *
+ * A `Vary: *` covers every request header, so it needs no addition either.
+ * Matching is case-insensitive and token-aware, so a header listing
+ * `Accept-Encoding, Origin` is recognised while one listing `Origin-Policy` is
+ * not.
+ *
+ * @param headers - The response headers to inspect.
+ * @returns `true` when appending `Origin` would be redundant.
+ */
+function isOriginInVaryHeader(headers: Headers): boolean {
+	const vary = headers.get(HeaderKey.Vary);
+	if (!vary) return false;
+	for (const token of vary.split(",")) {
+		const trimmed = token.trim();
+		if (trimmed === "*" || trimmed.toLowerCase() === "origin") return true;
+	}
+	return false;
 }
 
 /**
@@ -130,17 +156,16 @@ class Cors implements CorsInterface {
 	/**
 	 * Applies CORS headers to a Headers object given the request origin.
 	 *
-	 * Origin resolution has three outcomes. A wildcard policy sends `*`. A policy
-	 * listing origins sends the request's own origin when it is listed, and no
-	 * origin header at all when it is not — an unlisted origin is rejected by
-	 * omission rather than by an error status. A wildcard policy combined with
-	 * `credentials` reflects the request origin instead of `*`, because the spec
-	 * forbids the wildcard in credentialed mode. Whenever the origin is reflected,
-	 * {@link HeaderKey.Vary} is appended so caches key on it.
+	 * Origin resolution has two outcomes. A wildcard policy sends `*`, including
+	 * in credentialed mode — the spec forbids that combination, and the browser
+	 * is what rejects it. A policy listing origins sends the request's own origin
+	 * when it is listed, and no origin header at all when it is not: an unlisted
+	 * origin is rejected by omission rather than by an error status.
 	 *
-	 * The remaining list headers are written only when their option is a non-empty
-	 * array, so an unset method or header list leaves the browser's defaults
-	 * alone.
+	 * A restricted policy also appends {@link HeaderKey.Vary}, whether or not the
+	 * origin was allowed: the response differs by origin either way, so a shared
+	 * cache that did not key on it could hand one origin's response to another.
+	 * An existing `Vary` that already lists `Origin` is left alone.
 	 *
 	 * @param headers - The response headers to write into.
 	 * @param reqOrigin - The request's `Origin` header, or an empty string when it
@@ -159,16 +184,15 @@ class Cors implements CorsInterface {
 			maxAge = 86400,
 		} = this.opts ?? {};
 
-		const isWildcard = !allowedOrigins || allowedOrigins.includes("*");
-		const originAllowed = !isWildcard && allowedOrigins.includes(reqOrigin);
-		// Credentials mode forbids wildcard origin — reflect actual origin instead
-		const reflectOrigin = originAllowed || (isWildcard && credentials && reqOrigin);
+		const isWildcard = isWildcardPolicy(allowedOrigins);
 
-		if (reflectOrigin) {
-			headers.set(HeaderKey.AccessControlAllowOrigin, reqOrigin);
-			headers.append(HeaderKey.Vary, "Origin");
-		} else if (isWildcard) {
+		if (isWildcard) {
 			headers.set(HeaderKey.AccessControlAllowOrigin, "*");
+		} else {
+			if (allowedOrigins?.includes(reqOrigin)) {
+				headers.set(HeaderKey.AccessControlAllowOrigin, reqOrigin);
+			}
+			if (!isOriginInVaryHeader(headers)) headers.append(HeaderKey.Vary, "Origin");
 		}
 
 		if (isSomeArray(allowedMethods)) {
@@ -187,10 +211,10 @@ class Cors implements CorsInterface {
 			headers.set(HeaderKey.AccessControlMaxAge, maxAge);
 		}
 
-		headers.set(
-			HeaderKey.AccessControlAllowCredentials,
-			isPresent(credentials) ? credentials : false,
-		);
+		// Sending this as "false" is noise since it does nothing.
+		if (credentials) {
+			headers.set(HeaderKey.AccessControlAllowCredentials, true);
+		}
 	}
 }
 

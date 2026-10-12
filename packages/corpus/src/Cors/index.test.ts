@@ -59,18 +59,19 @@ describe("Cors", () => {
 			expect(ctx.res.headers.get(HeaderKey.Vary)).toBeNull();
 		});
 
-		it("reflects the actual origin (not '*') when credentials is true and a wildcard is configured", () => {
+		it("sends '*' rather than reflecting the caller when credentials is set on a wildcard", () => {
+			// Reflecting whatever origin was sent would make a credentialed
+			// response readable by any site. The wildcard goes out instead and
+			// the browser rejects the combination, which is what express,
+			// fastify and Hono all do.
 			const cors = new Cors({ credentials: true });
 			const ctx = makeContext("https://example.com");
 			cors.handler(ctx);
-			expect(ctx.res.headers.get(HeaderKey.AccessControlAllowOrigin)).toBe("https://example.com");
-			expect(ctx.res.headers.get(HeaderKey.Vary)).toBe("Origin");
+			expect(ctx.res.headers.get(HeaderKey.AccessControlAllowOrigin)).toBe("*");
+			expect(ctx.res.headers.get(HeaderKey.Vary)).toBeNull();
 		});
 
-		it("falls back to '*' when credentials is true but no origin header is present", () => {
-			// reqOrigin is falsy here, so the credentials+wildcard reflection branch
-			// is skipped and it falls through to the plain wildcard case instead -
-			// even though Allow-Credentials will still be set to true below.
+		it("sends '*' for a wildcard policy with credentials and no origin header", () => {
 			const cors = new Cors({ credentials: true });
 			const ctx = makeContext();
 			cors.handler(ctx);
@@ -90,6 +91,48 @@ describe("Cors", () => {
 			const ctx = makeContext("https://not-allowed.com");
 			cors.handler(ctx);
 			expect(ctx.res.headers.get(HeaderKey.AccessControlAllowOrigin)).toBeNull();
+		});
+
+		it("varies on origin even when the origin is rejected", () => {
+			// The response differs by origin whether or not it was allowed, so a
+			// shared cache that did not key on it could serve one origin's
+			// response to another.
+			const cors = new Cors({ allowedOrigins: ["https://example.com"] });
+			const ctx = makeContext("https://not-allowed.com");
+			cors.handler(ctx);
+			expect(ctx.res.headers.get(HeaderKey.Vary)).toBe("Origin");
+		});
+
+		it("varies on origin for a restricted policy when no origin was sent", () => {
+			const cors = new Cors({ allowedOrigins: ["https://example.com"] });
+			const ctx = makeContext();
+			cors.handler(ctx);
+			expect(ctx.res.headers.get(HeaderKey.AccessControlAllowOrigin)).toBeNull();
+			expect(ctx.res.headers.get(HeaderKey.Vary)).toBe("Origin");
+		});
+
+		it("does not duplicate Origin in a Vary header that already lists it", () => {
+			const cors = new Cors({ allowedOrigins: ["https://example.com"] });
+			const ctx = makeContext("https://example.com");
+			ctx.res.headers.set(HeaderKey.Vary, "Accept-Encoding, Origin");
+			cors.handler(ctx);
+			expect(ctx.res.headers.get(HeaderKey.Vary)).toBe("Accept-Encoding, Origin");
+		});
+
+		it("leaves a 'Vary: *' alone, since it already covers the origin", () => {
+			const cors = new Cors({ allowedOrigins: ["https://example.com"] });
+			const ctx = makeContext("https://example.com");
+			ctx.res.headers.set(HeaderKey.Vary, "*");
+			cors.handler(ctx);
+			expect(ctx.res.headers.get(HeaderKey.Vary)).toBe("*");
+		});
+
+		it("appends Origin to a Vary header that does not already list it", () => {
+			const cors = new Cors({ allowedOrigins: ["https://example.com"] });
+			const ctx = makeContext("https://example.com");
+			ctx.res.headers.set(HeaderKey.Vary, "Accept-Encoding");
+			cors.handler(ctx);
+			expect(ctx.res.headers.get(HeaderKey.Vary)).toBe("Accept-Encoding, Origin");
 		});
 
 		it("treats an explicit '*' entry in allowedOrigins as a wildcard", () => {
@@ -147,11 +190,20 @@ describe("Cors", () => {
 			expect(ctx.res.headers.get(HeaderKey.AccessControlAllowCredentials)).toBe("true");
 		});
 
-		it("sets Allow-Credentials to 'false' when credentials is not configured", () => {
+		it("omits Allow-Credentials when credentials is not configured", () => {
+			// A browser reads the header set to "false" exactly as it reads the
+			// header being absent, so sending it is noise on every response.
 			const cors = new Cors();
 			const ctx = makeContext("https://example.com");
 			cors.handler(ctx);
-			expect(ctx.res.headers.get(HeaderKey.AccessControlAllowCredentials)).toBe("false");
+			expect(ctx.res.headers.get(HeaderKey.AccessControlAllowCredentials)).toBeNull();
+		});
+
+		it("omits Allow-Credentials when credentials is explicitly false", () => {
+			const cors = new Cors({ credentials: false });
+			const ctx = makeContext("https://example.com");
+			cors.handler(ctx);
+			expect(ctx.res.headers.get(HeaderKey.AccessControlAllowCredentials)).toBeNull();
 		});
 	});
 
@@ -163,12 +215,21 @@ describe("Cors", () => {
 			expect(result).toHaveProperty("status", Status.NO_CONTENT);
 		});
 
-		it("applies the same origin/credentials logic as the regular handler", () => {
-			const cors = new Cors({ credentials: true });
+		it("applies the same origin logic as the regular handler", () => {
+			const cors = new Cors({ allowedOrigins: ["https://example.com"], credentials: true });
 			const ctx = makeContext("https://example.com");
 			const result = cors.handlePreflight(ctx) as { headers: Headers };
 			expect(result.headers.get(HeaderKey.AccessControlAllowOrigin)).toBe("https://example.com");
+			expect(result.headers.get(HeaderKey.AccessControlAllowCredentials)).toBe("true");
 			expect(result.headers.get(HeaderKey.Vary)).toBe("Origin");
+		});
+
+		it("sends '*' for a wildcard policy with credentials, as the handler does", () => {
+			const cors = new Cors({ credentials: true });
+			const ctx = makeContext("https://example.com");
+			const result = cors.handlePreflight(ctx) as { headers: Headers };
+			expect(result.headers.get(HeaderKey.AccessControlAllowOrigin)).toBe("*");
+			expect(result.headers.get(HeaderKey.Vary)).toBeNull();
 		});
 
 		it("sets Max-Age using the default of 86400 when not configured", () => {
