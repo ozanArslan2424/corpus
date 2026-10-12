@@ -15,12 +15,21 @@
  */
 
 /**
+ * One `name=value` pair from a `Cookie` header.
+ *
+ * Hoisted rather than written inline: `matchAll` clones the regex internally,
+ * so a shared instance carries no `lastIndex` between calls and there is
+ * nothing to recompile per request.
+ */
+const COOKIE_PAIR = /([^=;\s]+)=([^;]*)/g;
+
+/**
  * Parses an inbound `Cookie` header into individual cookies.
  *
  * The header is a semicolon-separated list of name/value pairs with no
- * attributes, so each pair is re-serialised on its own before being handed to
- * Bun's parser. Malformed fragments that yield no name are skipped rather than
- * throwing — a single bad pair from a client should not fail the request.
+ * attributes, so each pair becomes a cookie on its own. Malformed fragments
+ * that yield no name are skipped rather than throwing — a single bad pair from
+ * a client should not fail the request.
  *
  * @param cookieHeader - The raw `Cookie` header value.
  * @returns The parsed cookies, in header order. Values keep whatever encoding
@@ -28,10 +37,9 @@
  */
 function parseCookieHeader(cookieHeader: string): Array<Bun.Cookie> {
 	const array: Array<Bun.Cookie> = [];
-	const pairs = cookieHeader.matchAll(/([^=;\s]+)=([^;]*)/g);
-	for (const [, name, value] of pairs) {
+	for (const [, name, value] of cookieHeader.matchAll(COOKIE_PAIR)) {
 		if (!name) continue;
-		array.push(Bun.Cookie.parse(`${name}=${value}`));
+		array.push(new Bun.Cookie(name, value ?? ""));
 	}
 	return array;
 }
@@ -48,7 +56,7 @@ function parseCookieHeader(cookieHeader: string): Array<Bun.Cookie> {
  * headers into one string and loses the boundaries.
  * @returns The parsed cookies, in the order given.
  */
-function parseSetCookieHeaders(headers: string[]): Array<Bun.Cookie> {
+function parseSetCookieHeaders(headers: Array<string>): Array<Bun.Cookie> {
 	const array: Array<Bun.Cookie> = [];
 	for (const header of headers) {
 		array.push(Bun.Cookie.parse(header));
@@ -85,13 +93,20 @@ class Cookies extends Bun.CookieMap {
 	/**
 	 * Builds a map from an inbound `Cookie` header.
 	 *
+	 * The pairs go straight into the map rather than through
+	 * {@link parseCookieHeader}, whose array would be discarded on the next
+	 * line.
+	 *
 	 * @param cookieHeader - The raw `Cookie` header value, as sent by the client.
 	 * @returns The cookies it carried. Repeated names resolve to the last
 	 * occurrence.
 	 */
 	static fromHeader(cookieHeader: string): Cookies {
 		const cookies = new Cookies();
-		for (const cookie of parseCookieHeader(cookieHeader)) cookies.set(cookie);
+		for (const [, name, value] of cookieHeader.matchAll(COOKIE_PAIR)) {
+			if (!name) continue;
+			cookies.set(new Bun.Cookie(name, value ?? ""));
+		}
 		return cookies;
 	}
 
@@ -99,13 +114,18 @@ class Cookies extends Bun.CookieMap {
 	 * Builds a map from outbound `Set-Cookie` headers, preserving each cookie's
 	 * attributes.
 	 *
+	 * As with {@link Cookies.fromHeader}, the cookies are set as they are parsed
+	 * rather than collected into an intermediate array.
+	 *
 	 * @param headers - The raw `Set-Cookie` values, one per cookie.
 	 * @returns The cookies they describe. Repeated names resolve to the last
 	 * occurrence.
 	 */
-	static fromSetCookieHeaders(headers: string[]): Cookies {
+	static fromSetCookieHeaders(headers: Array<string>): Cookies {
 		const cookies = new Cookies();
-		for (const cookie of parseSetCookieHeaders(headers)) cookies.set(cookie);
+		for (const header of headers) {
+			cookies.set(Bun.Cookie.parse(header));
+		}
 		return cookies;
 	}
 }
