@@ -73,6 +73,7 @@ class Controller<Px extends Optional<string> = Optional<string>> {
 	 */
 	readonly routeIds: Set<string> = new Set<string>();
 
+	// TODO: remove beforeEach, it's not the standard way to write middlewares. controllers can be passed to middlewares directly.
 	/**
 	 * Runs before the handler of every {@link Controller.route} and
 	 * {@link Controller.staticRoute} created by this controller.
