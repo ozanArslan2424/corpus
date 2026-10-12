@@ -23,9 +23,10 @@
 
 import type { ContextHandler } from "@/Context";
 import { getNearestApp } from "@/Globals/AppsRegistry";
-import { HeaderKey } from "@/Headers";
+import { HeaderKey, type HeadersInitValue } from "@/Headers";
 import { Res, Status } from "@/Res";
 import { isSomeArray, type Optional } from "@/utils/is";
+import { memo } from "@/utils/memo";
 
 /**
  * The CORS policy. Every field is optional; an omitted field means the
@@ -57,7 +58,7 @@ type CorsOptions = {
  */
 interface CorsInterface {
 	/** The configured {@link CorsOptions}. */
-	opts?: CorsOptions;
+	options?: CorsOptions;
 	/** Preflight handler for OPTIONS requests. */
 	handlePreflight: ContextHandler;
 	/** Applies CORS headers to an outgoing response. */
@@ -97,6 +98,64 @@ function isOriginInVaryHeader(headers: Headers): boolean {
 }
 
 /**
+ * Everything in a policy that does not depend on the request: the method,
+ * header and exposure lists, the max-age, and the credentials flag.
+ *
+ * Keyed on the {@link Cors} itself and on `includeMaxAge`. The policy is held
+ * weakly, so entries never cross between policies and go away with the
+ * instance that built them. `includeMaxAge` has two values: an ordinary
+ * response and a preflight differ only in that header.
+ *
+ * The entries are built on the first response and reused from then on, so a
+ * policy whose {@link Cors.options} change afterwards — reassigned or mutated in
+ * place — keeps serving the headers it was first called with.
+ *
+ * The returned array is reused for every later response, so callers must read
+ * it and not mutate it.
+ *
+ * @param cors - The policy to read, and the key the entries are cached under.
+ * @param includeMaxAge - Whether to carry
+ * {@link HeaderKey.AccessControlMaxAge}.
+ * @returns The header entries, ready for `setMany`.
+ */
+const getStaticHeaders = memo(
+	(cors: CorsInterface, includeMaxAge: boolean): Array<[string, HeadersInitValue]> => {
+		const {
+			allowedMethods,
+			allowedHeaders,
+			exposedHeaders,
+			credentials,
+			maxAge = 86400,
+		} = cors.options ?? {};
+
+		const entries: Array<[string, HeadersInitValue]> = [];
+
+		if (isSomeArray(allowedMethods)) {
+			entries.push([HeaderKey.AccessControlAllowMethods, allowedMethods.join(", ")]);
+		}
+
+		if (isSomeArray(allowedHeaders)) {
+			entries.push([HeaderKey.AccessControlAllowHeaders, allowedHeaders.join(", ")]);
+		}
+
+		if (isSomeArray(exposedHeaders)) {
+			entries.push([HeaderKey.AccessControlExposeHeaders, exposedHeaders.join(", ")]);
+		}
+
+		if (includeMaxAge) {
+			entries.push([HeaderKey.AccessControlMaxAge, maxAge]);
+		}
+
+		// Sending this as "false" is noise since it does nothing.
+		if (credentials) {
+			entries.push([HeaderKey.AccessControlAllowCredentials, true]);
+		}
+
+		return entries;
+	},
+);
+
+/**
  * Default {@link CorsInterface} implementation.
  *
  * Both entry points share {@link Cors.applyHeaders}, so a preflight and a real
@@ -109,10 +168,10 @@ class Cors implements CorsInterface {
 	/**
 	 * Creates a policy and attaches it to the nearest {@link App}.
 	 *
-	 * @param opts - The {@link CorsOptions} to enforce. Omitting them yields a
+	 * @param options - The {@link CorsOptions} to enforce. Omitting them yields a
 	 * permissive wildcard origin with no method, header or exposure restrictions.
 	 */
-	constructor(public opts?: CorsOptions) {
+	constructor(readonly options?: CorsOptions) {
 		this.register();
 	}
 
@@ -167,6 +226,9 @@ class Cors implements CorsInterface {
 	 * cache that did not key on it could hand one origin's response to another.
 	 * An existing `Vary` that already lists `Origin` is left alone.
 	 *
+	 * Everything else comes from {@link getStaticHeaders} and goes out in one
+	 * `setMany`, so the per-request work here is the origin alone.
+	 *
 	 * @param headers - The response headers to write into.
 	 * @param reqOrigin - The request's `Origin` header, or an empty string when it
 	 * sent none.
@@ -175,18 +237,9 @@ class Cors implements CorsInterface {
 	 * how long the browser caches the result. Defaults to `false`.
 	 */
 	protected applyHeaders(headers: Headers, reqOrigin: string, includeMaxAge = false): void {
-		const {
-			allowedOrigins,
-			allowedMethods,
-			allowedHeaders,
-			exposedHeaders,
-			credentials,
-			maxAge = 86400,
-		} = this.opts ?? {};
+		const allowedOrigins = this.options?.allowedOrigins;
 
-		const isWildcard = isWildcardPolicy(allowedOrigins);
-
-		if (isWildcard) {
+		if (isWildcardPolicy(allowedOrigins)) {
 			headers.set(HeaderKey.AccessControlAllowOrigin, "*");
 		} else {
 			if (allowedOrigins?.includes(reqOrigin)) {
@@ -195,26 +248,7 @@ class Cors implements CorsInterface {
 			if (!isOriginInVaryHeader(headers)) headers.append(HeaderKey.Vary, "Origin");
 		}
 
-		if (isSomeArray(allowedMethods)) {
-			headers.set(HeaderKey.AccessControlAllowMethods, allowedMethods.join(", "));
-		}
-
-		if (isSomeArray(allowedHeaders)) {
-			headers.set(HeaderKey.AccessControlAllowHeaders, allowedHeaders.join(", "));
-		}
-
-		if (isSomeArray(exposedHeaders)) {
-			headers.set(HeaderKey.AccessControlExposeHeaders, exposedHeaders.join(", "));
-		}
-
-		if (includeMaxAge) {
-			headers.set(HeaderKey.AccessControlMaxAge, maxAge);
-		}
-
-		// Sending this as "false" is noise since it does nothing.
-		if (credentials) {
-			headers.set(HeaderKey.AccessControlAllowCredentials, true);
-		}
+		headers.setMany(getStaticHeaders(this, includeMaxAge));
 	}
 }
 

@@ -461,4 +461,5 @@ export {
 	HeaderKey,
 	type ContentDispositionDefinition,
 	type CacheControlDefinition,
+	type HeadersInitValue,
 };

@@ -29,12 +29,12 @@ describe("Cors", () => {
 		it("stores the provided opts", () => {
 			const opts = { allowedOrigins: ["https://example.com"] };
 			const cors = new Cors(opts);
-			expect(cors.opts).toBe(opts);
+			expect(cors.options).toBe(opts);
 		});
 
 		it("leaves opts undefined when not provided", () => {
 			const cors = new Cors();
-			expect(cors.opts).toBeUndefined();
+			expect(cors.options).toBeUndefined();
 		});
 
 		it("registers itself onto the nearest App's cors field", () => {
