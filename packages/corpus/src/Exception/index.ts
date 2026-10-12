@@ -50,11 +50,11 @@ class Exception extends Error {
 	 */
 	constructor(message: string, status: Status, data?: unknown);
 	constructor(message?: string, status?: Status, data?: unknown) {
-		super(message);
+		super();
+		this.name = new.target.name;
 		if (new.target !== Exception) return;
-		const msg = "Exception must be constructed with (message, status, data?) or extended.";
-		assert.present(message, msg);
-		assert.present(status, msg);
+		assert.present(message, "message is required when Exception is constructed directly.");
+		assert.present(status, "status is required when Exception is constructed directly.");
 		this.message = message;
 		this.status = status;
 		this.data = data;
