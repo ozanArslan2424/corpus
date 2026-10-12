@@ -106,16 +106,26 @@ class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	 * was dispatched without one, which is why {@link Context.server} is optional
 	 * at every use site — including the WebSocket upgrade.
 	 */
-	constructor(req: Request, server: Maybe<Server>) {
-		this.req = req;
-		this.server = server;
-		this._res = lazy.mut(() => new Res<R>());
-		this._url = lazy(() => new URL(this.req.url));
-		this.body = createSafeObject<B>();
-		this.params = createSafeObject<P>();
-		this.search = createSafeObject<S>();
-		this.data = createSafeObject<ContextDataInterface>();
-	}
+	constructor(
+		/**
+		 * The untouched incoming request. Read it for headers and for the raw body;
+		 * the parsed views live on {@link Context.body} and its siblings.
+		 */
+		readonly req: Request,
+		/**
+		 * The {@link Server} that accepted the request. Needed to upgrade a connection
+		 * to a {@link WebSocketRoute}; absent when the request was dispatched without
+		 * a server.
+		 */
+		readonly server: Maybe<Server>,
+	) {}
+
+	private _body: LazyMut<B> = lazy.mut(() => createSafeObject());
+	private _params: LazyMut<P> = lazy.mut(() => createSafeObject());
+	private _search: LazyMut<S> = lazy.mut(() => createSafeObject());
+	private _data: LazyMut<ContextDataInterface> = lazy.mut(() => createSafeObject());
+	private _res: LazyMut<Res<R>> = lazy.mut(() => new Res<R>());
+	private _url: Lazy<URL> = lazy(() => new URL(this.req.url));
 
 	/**
 	 * The parsed request body, decoded by {@link BodyParser} and validated against
@@ -124,21 +134,36 @@ class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	 * Empty for {@link Method.GET} and {@link Method.HEAD} requests, and for any
 	 * route whose handlers never read it.
 	 */
-	body: B;
+	get body(): B {
+		return this._body();
+	}
+	set body(value: B) {
+		this._body.set(value);
+	}
 
 	/**
 	 * The path parameters matched by the route, parsed by
 	 * {@link ParsersRegistry.urlParamsParser} and validated against the route's
 	 * params schema. A wildcard segment is available under the `*` key.
 	 */
-	params: P;
+	get params(): P {
+		return this._params();
+	}
+	set params(value: P) {
+		this._params.set(value);
+	}
 
 	/**
 	 * The query string, parsed by {@link ParsersRegistry.searchParamsParser} and
 	 * validated against the route's search schema. Empty when the request carried
 	 * no query string.
 	 */
-	search: S;
+	get search(): S {
+		return this._search();
+	}
+	set search(value: S) {
+		this._search.set(value);
+	}
 
 	/**
 	 * Free-form request-scoped state, shared across the whole
@@ -146,23 +171,12 @@ class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	 * hands something — an authenticated user, a request id — to what runs after
 	 * it. Type it by augmenting {@link ContextDataInterface}.
 	 */
-	data: ContextDataInterface;
-
-	/**
-	 * The {@link Server} that accepted the request. Needed to upgrade a connection
-	 * to a {@link WebSocketRoute}; absent when the request was dispatched without
-	 * a server.
-	 */
-	readonly server: Maybe<Server>;
-
-	/**
-	 * The untouched incoming request. Read it for headers and for the raw body;
-	 * the parsed views live on {@link Context.body} and its siblings.
-	 */
-	readonly req: Request;
-
-	/** Backing store for {@link Context.res}, constructed on first access. */
-	private _res: LazyMut<Res<R>>;
+	get data(): ContextDataInterface {
+		return this._data();
+	}
+	set data(value: ContextDataInterface) {
+		this._data.set(value);
+	}
 
 	/**
 	 * The response under construction. Mutate it to set status, headers or body
@@ -176,13 +190,9 @@ class Context<B = unknown, S = unknown, P = unknown, R = unknown> {
 	get res(): Res<R> {
 		return this._res();
 	}
-
 	set res(value: Res<R>) {
 		this._res.set(value);
 	}
-
-	/** Backing store for {@link Context.url}, parsed on first access. */
-	private _url: Lazy<URL>;
 
 	/**
 	 * The request URL, parsed once and reused.

@@ -31,7 +31,6 @@ import { RouteVariant, type RouteBase } from "@/RouteBase";
 import type { WebSocketRoute } from "@/RouteBase/WebSocketRoute";
 import type { Server, ServerHandler, ServerRouteMap } from "@/Server";
 import {
-	isEmpty,
 	isAbsent,
 	isPresent,
 	type MaybePromise,
@@ -479,9 +478,10 @@ class App implements AppInterface {
 			const isMethodWithoutBody = isOneOf(route.method, [Method.GET, Method.HEAD]);
 			const maxRequestBodySize = route.config?.maxRequestBodySize;
 
-			const handlers = [...this.findMiddlewares(route.id).map((m) => m.handler), route.handler];
+			const middlewares = this.findMiddlewares(route.id).map((m) => m.handler);
+			const handlers = [...middlewares, route.handler];
 			const access = getContextAccess(handlers, route.config);
-			const handle = composeHandlerChain(...handlers);
+			const handle: MiddlewareHandler = composeHandlerChain(...handlers);
 
 			routes[endpoint] ??= {};
 			routes[endpoint]![route.method] = this.finalize(async (c) => {
@@ -493,7 +493,8 @@ class App implements AppInterface {
 					if (wildcardValue) c.req.params["*"] = decodeURIComponent(wildcardValue);
 				}
 
-				if (access.params && !isEmpty(c.req.params)) {
+				const hasParams = access.params ? Object.keys(c.req.params).length > 0 : false;
+				if (hasParams) {
 					c.params = parsers.urlParamsParser.parse(c.req.params);
 					c.params = await parsers.schemaParser.parse("params", c.params, route.config?.params);
 				}

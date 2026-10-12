@@ -38,7 +38,7 @@ import {
 	isAbsent,
 	isPrimitive,
 } from "@/utils/is";
-import { lazy, type Lazy, type LazyMut } from "@/utils/lazy";
+import { lazy, type LazyMut } from "@/utils/lazy";
 import type { ValueOf } from "@/utils/object";
 import { type Tuple, tuple } from "@/utils/tuple";
 import { XFile } from "@/XFile";
@@ -316,50 +316,6 @@ function resolveFile(fileOrPath: XFile | string): XFile {
 	return file;
 }
 
-/**
- * Wraps a response's headers so that writing `Set-Cookie` also updates the
- * cookie map.
- *
- * {@link Res} exposes cookies two ways — as headers and as a {@link Cookies} map
- * — and they must not disagree. The map wins at serialization time, so a
- * `Set-Cookie` written directly as a header would be dropped unless it is
- * mirrored into the map, which is what this does. An array append is mirrored
- * item by item, since each is its own cookie.
- *
- * @param headers - The headers to wrap. Mutated in place.
- * @param getCookies - Resolves the cookie map lazily, so wrapping does not force
- * it into existence.
- * @returns The same headers object.
- */
-function resHeadersWrapper(headers: Headers, getCookies: () => Cookies): Headers {
-	const set = headers.set.bind(headers);
-	const append = headers.append.bind(headers);
-
-	function sync(cookieString: string) {
-		getCookies().set(Bun.Cookie.parse(cookieString));
-	}
-
-	headers.set = ((...args: Parameters<Headers["set"]>) => {
-		set(...args);
-		if (args[0].toLowerCase() === HeaderKey.SetCookie.toLowerCase()) {
-			sync(String(args[1]));
-		}
-	}) as Headers["set"];
-
-	headers.append = ((...args: Parameters<Headers["append"]>) => {
-		append(...args);
-		if (args[0].toLowerCase() === HeaderKey.SetCookie.toLowerCase()) {
-			if (Array.isArray(args[1])) {
-				for (const cs of args[1]) sync(String(cs));
-			} else {
-				sync(String(args[1]));
-			}
-		}
-	}) as Headers["append"];
-
-	return headers;
-}
-
 /** A `ResponseInit` that can also carry cookies. */
 interface ResInit extends ResponseInit {
 	/** Cookies to seed {@link Res.cookies} with. */
@@ -397,31 +353,17 @@ class Res<R = unknown> {
 
 		this.statusText = init?.statusText ?? "";
 
-		this._cookies = lazy(() => init?.cookies ?? new Cookies());
+		this._headers = lazy.mut(() =>
+			init?.headers instanceof Headers ? init.headers : new Headers(init?.headers),
+		);
 
-		this._headers = lazy.synced({
-			init: () =>
-				resHeadersWrapper(
-					init?.headers instanceof Headers ? init.headers : new Headers(init?.headers),
-					() => this._cookies(),
-				),
-			onGet: (value) => {
-				const cookies = this._cookies();
-				// Cookie values are percent-encoded on serialize - that is what keeps
-				// a CRLF in a value from splitting the response. The encoding must
-				// happen exactly once: see the double-encoding tests in Res.
-				// Use the prototype methods, not the patched ones: writing the
-				// map into the header must not feed the header back into the
-				// map. Bun.Cookie.parse does not decode what serialize encoded,
-				// so each round-trip re-encodes ("%3A" -> "%253A").
-				Headers.prototype.delete.call(value, HeaderKey.SetCookie);
-				for (const header of cookies.toSetCookieHeaders()) {
-					Headers.prototype.append.call(value, HeaderKey.SetCookie, header);
-				}
-				return value;
-			},
-		});
+		this._cookies = lazy.mut(() => new Cookies());
+		// if init.cookies argument is used, it stops being lazy
+		if (isPresent(init?.cookies)) this._cookies.set(init.cookies);
 	}
+
+	private _cookies: LazyMut<Cookies>;
+	private _headers: LazyMut<Headers>;
 
 	/**
 	 * The body to send. Assign any value — objects become JSON, typed arrays stay
@@ -436,9 +378,6 @@ class Res<R = unknown> {
 	/** The status text. Empty by default, which lets the runtime supply the standard phrase. */
 	statusText: string;
 
-	/** Backing store for {@link Res.headers}, created on first access. */
-	private _headers: LazyMut<Headers>;
-
 	/**
 	 * The response headers.
 	 *
@@ -452,9 +391,9 @@ class Res<R = unknown> {
 	get headers(): Headers {
 		return this._headers();
 	}
-
-	/** Backing store for {@link Res.cookies}, created on first access. */
-	private _cookies: Lazy<Cookies>;
+	set headers(value: Headers) {
+		this._headers.set(value);
+	}
 
 	/**
 	 * The cookies to send, as a mutable map.
@@ -468,6 +407,9 @@ class Res<R = unknown> {
 	 */
 	get cookies(): Cookies {
 		return this._cookies();
+	}
+	set cookies(value: Cookies) {
+		this._cookies.set(value);
 	}
 
 	/**
@@ -483,20 +425,40 @@ class Res<R = unknown> {
 	 * {@link App.respond}.
 	 */
 	toNativeResponse(): Response {
-		const data = this.body;
 		const headers = this.headers;
 		const status = this.status;
 		const statusText = this.statusText;
-		const [body, contentType] = resolveResBody(data);
+
+		const [body, contentType] = resolveResBody(this.body);
 		if (isPresent(contentType) && !headers.has(HeaderKey.ContentType)) {
 			headers.set(HeaderKey.ContentType, contentType);
 		}
+
 		// Browsers will otherwise MIME-sniff a text/plain body that looks like
 		// markup and render it as HTML, turning any reflected value into XSS.
 		// Set unconditionally: there is no case where sniffing is wanted.
 		if (!headers.has(HeaderKey.XContentTypeOptions)) {
 			headers.set(HeaderKey.XContentTypeOptions, "nosniff");
 		}
+
+		// The jar owns every name it holds: existing Set-Cookie headers for those
+		// names are replaced rather than appended to, which is what keeps a second
+		// serialization from duplicating the first one's output.
+		const cookies = this._cookies.initialized ? this.cookies.toSetCookieHeaders() : [];
+
+		if (cookies.length) {
+			const cookieName = (setCookieHeader: string): string => {
+				const eq = setCookieHeader.indexOf("=");
+				return eq === -1 ? setCookieHeader.trim() : setCookieHeader.slice(0, eq).trim();
+			};
+
+			const names = new Set(cookies.map(cookieName));
+			const kept = headers.getSetCookie().filter((line) => !names.has(cookieName(line)));
+			headers.delete(HeaderKey.SetCookie);
+			for (const line of kept) headers.append(HeaderKey.SetCookie, line);
+			for (const line of cookies) headers.append(HeaderKey.SetCookie, line);
+		}
+
 		return new Response(body, { headers, status, statusText });
 	}
 

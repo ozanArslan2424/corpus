@@ -1,5 +1,18 @@
 # @ozanarslan/corpus
 
+## 1.1.0
+
+### Minor Changes
+
+- **`Res` no longer mirrors cookies into headers before serialization.** The patched `Headers` wrapper (`resHeadersWrapper`) is gone, along with the `lazy.synced` `onGet` that rewrote `Set-Cookie` on every header read. The jar and the headers now stay independent until `toNativeResponse`, which replaces any `Set-Cookie` line whose name the jar owns and appends the rest. Repeated serialization no longer duplicates entries or re-encodes a value (`%3A` → `%253A`). Behavior change: reading `res.headers.get("Set-Cookie")` before serialization no longer reflects jar cookies, and a `Set-Cookie` written directly as a header is no longer parsed back into `res.cookies`. The serialized response is unchanged.
+
+  - `Res`: `headers` and `cookies` gain setters; both are backed by `lazy.mut`. The jar is only materialized when touched, so `toNativeResponse` skips cookie merging entirely when it was never used.
+  - `Context`: `req` and `server` move to constructor parameter properties; `body`, `params`, `search` and `data` become getter/setter pairs over `lazy.mut` cells, so a route that never reads them never allocates them.
+  - `lazy`: all three forms share a `LazyCell` and expose a readonly `initialized` flag; reading it does not trigger `init`.
+  - `App.composeRoutes`: check params emptiness with `Object.keys(...).length` instead of `isEmpty`.
+  - `RateLimiter`: use `isAbsent`/`isPresent` in place of `isEmpty`.
+  - `utils/is`: remove `isEmpty` — its coercion of `0` and `""` to empty made it wrong at every call site it had.
+
 ## 1.0.0
 
 ### Major Changes

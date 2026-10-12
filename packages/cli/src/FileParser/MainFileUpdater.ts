@@ -6,7 +6,7 @@ import { getConfig } from "@/Config/getConfig";
 import { LISTEN_PATTERN, PATTERNS } from "@/constants";
 import { FileParser } from "@/FileParser";
 import type { StringReader } from "@/internal/StringReader";
-import { isAbsent, isEmpty, isPresent, isSomeArray } from "@/utils/is";
+import { isAbsent, isPresent, isSomeArray } from "@/utils/is";
 import { logger } from "@/utils/logger";
 
 type ChunkKind = "import" | "route" | "middleware" | "controller" | "service";
@@ -59,7 +59,7 @@ export class MainFileUpdater {
 
 		lines = lines.filter((line) => {
 			const match = this.reader.getLine(line.trim());
-			const pass = isEmpty(match);
+			const pass = match.length > 0;
 			if (!pass) logger.warn(`Skipping existing line: ${line}`);
 			return pass;
 		});

@@ -8,6 +8,8 @@ interface LazyFn {
 
 interface Lazy<T> {
 	(): T;
+	/** Whether the value has been created yet. Reading it does not create one. */
+	readonly initialized: boolean;
 }
 
 interface LazyMut<T> extends Lazy<T> {
@@ -28,17 +30,57 @@ interface LazySyncedInit<T> extends SyncCallbacks<T> {
 	init(): T;
 }
 
+/** The deferred value itself, shared by all three forms. */
+interface LazyCell<T> {
+	/** Reads the value, running `init` on first access. */
+	get(): T;
+	/** Overwrites the value without running `init`. */
+	put(value: T): void;
+	/** Whether `init` has run or a value has been put. */
+	readonly initialized: boolean;
+}
+
+/**
+ * Holds the deferred value. `EMPTY` marks the uninitialized state so that a
+ * legitimately `undefined` value still counts as initialized.
+ *
+ * @param init - Builds the value on first read.
+ * @returns The cell.
+ */
+function createCell<T>(init: () => T): LazyCell<T> {
+	let _state: T | EMPTY = EMPTY;
+	return {
+		get: () => (_state === EMPTY ? (_state = init()) : _state),
+		put: (value: T) => {
+			_state = value;
+		},
+		get initialized() {
+			return _state !== EMPTY;
+		},
+	};
+}
+
+/**
+ * Attaches the `initialized` flag to a lazy function.
+ *
+ * A getter rather than a plain property, since the cell's state changes after
+ * the function is built.
+ *
+ * @param fn - The lazy function to augment. Mutated in place.
+ * @param cell - The {@link LazyCell} it reads from.
+ * @returns The same function.
+ */
+function withInitialized<T, L extends Lazy<T>>(fn: L, cell: LazyCell<T>): L {
+	Object.defineProperty(fn, "initialized", { get: () => cell.initialized });
+	return fn;
+}
+
 /**
  * Defers `init` until the first call, then caches it forever.
- * `EMPTY` marks the uninitialized state so that a legitimately
- * `undefined` value still counts as initialized.
  */
 function lazyBase<T>(init: () => T): Lazy<T> {
-	let _state: T | EMPTY = EMPTY;
-	return () => {
-		if (_state === EMPTY) _state = init();
-		return _state;
-	};
+	const cell = createCell(init);
+	return withInitialized((() => cell.get()) as Lazy<T>, cell);
 }
 
 /**
@@ -46,14 +88,9 @@ function lazyBase<T>(init: () => T): Lazy<T> {
  * first read skips `init` entirely - it will never run.
  */
 function lazyMut<T>(init: () => T): LazyMut<T> {
-	let _state: T | EMPTY = EMPTY;
-	const fn = (() => {
-		if (_state === EMPTY) _state = init();
-		return _state;
-	}) as LazyMut<T>;
-	fn.set = (value: T) => {
-		_state = value;
-	};
+	const cell = createCell(init);
+	const fn = withInitialized((() => cell.get()) as LazyMut<T>, cell);
+	fn.set = cell.put;
 	return fn;
 }
 
@@ -63,16 +100,20 @@ function lazyMut<T>(init: () => T): LazyMut<T> {
  * `onGet` runs on every read, including the one that triggers `init`.
  */
 function lazySynced<T>({ init, onGet, onSet }: LazySyncedInit<T>): LazyMut<T> {
-	let _state: T | EMPTY = EMPTY;
-	const fn = (() => {
-		if (_state === EMPTY) _state = init();
-		if (onGet) _state = onGet(_state);
-		return _state;
-	}) as LazyMut<T>;
+	const cell = createCell(init);
+	const fn = withInitialized(
+		(() => {
+			const value = cell.get();
+			if (!onGet) return value;
+			const next = onGet(value);
+			cell.put(next);
+			return next;
+		}) as LazyMut<T>,
+		cell,
+	);
 	fn.set = (value: T) => {
-		if (_state === EMPTY) _state = init();
-		const prev = _state;
-		_state = onSet ? onSet(value, prev) : value;
+		const prev = cell.get();
+		cell.put(onSet ? onSet(value, prev) : value);
 	};
 	return fn;
 }

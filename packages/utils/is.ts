@@ -26,15 +26,6 @@ export function isObject(input: unknown): input is Record<string, unknown> {
 	return Object.getPrototypeOf(input) === Object.prototype;
 }
 
-export function isEmpty<T>(input: T): input is Extract<T, EMPTY | null | undefined | "" | 0> {
-	if (isAbsent(input)) return true;
-	if (typeof input === "string") return input.trim() === "";
-	if (typeof input === "number") return input === 0;
-	if (isObject(input)) return Object.keys(input).length === 0;
-	if (Array.isArray(input)) return input.length === 0;
-	return false;
-}
-
 export function isOneOf<const T extends readonly unknown[]>(
 	input: unknown,
 	array: T,

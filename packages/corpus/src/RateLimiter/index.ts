@@ -33,7 +33,7 @@ import { HeaderKey } from "@/Headers";
 import { Middleware, type MiddlewareHandler } from "@/Middleware";
 import { Status } from "@/Res";
 import { RouteVariant } from "@/RouteBase";
-import { isEmpty, type Maybe, type MaybePromise, type OrString } from "@/utils/is";
+import { isAbsent, isPresent, type Maybe, type MaybePromise, type OrString } from "@/utils/is";
 import { tuple, type Tuple } from "@/utils/tuple";
 
 /** One caller's counter for the current window. */
@@ -275,7 +275,7 @@ type RateLimiterConfig = {
  * @returns `true` when the value is a well-formed IPv4 or IPv6 address.
  */
 function isValidIp(ip: Maybe<string>): ip is string {
-	if (isEmpty(ip) || ip.length === 0) return false;
+	if (isAbsent(ip) || ip.length === 0) return false;
 
 	// IPv4
 	if (ip.includes(".")) {
@@ -482,7 +482,7 @@ class RateLimiter extends Middleware {
 		// --- Authenticated: hash the JWT token ---
 		const authHeader = headers.get(this.config.authHeader ?? HeaderKey.Authorization);
 		const token = authHeader?.includes("earer ") ? authHeader.slice(7) : authHeader;
-		if (!isEmpty(token) && token.length >= 20 && token.length <= 2048) {
+		if (isPresent(token) && token.length >= 20 && token.length <= 2048) {
 			return tuple(`u:${hashData(token, 16)}`, this.config.limits.authenticated);
 		}
 

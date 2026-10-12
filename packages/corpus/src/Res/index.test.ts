@@ -122,11 +122,11 @@ describe("Res", () => {
 			expect(res.cookies.get("preset")).toBe("yes");
 		});
 
-		it("immediately reflects cookies provided via init.cookies as Set-Cookie headers, with no further mutation required", () => {
+		it("reflects cookies provided via init.cookies as Set-Cookie headers on serialization", () => {
 			const provided = new Cookies();
 			provided.set("preset", "yes");
 			const res = new Res(undefined, { cookies: provided });
-			expect(res.headers.get(HeaderKey.SetCookie)).toContain("preset=yes");
+			expect(res.toNativeResponse().headers.get(HeaderKey.SetCookie)).toContain("preset=yes");
 		});
 
 		it("is independent per instance - two Res built with no init don't share state", () => {
@@ -157,18 +157,24 @@ describe("Res", () => {
 			expect(res.cookies).toBe(res.cookies);
 		});
 
-		it("adding a cookie is reflected on both the map and the Set-Cookie header", () => {
+		it("does not touch headers when a cookie is set", () => {
 			const res = new Res();
 			res.cookies.set("name", "Ozan");
 			expect(res.cookies.get("name")).toBe("Ozan");
-			expect(res.headers.get(HeaderKey.SetCookie)).toContain("name=Ozan");
+			expect(res.headers.get(HeaderKey.SetCookie)).toBeNull();
+		});
+
+		it("adding a cookie is reflected as a Set-Cookie header on serialization", () => {
+			const res = new Res();
+			res.cookies.set("name", "Ozan");
+			expect(res.toNativeResponse().headers.get(HeaderKey.SetCookie)).toContain("name=Ozan");
 		});
 
 		it("adding multiple cookies produces a Set-Cookie entry for each", () => {
 			const res = new Res();
 			res.cookies.set("a", "1");
 			res.cookies.set("b", "2");
-			const header = res.headers.get(HeaderKey.SetCookie) ?? "";
+			const header = res.toNativeResponse().headers.get(HeaderKey.SetCookie) ?? "";
 			expect(header).toContain("a=1");
 			expect(header).toContain("b=2");
 		});
@@ -177,36 +183,35 @@ describe("Res", () => {
 			const res = new Res();
 			res.cookies.set("name", "Ozan");
 			res.cookies.delete("name");
-			const header = res.headers.get(HeaderKey.SetCookie) ?? "";
+			const header = res.toNativeResponse().headers.get(HeaderKey.SetCookie) ?? "";
 			expect(header).toContain("name=;");
 			expect(header.toLowerCase()).toContain("expires=");
 		});
 	});
 
 	describe("cookie encoding", () => {
-		it("should not re-encode a cookie value on repeated header access", () => {
+		it("encodes a cookie value exactly once", () => {
 			const res = new Res("ok");
 			res.cookies.set("reflected", "a:b", { path: "/" });
 
-			// the bug needs two reads: onGet writes the map into the header, the
-			// patched append parses it back in without decoding, and the next
-			// read serializes the already-encoded value again ("%3A" -> "%253A").
-			// Cors + toNativeResponse touch headers twice on a real request.
-			void res.headers;
-			const header = res.headers.get(HeaderKey.SetCookie) ?? "";
+			const header = res.toNativeResponse().headers.get(HeaderKey.SetCookie) ?? "";
 
 			expect(header).toContain("reflected=a%3Ab");
 			expect(header).not.toContain("%253A");
 		});
 
-		it("should keep a cookie value stable across many header accesses", () => {
+		it("should keep a cookie value stable across repeated serialization", () => {
+			// Serializing twice is normal: BodyParser.parse(Res) builds a response
+			// and App.respond builds another. The jar absorbs header-written
+			// cookies without decoding them, so a merge that wrote back into
+			// res.headers would re-encode its own output on the second pass.
 			const res = new Res("ok");
 			res.cookies.set("session", "a:b c/d", { path: "/" });
 
-			const first = res.headers.get(HeaderKey.SetCookie);
-			for (let i = 0; i < 5; i++) void res.headers;
+			const first = res.toNativeResponse().headers.get(HeaderKey.SetCookie);
+			for (let i = 0; i < 5; i++) void res.toNativeResponse();
 
-			expect(res.headers.get(HeaderKey.SetCookie)).toBe(first);
+			expect(res.toNativeResponse().headers.get(HeaderKey.SetCookie)).toBe(first);
 		});
 
 		it("should round-trip a cookie value through serialization", () => {
@@ -214,8 +219,7 @@ describe("Res", () => {
 			const res = new Res("ok");
 			res.cookies.set("session", value, { path: "/" });
 
-			void res.headers;
-			const header = res.headers.get(HeaderKey.SetCookie) ?? "";
+			const header = res.toNativeResponse().headers.get(HeaderKey.SetCookie) ?? "";
 			const parsed = Bun.Cookie.parse(header);
 
 			expect(decodeURIComponent(parsed.value)).toBe(value);
@@ -227,26 +231,30 @@ describe("Res", () => {
 			const res = new Res();
 			res.headers.set("X-Custom", "value");
 			res.cookies.set("name", "Ozan");
-			expect(res.headers.get("X-Custom")).toBe("value");
-			expect(res.headers.get(HeaderKey.SetCookie)).toContain("name=Ozan");
+			const headers = res.toNativeResponse().headers;
+			expect(headers.get("X-Custom")).toBe("value");
+			expect(headers.get(HeaderKey.SetCookie)).toContain("name=Ozan");
 		});
 
 		it("preserves a manually-set Set-Cookie header alongside cookies set via the jar", () => {
 			const res = new Res();
 			res.headers.append(HeaderKey.SetCookie, "manual=value");
 			res.cookies.set("fromJar", "1");
-			const header = res.headers.get(HeaderKey.SetCookie) ?? "";
+			const header = res.toNativeResponse().headers.get(HeaderKey.SetCookie) ?? "";
 			expect(header).toContain("manual=value");
 			expect(header).toContain("fromJar=1");
 		});
 
-		it("does not duplicate a cookie's Set-Cookie entry across repeated reads of headers", () => {
+		it("emits one entry per cookie name when a header and the jar hold the same name", () => {
 			const res = new Res();
-			res.cookies.set("name", "Ozan");
-			const first = res.headers.get(HeaderKey.SetCookie);
-			const second = res.headers.get(HeaderKey.SetCookie);
-			expect(first).toBe(second);
-			expect(res.headers.getSetCookie().filter((h) => h.startsWith("name=")).length).toBe(1);
+			res.headers.append(HeaderKey.SetCookie, "name=header");
+			res.cookies.set("name", "jar");
+			const matches = res
+				.toNativeResponse()
+				.headers.getSetCookie()
+				.filter((h) => h.startsWith("name="));
+			expect(matches.length).toBe(1);
+			expect(matches[0]).toContain("name=jar");
 		});
 
 		it("updates only the affected cookie's Set-Cookie entry when one of several cookies changes", () => {
@@ -254,24 +262,19 @@ describe("Res", () => {
 			res.cookies.set("a", "1");
 			res.cookies.set("b", "2");
 			res.cookies.set("a", "updated");
-			const header = res.headers.get(HeaderKey.SetCookie) ?? "";
+			const header = res.toNativeResponse().headers.get(HeaderKey.SetCookie) ?? "";
 			expect(header).toContain("a=updated");
 			expect(header).toContain("b=2");
 			expect(header).not.toContain("a=1;");
 		});
 
-		it("reading cookies via the jar reflects a cookie set directly on headers via fromSetCookieHeaders", () => {
-			const res = new Res();
-			res.headers.append(HeaderKey.SetCookie, "external=1");
-			const parsed = Cookies.fromSetCookieHeaders(res.headers.getSetCookie());
-			expect(parsed.get("external")).toBe("1");
-		});
-
-		it("constructing with pre-populated init.cookies immediately reflects them in headers", () => {
+		it("constructing with pre-populated init.cookies reflects them on serialization", () => {
 			const preset = new Cookies();
 			preset.set("preexisting", "value");
 			const res = new Res(undefined, { cookies: preset });
-			expect(res.headers.get(HeaderKey.SetCookie)).toContain("preexisting=value");
+			expect(res.toNativeResponse().headers.get(HeaderKey.SetCookie)).toContain(
+				"preexisting=value",
+			);
 			expect(res.cookies.get("preexisting")).toBe("value");
 		});
 
@@ -280,7 +283,7 @@ describe("Res", () => {
 			preset.set("preexisting", "value");
 			const res = new Res(undefined, { cookies: preset });
 			res.cookies.set("new", "one");
-			const header = res.headers.get(HeaderKey.SetCookie) ?? "";
+			const header = res.toNativeResponse().headers.get(HeaderKey.SetCookie) ?? "";
 			expect(header).toContain("preexisting=value");
 			expect(header).toContain("new=one");
 		});
@@ -289,7 +292,10 @@ describe("Res", () => {
 			const res = new Res();
 			res.cookies.set("name", "Ozan");
 			res.cookies.set("name", "Ozan");
-			const matches = res.headers.getSetCookie().filter((h) => h.startsWith("name="));
+			const matches = res
+				.toNativeResponse()
+				.headers.getSetCookie()
+				.filter((h) => h.startsWith("name="));
 			expect(matches.length).toBe(1);
 		});
 
@@ -302,7 +308,6 @@ describe("Res", () => {
 			expect(response.headers.get(HeaderKey.SetCookie)).toContain("name=Ozan");
 		});
 	});
-
 	describe("toNativeResponse", () => {
 		it("produces a null body and no content-type for a nil body", () => {
 			const response = new Res(null).toNativeResponse();
