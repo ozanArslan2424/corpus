@@ -96,6 +96,18 @@ importers:
         specifier: ^0.28.2
         version: 0.28.2
 
+  packages/plugin-pages:
+    devDependencies:
+      '@ozanarslan/corpus':
+        specifier: workspace:*
+        version: link:../corpus
+      '@types/bun':
+        specifier: ^1.4.0
+        version: 1.4.1
+      tsdown:
+        specifier: ^0.22.14
+        version: 0.22.14(oxc-resolver@11.24.2)(typescript@6.0.3)
+
 packages:
 
   '@ark/schema@0.56.2':
