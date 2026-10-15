@@ -710,6 +710,7 @@ class App implements AppInterface {
 	 * @param route - The {@link RouteBase} to register.
 	 */
 	addRoute(route: RouteBase): void {
+		// TODO: BundleRoute's aren't supposed to be prefixed
 		// endpoint is readonly to consumers, but the app owns prefixing, so it
 		// writes through a narrow mutable view rather than exposing a setter.
 		(route as { endpoint: RouteBase["endpoint"] }).endpoint = joinPathSegments(
