@@ -1,3 +1,5 @@
+export const ASSETS_SERVE_PATH = "/assets/*";
+
 /** Separates the loading markup from the real content in a streamed partial. */
 export const LOADING_MARKER = "<!--%%loaded%%-->";
 

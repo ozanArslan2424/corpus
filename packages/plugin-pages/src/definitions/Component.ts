@@ -1,37 +1,41 @@
-import { defineRenderable, type ClientScript, type Renderable } from "@/definitions/Renderable";
-import { useAssets } from "@/runtime/collect";
-import { renderContext, settleLoader, type AnyContext, type SettledState } from "@/runtime/loaders";
-import type { Css } from "@/shared/css";
+import {
+	defineRenderable,
+	type Renderable,
+	type RenderableDefinition,
+} from "@/definitions/Renderable";
+import { useAssets } from "@/runtime/assets";
+import {
+	renderContext,
+	settleLoader,
+	type AnyLoader,
+	type LoaderData,
+	type SettledState,
+} from "@/runtime/loaders";
 import type { Html } from "@/shared/html";
 
-export type ComponentLoader<Props extends object = {}, Data = undefined> = (
-	props: Props,
-) => Bun.MaybePromise<Data>;
-
-export type ComponentRender<Props extends object = {}, Data = undefined> = (
-	props: Props,
-	state: SettledState<Data>,
-) => Html;
-
-export interface ComponentDefinition<Props extends object = {}, Data = undefined> {
-	loader?: ComponentLoader<Props, Data>;
-	render: ComponentRender<Props, Data>;
-	style?: Css;
-	script?: ClientScript;
+export interface ComponentDefinition<
+	Props extends object = {},
+	L extends AnyLoader | undefined = undefined,
+> extends RenderableDefinition {
+	loader?: L;
+	render: (props: Props & { state: SettledState<LoaderData<L>> }) => Bun.MaybePromise<Html>;
 }
 
-export type ComponentResult<Data> = [Data] extends [undefined] ? Html : Promise<Html>;
-
-export type Component<Props extends object = {}, Data = undefined> = Renderable & {
+export type Component<
+	Props extends object = {},
+	L extends AnyLoader | undefined = undefined,
+> = Renderable & {
 	readonly kind: "component";
-	(...args: {} extends Props ? [props?: Props] : [props: Props]): ComponentResult<Data>;
+	(
+		...args: {} extends Props ? [props?: Props] : [props: Props]
+	): [LoaderData<L>] extends [undefined] ? Html : Promise<Html>;
 };
 
-export function component<Props extends object = {}, Data = undefined>(
+export function component<Props extends object = {}, L extends AnyLoader | undefined = undefined>(
 	id: string,
-	definition: ComponentDefinition<Props, Data> & ThisType<AnyContext>,
-): Component<Props, Data> {
-	const self: Component<Props, Data> = defineRenderable(
+	definition: ComponentDefinition<Props, L>,
+): Component<Props, L> {
+	const self: Component<Props, L> = defineRenderable(
 		"component",
 		id,
 		definition,
@@ -41,17 +45,21 @@ export function component<Props extends object = {}, Data = undefined>(
 			const loader = definition.loader;
 
 			if (!loader) {
-				return definition.render(given, {
-					status: "success",
-					data: undefined as Data,
-					error: undefined,
-				});
+				return definition.render(
+					Object.assign(given, {
+						state: {
+							status: "success",
+							data: undefined,
+							error: undefined,
+						} as SettledState<LoaderData<L>>,
+					}),
+				);
 			}
 
 			return (async () => {
 				const c = renderContext();
 				const state = await settleLoader(() => loader.call(c, given));
-				return definition.render(given, state);
+				return definition.render(Object.assign(given, { state }));
 			})();
 		},
 	);

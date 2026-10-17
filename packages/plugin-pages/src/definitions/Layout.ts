@@ -1,54 +1,46 @@
 import type { Context } from "@ozanarslan/corpus";
 
-import type { AnyPageRoute } from "@/definitions/Page";
-import { defineRenderable, type ClientScript, type Renderable } from "@/definitions/Renderable";
-import type { LoaderData, LoaderState } from "@/runtime/loaders";
-import type { Css } from "@/shared/css";
+import {
+	defineRenderable,
+	type Renderable,
+	type RenderableDefinition,
+} from "@/definitions/Renderable";
+import type { LoaderState, LoaderData } from "@/runtime/loaders";
+import type { AnyPageRoute } from "@/server/PageRoute";
 import type { Html } from "@/shared/html";
 
-export type LayoutLoader<Data = undefined> = () => Bun.MaybePromise<Data>;
-
-export type LayoutRenderProps<
-	Data = undefined,
-	B = unknown,
-	S = unknown,
-	P = unknown,
-> = LoaderState<Data> & {
-	c: Context<B, S, P>;
-	title: string;
-	children: Html;
-};
-
-export type LayoutRender<Data = undefined, B = unknown, S = unknown, P = unknown> = (
-	props: LayoutRenderProps<Data, B, S, P>,
-) => Bun.MaybePromise<Html>;
+// layouts can't get dependencies
+type LayoutLoader = () => any;
 
 export interface LayoutDefinition<
-	L extends LayoutLoader<any> | undefined = undefined,
+	L extends LayoutLoader | undefined = undefined,
 	B = unknown,
 	S = unknown,
 	P = unknown,
-> {
+> extends RenderableDefinition {
 	loader?: L;
-	render: LayoutRender<LoaderData<L>, B, S, P>;
-	style?: Css;
-	script?: ClientScript;
+	render: (
+		c: Context<B, S, P> & {
+			state: LoaderState<LoaderData<L>>;
+			title: string;
+			children: Html;
+		},
+	) => Bun.MaybePromise<Html>;
 }
 
-export type Layout<
-	L extends LayoutLoader<any> | undefined = undefined,
+export interface Layout<
+	L extends LayoutLoader | undefined = undefined,
 	B = unknown,
 	S = unknown,
 	P = unknown,
-> = Renderable & {
+>
+	extends Renderable, LayoutDefinition<L, B, S, P> {
 	readonly kind: "layout";
-	readonly render: LayoutRender<LoaderData<L>, B, S, P>;
-	readonly loader?: LayoutLoader<LoaderData<L>>;
 	(...children: Array<AnyPageRoute | Array<AnyPageRoute>>): Array<AnyPageRoute>;
-};
+}
 
 export function layout<
-	L extends LayoutLoader<any> | undefined = undefined,
+	L extends LayoutLoader | undefined = undefined,
 	B = unknown,
 	S = unknown,
 	P = unknown,
@@ -66,7 +58,6 @@ export function layout<
 			for (const route of routes) route.layouts.unshift(self);
 			return routes;
 		},
-		{ render: definition.render, loader: definition.loader },
 	);
 	return self;
 }

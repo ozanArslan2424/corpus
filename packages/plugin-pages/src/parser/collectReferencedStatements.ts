@@ -77,7 +77,7 @@ function referencedNames(code: string): Set<string> {
  * The statements `body` references, directly or through other statements, in their original order.
  * Pure: needs only each statement's declared `name` (`null` declares nothing) and its `text`.
  */
-export function referencedStatements<T extends { name: string | null; text: string }>(
+export function collectReferencedStatements<T extends { name: string | null; text: string }>(
 	body: string,
 	statements: ReadonlyArray<T>,
 ): Array<T> {

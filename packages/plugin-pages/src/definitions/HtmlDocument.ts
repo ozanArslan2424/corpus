@@ -1,4 +1,4 @@
-import type { AnyPageRoute } from "@/definitions/Page";
+import type { AnyPageRoute } from "@/server/PageRoute";
 import { html, type Html } from "@/shared/html";
 
 export interface HtmlDocumentProps {

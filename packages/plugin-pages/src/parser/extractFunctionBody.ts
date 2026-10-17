@@ -5,7 +5,7 @@ import { skipQuoteString, skipTemplateLiteral } from "@/parser/lex";
  * generators, methods (`name() {}`, `get x() {}`, `[key]() {}`) and arrows. An expression-bodied arrow
  * becomes `return <expression>;`.
  */
-export function functionBody(fn: Function): string {
+export function extractFunctionBody(fn: Function): string {
 	const text = fn.toString();
 	let depth = 0;
 

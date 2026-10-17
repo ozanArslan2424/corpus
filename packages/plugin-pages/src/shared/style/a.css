@@ -1,0 +1,151 @@
+#s0 .resume-page {
+	display: flex;
+	flex-direction: column;
+	gap: calc(var(--spacing) * 2);
+	scroll-behavior: smooth;
+}
+#s0 .resume-page .toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: calc(var(--spacing) * 2);
+}
+#s0 .resume-page .resume-frame {
+	margin-inline: auto;
+	max-width: 56rem;
+	overflow: hidden;
+	border-radius: var(--radius-lg);
+	border-width: 1px;
+}
+#s0 .resume-page .certificates {
+	display: grid;
+	gap: calc(var(--spacing) * 3);
+}
+#s0 article.resume {
+	width: 100%;
+	aspect-ratio: 1000/1414;
+}
+#s0 article.resume header {
+	background-color: var(--secondary);
+	position: relative;
+	padding: calc(var(--spacing) * 4);
+}
+#s0 article.resume header h1 {
+	font-weight: 700;
+}
+#s0 article.resume header p {
+	color: color-mix(in oklab, var(--foreground) 90%, transparent);
+}
+#s0 article.resume main {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: calc(var(--spacing) * 10);
+	padding: calc(var(--spacing) * 4);
+}
+#s0 article.resume main div.left {
+	order: 2;
+	grid-column: span 3 / span 3;
+}
+#s0 article.resume main div.left section {
+	margin-bottom: calc(var(--spacing) * 4);
+}
+#s0 article.resume main div.left section h2 {
+	margin-bottom: calc(var(--spacing) * 1);
+	font-weight: 900;
+}
+#s0 article.resume main div.left section p {
+	font-size: var(--text-sm);
+	line-height: var(--text-sm--line-height);
+}
+#s0 article.resume main div.left section ul li {
+	margin-bottom: calc(var(--spacing) * 1.5);
+}
+#s0 article.resume main div.left section ul li h3 {
+	display: flex;
+	justify-content: space-between;
+	font-weight: 700;
+}
+#s0 article.resume main div.left section ul li p {
+	font-size: var(--text-sm);
+	line-height: var(--text-sm--line-height);
+	text-wrap: pretty;
+}
+#s0 article.resume main div.right {
+	z-index: 10;
+	order: 1;
+	grid-column: span 3 / span 3;
+}
+#s0 article.resume main div.right img {
+	margin-bottom: calc(var(--spacing) * 4);
+	aspect-ratio: 1 / 1;
+	width: 100%;
+}
+#s0 article.resume main div.right section {
+	margin-bottom: calc(var(--spacing) * 4);
+}
+#s0 article.resume main div.right section h2 {
+	margin-bottom: calc(var(--spacing) * 1);
+	font-size: var(--text-base);
+	line-height: var(--text-base--line-height);
+	font-weight: 900;
+}
+#s0 article.resume main div.right section p {
+	font-size: var(--text-sm);
+	line-height: var(--text-sm--line-height);
+}
+#s0 article.resume main div.right section ul li {
+	margin-bottom: calc(var(--spacing) * 1);
+	display: flex;
+	justify-content: space-between;
+}
+#s0 article.resume main div.right section ul li h4 {
+	font-size: var(--text-sm);
+	line-height: var(--text-sm--line-height);
+	font-weight: 700;
+}
+#s0 article.resume main div.right section ul li p,
+#s0 article.resume main div.right section ul li a {
+	font-size: var(--text-sm);
+	line-height: var(--text-sm--line-height);
+}
+#s0 article.resume main div.right section ul li a:hover {
+	text-decoration-line: underline;
+}
+@media (width >= 40rem) {
+	#s0 .resume-page {
+		margin-top: calc(var(--spacing) * -8);
+	}
+	#s0 article.resume header h1 {
+		font-size: var(--text-5xl);
+		line-height: var(--text-5xl--line-height);
+	}
+	#s0 article.resume main div.left {
+		order: 1;
+		grid-column: span 2 / span 2;
+	}
+	#s0 article.resume main div.right {
+		order: 2;
+		grid-column: span 1 / span 1;
+		margin-top: calc(var(--spacing) * -26);
+	}
+}
+@media print {
+	body * {
+		visibility: hidden;
+	}
+	#s0 .print-target,
+	#s0 .print-target * {
+		visibility: visible;
+	}
+	#s0 .print-target {
+		margin: 24px;
+		position: absolute;
+		inset: 0;
+	}
+	#s0 article.resume {
+		background-color: white !important;
+	}
+	#s0 article.resume header {
+		background-color: white !important;
+	}
+}

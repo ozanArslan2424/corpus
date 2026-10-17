@@ -116,7 +116,7 @@ function describe(text: string): Array<Statement> {
  * A statement starts on a line that begins at column 0 outside any bracket, string or template;
  * leading comments belong to the statement after them.
  */
-export function topLevelStatements(source: string): Array<Statement> {
+export function parseTopLevelStatements(source: string): Array<Statement> {
 	const texts: Array<string> = [];
 	let depth = 0;
 	let start = 0;

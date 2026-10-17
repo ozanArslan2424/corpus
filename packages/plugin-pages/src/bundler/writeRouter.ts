@@ -5,7 +5,7 @@ import path from "node:path";
 const ROUTER_FILE = path.join(import.meta.dir, "router.js");
 
 /** Copies the prebuilt client router into `outdir` as `router.js`. Returns its contents. */
-export async function bundleRouter(outdir: string): Promise<string> {
+export async function writeRouter(outdir: string): Promise<string> {
 	const source = await fs.readFile(ROUTER_FILE, "utf8");
 	await fs.writeFile(path.join(outdir, "router.js"), source);
 	return source;

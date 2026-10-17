@@ -1,4 +1,4 @@
-import { LOADING_MARKER } from "@/shared/markers";
+import { LOADING_MARKER } from "@/shared/constants";
 
 interface State {
 	executed: Set<string>;

@@ -1,41 +1,16 @@
 import type { Renderable } from "@/definitions/Renderable";
-import type { Html } from "@/shared/html";
-import { assert } from "@/utils/assert";
+import type { Nullable } from "@/utils/is";
 
-export interface AssetTags {
-	style?: Html;
-	script?: Html;
+const map = new Map<Renderable["ref"], Renderable>();
+
+export function getRenderable(ref: Renderable["ref"]): Nullable<Renderable> {
+	return map.get(ref) ?? null;
 }
 
-export const renderables = new Set<Renderable>();
-export const tags = new WeakMap<Renderable, AssetTags>();
-
-/** Called when a renderable is defined so `writeAssets` knows about it. */
-export function registerAssets(renderable: Renderable): void {
-	if (renderable.style || renderable.script) renderables.add(renderable);
+export function getRenderableMap() {
+	return map;
 }
 
-export function tagsOf(renderable: Renderable): AssetTags {
-	if (!renderable.style && !renderable.script) return {};
-	const result = tags.get(renderable);
-	if (!result)
-		throw new Error(
-			`Assets for ${renderable.kind} "${renderable.id}" weren't written; call writeAssets() before listening`,
-		);
-	return result;
-}
-
-/** The `<script>` tag for the client router; set by `writeAssets`. */
-let routerTag: Html | undefined;
-
-export function setRouterTag(tag: Html): void {
-	routerTag = tag;
-}
-
-export function getRouterTag(): Html {
-	assert.present(
-		routerTag,
-		"The router script wasn't written; call writeAssets() before listening",
-	);
-	return routerTag;
+export function addRenderable(renderable: Renderable) {
+	map.set(renderable.ref, renderable);
 }
